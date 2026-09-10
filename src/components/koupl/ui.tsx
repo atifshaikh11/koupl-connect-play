@@ -231,7 +231,7 @@ export function FeatureTile({ game }: { game: GameDef }) {
 export function MiniTile({ game }: { game: GameDef }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className="press surface flex flex-col gap-2 p-3"
     >
