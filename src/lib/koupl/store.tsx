@@ -72,6 +72,7 @@ type Ctx = {
   setSettings: (patch: Partial<Settings>) => void;
   saveGuest: (patch: Partial<GuestProfile>) => void;
   clearGuest: () => void;
+  startDemo: () => void;
   updateProfile: (patch: Partial<ProfileRow>) => Promise<void>;
   linkPartner: (code: string) => Promise<{ name: string } | null>;
   unlinkPartner: () => Promise<void>;
