@@ -92,6 +92,44 @@ export type Database = {
         }
         Relationships: []
       }
+      room_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          room_id: string
+          sender_avatar: string
+          sender_id: string | null
+          sender_name: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          room_id: string
+          sender_avatar?: string
+          sender_id?: string | null
+          sender_name?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          sender_avatar?: string
+          sender_id?: string | null
+          sender_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_messages_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rooms: {
         Row: {
           code: string
