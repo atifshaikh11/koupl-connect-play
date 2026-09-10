@@ -183,7 +183,7 @@ export function DualChoiceGame({
             </span>
             <p className="mt-2 text-sm font-bold">Locked in.</p>
             <p className="text-sm text-muted-foreground">
-              Waiting for {players[1 - (mySlot as 0 | 1)].name} to choose…
+              Waiting for {players[mySlot === 0 ? 1 : 0].name} to choose…
             </p>
           </div>
         ) : localTurn && !passed && s.a0 !== null && s.a1 === null ? (
