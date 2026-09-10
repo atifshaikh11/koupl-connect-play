@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AvatarBubble, LoadingScreen, Wordmark } from "@/components/koupl/ui";
 import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
-import { useRoomChat } from "@/lib/koupl/useRoomChat";
+import { useLocalChat, useRoomChat } from "@/lib/koupl/useRoomChat";
 import { DualChoiceGame, type DualRound } from "@/components/games/DualChoiceGame";
 import { FourInARow } from "@/components/games/FourInARow";
 import { BasketballRivalry } from "@/components/games/BasketballRivalry";
@@ -62,7 +62,7 @@ function Play() {
   const navigate = useNavigate();
   const app = useApp();
   const room = useRoom(game.id, app.session?.user.id ?? null);
-  const chat = useRoomChat(room.room?.id ?? null, {
+  const roomChat = useRoomChat(room.room?.id ?? null, {
     id: app.session?.user.id ?? null,
     name: app.me.name,
     avatar: app.me.avatar,
@@ -94,6 +94,11 @@ function Play() {
     if (mode !== "online" || !room.room || !app.session) return null;
     return room.room.host_id === app.session.user.id ? 0 : 1;
   }, [mode, room.room, app.session]);
+
+  const localChat = useLocalChat(game.id, players);
+  const online = mode === "online" && !!room.room;
+  const chat = online ? roomChat : localChat;
+  const chatMyId = online ? (app.session?.user.id ?? null) : (localChat.localSender?.id ?? null);
 
   function finish(result: GameResult) {
     void app.logActivity({
@@ -256,14 +261,15 @@ function Play() {
             </div>
           ) : null}
 
-          {mode === "online" && room.room ? (
+          {mode === "local" || room.room ? (
             <div className="surface mt-4 flex flex-col p-4">
               <p className="mb-2 text-xs font-bold text-muted-foreground">
-                Chat — talk before you start
+                {online ? "Chat — talk before you start" : "Notes — leave each other a message"}
               </p>
-              <ChatPanel chat={chat} myId={app.session?.user.id ?? null} />
+              <ChatPanel chat={chat} myId={chatMyId} />
             </div>
           ) : null}
+
 
           <div className="mt-auto space-y-2 pt-8">
             <Button
@@ -401,7 +407,7 @@ function Play() {
   return (
     <>
       {gameScreen}
-      {mode === "online" && room.room ? <ChatDock chat={chat} myId={app.session?.user.id ?? null} /> : null}
+      <ChatDock chat={chat} myId={chatMyId} />
     </>
   );
 }

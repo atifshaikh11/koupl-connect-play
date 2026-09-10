@@ -31,3 +31,4 @@ Blocked (needs the app owner):
 - [x] Fixed build errors from store page (GameDef fields, icon import); build + typecheck green
 - [x] Realtime lobby chat (room_messages table + RLS + realtime; lobby panel + in-game chat dock)
   Note: end-to-end two-account chat not verified in sandbox — backend has no signed-up users yet.
+- [x] One-phone chat fallback (device-local notes thread with sender switch, persisted per game)
