@@ -11,6 +11,7 @@ export function GameFrame({
   onExit,
   step,
   total,
+  stepNoun = "Round",
   children,
   header,
 }: {
@@ -18,6 +19,7 @@ export function GameFrame({
   onExit: () => void;
   step?: number;
   total?: number;
+  stepNoun?: string;
   children: ReactNode;
   header?: ReactNode;
 }) {
