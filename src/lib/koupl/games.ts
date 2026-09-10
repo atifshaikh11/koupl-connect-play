@@ -112,6 +112,50 @@ export const GAMES: GameDef[] = [
 
 export const gameById = (id: string) => GAMES.find((g) => g.id === id);
 
+/** Three-step "how to play" shown on each game detail screen. Original wording. */
+export const HOW_TO: Record<string, string[]> = {
+  "never-have-i-ever": [
+    "A confession card appears. Read it out loud together.",
+    "Each of you taps “I have” or “Never” — hidden until you both answer.",
+    "Matching answers score a point for the pair. Mismatches earn a story.",
+  ],
+  "whos-more-likely": [
+    "Read the round out loud, then point with a tap.",
+    "You each choose the person you think fits best.",
+    "Agree and you both score. Disagree and you defend your case.",
+  ],
+  "four-in-a-row": [
+    "Take turns dropping a disc into a column.",
+    "Line up four of yours across, down or diagonally.",
+    "First to connect four wins the round — then hit rematch.",
+  ],
+  "basketball-rivalry": [
+    "The hoop slides side to side. Tap to shoot.",
+    "Time it so the ball meets the moving hoop.",
+    "Ten shots each. Highest score takes the bragging rights.",
+  ],
+  "pillow-talk": [
+    "One question at a time, no timer, no score.",
+    "Whoever's turn it is reads it out and answers first.",
+    "Swipe to the next card whenever the conversation runs its course.",
+  ],
+  "this-or-that": [
+    "Two options land on screen. Pick your side.",
+    "Both answers stay hidden until you've each chosen.",
+    "Every match adds a point to your shared alignment score.",
+  ],
+  "truth-or-dare": [
+    "On your turn, choose truth or dare.",
+    "Answer honestly or complete the dare to bank a point.",
+    "Pass if you must — it just costs you the point.",
+  ],
+  "couple-quiz": [
+    "One of you answers a question about yourself.",
+    "The other guesses what they picked.",
+    "Roles swap each round. Correct guesses score.",
+  ],
+};
+
 export const CATEGORY_LABEL: Record<string, string> = {
   party: "Party",
   deep: "Deep talk",

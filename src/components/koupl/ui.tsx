@@ -157,7 +157,7 @@ const ACCENT_BG: Record<GameDef["accent"], string> = {
 export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className={cn(
         "press surface group relative flex overflow-hidden",
@@ -202,7 +202,7 @@ const ACCENT_DOT: Record<GameDef["accent"], string> = {
 export function FeatureTile({ game }: { game: GameDef }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className="press relative flex w-[9.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
     >
@@ -231,7 +231,7 @@ export function FeatureTile({ game }: { game: GameDef }) {
 export function MiniTile({ game }: { game: GameDef }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className="press surface flex flex-col gap-2 p-3"
     >
@@ -247,6 +247,35 @@ export function MiniTile({ game }: { game: GameDef }) {
       <span className="min-w-0">
         <span className="font-display block truncate text-sm font-bold">{game.title}</span>
         <span className="block truncate text-[11px] text-muted-foreground">{game.tagline}</span>
+      </span>
+    </Link>
+  );
+}
+
+/** Tall dark artwork tile used in the games library grid. */
+export function PosterTile({ game }: { game: GameDef }) {
+  return (
+    <Link
+      to="/game/$gameId"
+      params={{ gameId: game.id }}
+      className="press relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute -right-8 -top-10 h-32 w-32 rounded-full opacity-30 blur-2xl",
+          ACCENT_DOT[game.accent],
+        )}
+      />
+      <span
+        aria-hidden
+        className="absolute left-1/2 top-[30%] -translate-x-1/2 -translate-y-1/2 text-6xl drop-shadow"
+      >
+        {game.emoji}
+      </span>
+      <span className="relative">
+        <span className="font-display block text-sm font-bold leading-tight">{game.title}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-night-muted">{game.minutes}</span>
       </span>
     </Link>
   );
