@@ -156,11 +156,21 @@ export function DualChoiceGame({
         />
       }
     >
-      <PromptCard tone={tone} animateKey={round.key}>
-        <p className="font-display text-xl font-bold leading-snug text-balance-tight">
-          {round.prompt}
-        </p>
-      </PromptCard>
+      {s.streak >= 2 ? (
+        <div className="mt-3 flex justify-center">
+          <StatPill label="In sync" value={`${s.streak} in a row`} tone="success" />
+        </div>
+      ) : null}
+
+      <div className="mt-3">
+        <PromptCard tone={tone} animateKey={round.key}>
+          <p className="font-display text-xl font-bold leading-snug text-balance-tight">
+            {round.prompt}
+          </p>
+        </PromptCard>
+      </div>
+
+
 
       <div className="mt-5 flex flex-1 flex-col justify-end gap-3">
         {bothIn ? (
