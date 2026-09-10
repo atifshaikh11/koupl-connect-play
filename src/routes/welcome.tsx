@@ -35,7 +35,7 @@ const STEPS = ["Welcome", "You", "Us", "Partner"] as const;
 
 function Welcome() {
   const navigate = useNavigate();
-  const { hydrated, saveGuest, inviteCode, session } = useApp();
+  const { hydrated, saveGuest, startDemo, inviteCode, session } = useApp();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState(AVATARS[0]!);
