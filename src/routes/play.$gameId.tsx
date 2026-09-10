@@ -62,7 +62,7 @@ function Play() {
   const navigate = useNavigate();
   const app = useApp();
   const room = useRoom(game.id, app.session?.user.id ?? null);
-  const chat = useRoomChat(room.room?.id ?? null, {
+  const roomChat = useRoomChat(room.room?.id ?? null, {
     id: app.session?.user.id ?? null,
     name: app.me.name,
     avatar: app.me.avatar,
