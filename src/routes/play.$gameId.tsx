@@ -201,7 +201,7 @@ function Play() {
             >
               <Smartphone className="h-6 w-6" aria-hidden />
               <span className="text-sm font-bold">One phone</span>
-              <span className="text-[11px] text-muted-foreground">Pass it back and forth</span>
+              <span className="text-xs text-muted-foreground">Pass it back and forth</span>
             </button>
             <button
               type="button"
@@ -219,7 +219,7 @@ function Play() {
             >
               <Users className="h-6 w-6" aria-hidden />
               <span className="text-sm font-bold">Two phones</span>
-              <span className="text-[11px] text-muted-foreground">Live room</span>
+              <span className="text-xs text-muted-foreground">Live room</span>
             </button>
           </div>
 

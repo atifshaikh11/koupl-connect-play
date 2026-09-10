@@ -60,11 +60,11 @@ export function GameFrame({
             </AlertDialogContent>
           </AlertDialog>
           <div className="min-w-0 flex-1">
-            <p className="font-display truncate text-base font-bold">
+            <h1 className="font-display truncate text-base font-bold">
               <span aria-hidden>{game.emoji}</span> {game.title}
-            </p>
+            </h1>
             {typeof step === "number" && total ? (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 {stepNoun} {Math.min(step + 1, total)} of {total}
               </p>
             ) : null}

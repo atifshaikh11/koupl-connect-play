@@ -276,7 +276,7 @@ export function FeatureTile({ game }: { game: GameDef }) {
         <span className="font-display block text-base font-bold leading-tight">{game.title}</span>
         <span className="mt-1 block truncate text-xs text-night-muted">{game.minutes}</span>
       </span>
-      <span className="relative mt-3 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">
+      <span className="relative mt-3 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
         Play
       </span>
     </Link>
@@ -294,7 +294,7 @@ export function MiniTile({ game }: { game: GameDef }) {
       <GameArtwork game={game} className="h-11 w-11" />
       <span className="min-w-0">
         <span className="font-display block truncate text-sm font-bold">{game.title}</span>
-        <span className="block truncate text-[11px] text-muted-foreground">{game.tagline}</span>
+        <span className="block truncate text-xs text-muted-foreground">{game.tagline}</span>
       </span>
     </Link>
   );
@@ -369,7 +369,7 @@ export function Chip({
     success: "bg-success/15 text-success",
   } as const;
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-bold", tones[tone])}>
+    <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", tones[tone])}>
       {children}
     </span>
   );
