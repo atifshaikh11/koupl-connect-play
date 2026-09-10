@@ -131,6 +131,7 @@ function Activity() {
           })}
         </ul>
       )}
+      </div>
     </Screen>
   );
 }
