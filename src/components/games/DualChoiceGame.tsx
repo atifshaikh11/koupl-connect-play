@@ -52,6 +52,7 @@ export function DualChoiceGame({
   const round = rounds[Math.min(s.i, rounds.length - 1)]!;
   const bothIn = s.a0 !== null && s.a1 !== null;
   const matched = bothIn && s.a0 === s.a1;
+  const shownScore = s.score + (matched ? 1 : 0);
 
   // Whose input is being collected right now.
   const pendingSlot: 0 | 1 | null = s.a0 === null ? 0 : s.a1 === null ? 1 : null;
