@@ -1,7 +1,7 @@
-import { Heart, SkipForward } from "lucide-react";
+import { Heart, Moon, SkipForward } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { GameFrame, GameSummary, PromptCard } from "@/components/koupl/GameShell";
+import { GameFrame, GameSummary, PromptCard, StatPill } from "@/components/koupl/GameShell";
 import { TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import type { GameProps } from "./shared";
@@ -38,9 +38,13 @@ export function PillowTalk({
         <GameSummary
           players={players}
           scores={[s.kept, s.kept]}
-          headline={`${s.kept} questions answered`}
+          headline={`${s.kept} question${s.kept === 1 ? "" : "s"} answered`}
           detail="No winners here. Just a bit more of each other than you had an hour ago."
           scored={false}
+          stats={[
+            { label: "Answered", value: s.kept },
+            { label: "Skipped", value: s.skipped },
+          ]}
           onRematch={() => reset(initial)}
           onExit={() =>
             onFinish({
@@ -55,18 +59,21 @@ export function PillowTalk({
   }
 
   return (
-    <GameFrame game={game} onExit={onExit} step={s.i} total={cards.length}>
-      <div className="mb-4">
+    <GameFrame game={game} onExit={onExit} step={s.i} total={cards.length} stepNoun="Card">
+      <div className="mb-3">
         <TurnBanner
           player={players[asker]}
           action={myTurn ? "read it out and answer" : "is answering"}
         />
       </div>
 
+      <div className="mb-3 flex items-center justify-center gap-2">
+        <StatPill label="Answered" value={s.kept} tone="success" />
+        <StatPill label="Skipped" value={s.skipped} />
+      </div>
+
       <PromptCard tone="berry" animateKey={s.i}>
-        <span className="mb-3 text-3xl" aria-hidden>
-          🌙
-        </span>
+        <Moon className="mb-3 h-8 w-8" aria-hidden />
         <p className="font-display text-xl font-bold leading-snug text-balance-tight">
           {cards[s.i]}
         </p>
