@@ -101,6 +101,18 @@ function Welcome() {
               </Button>
               <Button
                 size="lg"
+                variant="secondary"
+                className="h-14 rounded-2xl text-base font-bold"
+                onClick={() => {
+                  startDemo();
+                  toast.success("Demo loaded — you're Sam, playing with Alex");
+                  void navigate({ to: "/" });
+                }}
+              >
+                Try the demo — no account
+              </Button>
+              <Button
+                size="lg"
                 variant="ghost"
                 className="h-12 rounded-2xl text-base"
                 onClick={() => void navigate({ to: "/auth" })}
