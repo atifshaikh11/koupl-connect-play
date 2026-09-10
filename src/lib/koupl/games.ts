@@ -257,6 +257,21 @@ export const THIS_OR_THAT: ThisOrThatCard[] = [
   { a: "Handwritten letter", b: "Voice note" },
   { a: "Same tattoo", b: "Same playlist" },
   { a: "City apartment", b: "House with a garden" },
+  { a: "Camping", b: "Hotel" },
+  { a: "Board games", b: "Video games" },
+  { a: "Comedy show", b: "Live music" },
+  { a: "Breakfast in bed", b: "Brunch out" },
+  { a: "Matching outfits", b: "Absolutely not" },
+  { a: "Winter wedding", b: "Summer wedding" },
+  { a: "Sea swim", b: "Hot bath" },
+  { a: "Long books", b: "Long series" },
+  { a: "Spontaneous kiss", b: "Long hug" },
+  { a: "Anniversary trip", b: "Anniversary feast" },
+  { a: "Talk it out now", b: "Sleep on it" },
+  { a: "Karaoke duet", b: "Silent car ride" },
+  { a: "Save for a house", b: "Spend on travel" },
+  { a: "Sunday roast", b: "Street food crawl" },
+  { a: "Photo albums", b: "Fridge magnets" },
 ];
 
 export const TRUTHS: string[] = [
