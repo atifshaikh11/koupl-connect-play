@@ -164,7 +164,7 @@ function StorePage() {
               void navigator.clipboard?.writeText(window.location.href).catch(() => {});
             }}
           >
-            <Flag className="h-5 w-5 rotate-0" />
+            <Share2 className="h-5 w-5" />
           </button>
           <button
             type="button"
