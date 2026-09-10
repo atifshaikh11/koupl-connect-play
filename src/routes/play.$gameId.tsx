@@ -292,7 +292,8 @@ function Play() {
     onExit: exit,
   };
 
-  switch (game.id) {
+  const gameScreen = ((): ReactNode => {
+    switch (game.id) {
     case "never-have-i-ever": {
       const rounds: DualRound[] = shuffle(NEVER_HAVE_I_EVER, seed)
         .slice(0, ROUNDS)
@@ -378,5 +379,13 @@ function Play() {
       return <CoupleQuiz {...base} questions={shuffle(COUPLE_QUIZ, seed).slice(0, 10)} />;
     default:
       return null;
-  }
+    }
+  })();
+
+  return (
+    <>
+      {gameScreen}
+      {mode === "online" && room.room ? <ChatDock chat={chat} myId={app.session?.user.id ?? null} /> : null}
+    </>
+  );
 }
