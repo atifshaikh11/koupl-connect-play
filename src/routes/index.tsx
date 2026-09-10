@@ -13,7 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AvatarBubble, Chip, GameCard, LoadingScreen, Screen, Wordmark } from "@/components/koupl/ui";
+import {
+  AvatarBubble,
+  FeatureTile,
+  LoadingScreen,
+  MiniTile,
+  Screen,
+  SectionHeading,
+} from "@/components/koupl/ui";
 import { DAILY_PROMPTS, GAMES, gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
 
