@@ -119,7 +119,7 @@ export function DualChoiceGame({
       header={
         <ScoreBar
           players={players}
-          scores={[s.score, s.score]}
+          scores={[shownScore, shownScore]}
           activeSlot={bothIn ? null : answeringSlot}
         />
       }
