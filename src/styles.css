@@ -113,6 +113,12 @@
   --sky: oklch(0.72 0.11 236);
   --sky-foreground: oklch(0.24 0.06 250);
 
+  /* Deep warm-black panels used for hero + feature tiles in both themes. */
+  --night: oklch(0.185 0.022 25);
+  --night-soft: oklch(0.255 0.028 26);
+  --night-foreground: oklch(0.98 0.008 80);
+  --night-muted: oklch(0.75 0.02 62);
+
   --border: oklch(0.89 0.026 66);
   --input: oklch(0.89 0.026 66);
   --ring: oklch(0.635 0.196 24);
