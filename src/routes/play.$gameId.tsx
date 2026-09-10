@@ -91,6 +91,7 @@ function Play() {
       my_score: result.myScore,
       their_score: result.theirScore,
     });
+    clearSavedGame(game.id);
     app.buzz(20);
     void navigate({ to: "/activity" });
   }
