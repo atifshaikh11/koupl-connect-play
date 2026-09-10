@@ -8,7 +8,7 @@ import { CATEGORY_LABEL, GAMES } from "@/lib/koupl/games";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/games")({
-  validateSearch: (search: Record<string, unknown>): { c?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { c?: string | undefined } => ({
     c: typeof search['c'] === "string" ? search['c'] : undefined,
   }),
   head: () => ({
