@@ -202,7 +202,7 @@ const ACCENT_DOT: Record<GameDef["accent"], string> = {
 export function FeatureTile({ game }: { game: GameDef }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className="press relative flex w-[9.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
     >
