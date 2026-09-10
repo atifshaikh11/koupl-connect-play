@@ -142,6 +142,26 @@ export const NEVER_HAVE_I_EVER: string[] = [
   "Never have I ever sung loudly in the car when you weren't in it.",
   "Never have I ever rehearsed an apology before giving it.",
   "Never have I ever kept a receipt or ticket stub from one of our nights out.",
+  "Never have I ever googled something you said just to check you were right.",
+  "Never have I ever pretended to know a band you love.",
+  "Never have I ever taken the bigger half on purpose.",
+  "Never have I ever stayed up late just to keep talking to you.",
+  "Never have I ever cried at something you wrote me.",
+  "Never have I ever picked a restaurant because you'd like the pudding.",
+  "Never have I ever screenshot one of your messages to show a friend.",
+  "Never have I ever moved something of yours and denied it.",
+  "Never have I ever imagined what our house would look like.",
+  "Never have I ever pretended a plan fell through so we could stay in.",
+  "Never have I ever kept a nickname for you I've never used out loud.",
+  "Never have I ever agreed with you just to end the conversation.",
+  "Never have I ever learned something new purely because you're into it.",
+  "Never have I ever taken a longer route home to keep the conversation going.",
+  "Never have I ever hidden how nervous I was around your family.",
+  "Never have I ever gone through your playlist to work out your mood.",
+  "Never have I ever eaten something I dislike because you cooked it.",
+  "Never have I ever told you I was fine when I really wasn't.",
+  "Never have I ever counted down the hours until I'd see you.",
+  "Never have I ever kept an item of yours on purpose.",
 ];
 
 export const WHOS_MORE_LIKELY: string[] = [
@@ -163,6 +183,24 @@ export const WHOS_MORE_LIKELY: string[] = [
   "Who's more likely to win a dance-off at a wedding?",
   "Who's more likely to keep a plant alive for a whole year?",
   "Who's more likely to read the instructions before building furniture?",
+  "Who's more likely to book a flight at 3am on a whim?",
+  "Who's more likely to argue with a self-checkout machine?",
+  "Who's more likely to remember a stranger's birthday?",
+  "Who's more likely to get lost with a map in their hand?",
+  "Who's more likely to eat dessert before the main?",
+  "Who's more likely to become obsessed with a new gadget?",
+  "Who's more likely to make friends with the neighbour's cat first?",
+  "Who's more likely to fall for an obvious scam email?",
+  "Who's more likely to redecorate a room at midnight?",
+  "Who's more likely to keep a plant they've clearly killed?",
+  "Who's more likely to be recognised in the local shop?",
+  "Who's more likely to give a heartfelt speech with no warning?",
+  "Who's more likely to hoard sauce packets?",
+  "Who's more likely to say yes to karaoke?",
+  "Who's more likely to win a staring contest?",
+  "Who's more likely to panic in a horror film?",
+  "Who's more likely to bring back a suitcase of snacks from abroad?",
+  "Who's more likely to text the wrong person something embarrassing?",
 ];
 
 export const PILLOW_TALK: string[] = [
@@ -182,6 +220,22 @@ export const PILLOW_TALK: string[] = [
   "What does being loved well look like to you this year?",
   "What's something you're still learning about yourself?",
   "If we could pause one week forever, which week would it be?",
+  "What's the kindest thing anyone has ever said about us?",
+  "Which of our routines would you never want to lose?",
+  "What do you think I underestimate about myself?",
+  "When was the last time you felt genuinely rested?",
+  "What's a conversation we keep circling but never finish?",
+  "What does home smell like to you?",
+  "Which of your parents' habits have you kept on purpose?",
+  "What would you like our next chapter to be called?",
+  "What's something small I could do tomorrow that would help?",
+  "Which of my worries would you like to take off me?",
+  "What's a promise you'd like us to make quietly?",
+  "When do you feel most yourself?",
+  "What have you changed your mind about since we met?",
+  "What's a hard thing you're glad we went through?",
+  "What do you hope stays exactly the same about us?",
+  "What's one thing you'd love to try together this year?",
 ];
 
 export type ThisOrThatCard = { a: string; b: string };
@@ -218,6 +272,18 @@ export const TRUTHS: string[] = [
   "What's a lie you told me that was actually kind?",
   "What's your most unrealistic dream for us?",
   "What's something you've forgiven me for without telling me?",
+  "What's the worst gift you've ever received and pretended to like?",
+  "What did you assume about me the first week we met?",
+  "What's a habit of mine you'd secretly like to break?",
+  "What's the boldest thing you've ever texted someone?",
+  "Which of my stories have you heard far too many times?",
+  "What's something you're proud of but never mention?",
+  "What's the silliest thing you've cried about this year?",
+  "What's a rule you've broken and never regretted?",
+  "What's the last thing you did purely to impress me?",
+  "What would you do with a completely free, unwatched day?",
+  "What's the most childish thing you still enjoy?",
+  "Which compliment do you never get tired of hearing?",
 ];
 
 export const DARES: string[] = [
@@ -233,6 +299,18 @@ export const DARES: string[] = [
   "Dance for thirty seconds with no music at all.",
   "Let your partner choose your outfit for tomorrow.",
   "Read your last three messages out loud in a movie-trailer voice.",
+  "Invent a jingle for your partner's name and perform it.",
+  "Balance something on your head until your next turn.",
+  "Describe your day as if you were a sports commentator.",
+  "Swap accents with your partner for two whole rounds.",
+  "Write a two-line poem about them, out loud, right now.",
+  "Let them add one ridiculous item to tomorrow's shopping list.",
+  "Do your best catwalk from one side of the room to the other.",
+  "Name ten things you love about them in thirty seconds.",
+  "Let them tickle-attack you for five seconds without moving.",
+  "Act out how you looked on our first date.",
+  "Hold a plank while they ask you three quick questions.",
+  "Give them a two-minute head, shoulder or hand massage.",
 ];
 
 export type QuizQuestion = { q: string; options: string[] };
@@ -285,6 +363,46 @@ export const COUPLE_QUIZ: QuizQuestion[] = [
   {
     q: "How do I like to be woken up?",
     options: ["Slowly, with coffee", "Alarm and go", "Left alone", "With a chat"],
+  },
+  {
+    q: "What's my dream pet?",
+    options: ["A big dog", "A lazy cat", "Something unusual", "No pets, thanks"],
+  },
+  {
+    q: "Where would I want to live for a year?",
+    options: ["By the sea", "A big city", "The mountains", "Right where we are"],
+  },
+  {
+    q: "What's my favourite part of a night out?",
+    options: ["Getting ready", "The food", "The dancing", "Going home"],
+  },
+  {
+    q: "What do I do first thing in the morning?",
+    options: ["Check my phone", "Make a drink", "Snooze again", "Get straight up"],
+  },
+  {
+    q: "Which gift would land best with me?",
+    options: ["Something handmade", "Tickets to something", "Something practical", "A surprise trip"],
+  },
+  {
+    q: "How do I feel about surprise parties?",
+    options: ["Love them", "Hate them", "Depends who's there", "Only small ones"],
+  },
+  {
+    q: "What's my most-used app?",
+    options: ["Messages", "Social", "Music", "Maps"],
+  },
+  {
+    q: "Which task do I always put off?",
+    options: ["Replying to emails", "Booking appointments", "Tidying up", "Paperwork"],
+  },
+  {
+    q: "What's my ideal holiday pace?",
+    options: ["Non-stop sightseeing", "One thing a day", "Pure lounging", "Whatever you want"],
+  },
+  {
+    q: "What makes me instantly happier?",
+    options: ["Food", "A walk", "A nap", "A hug"],
   },
 ];
 
