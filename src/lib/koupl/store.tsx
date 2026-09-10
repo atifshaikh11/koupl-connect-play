@@ -394,6 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings,
     saveGuest,
     clearGuest,
+    startDemo,
     updateProfile,
     linkPartner,
     unlinkPartner,
