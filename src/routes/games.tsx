@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,10 @@ function GamesLibrary() {
     FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all",
   );
   const [q, setQ] = useState("");
+
+  useEffect(() => {
+    setFilter(FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all");
+  }, [c]);
 
   const list = GAMES.filter(
     (g) =>
@@ -120,6 +124,18 @@ function GamesLibrary() {
             emoji="🔍"
             title={filter === "favorites" ? "No favorites yet" : "No games match"}
             body={filter === "favorites" ? "Tap the heart on a game to keep it close." : "Try a different word, or clear the filter to see everything."}
+            action={
+              <button
+                type="button"
+                className="press min-h-11 rounded-2xl bg-primary px-5 text-sm font-bold text-primary-foreground"
+                onClick={() => {
+                  setQ("");
+                  setFilter("all");
+                }}
+              >
+                Show all games
+              </button>
+            }
           />
         )}
       </div>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Link2, Play, Sparkles } from "lucide-react";
+import { Copy, Heart, Link2, Play, Sparkles, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
 import {
   AvatarBubble,
   FeatureTile,
+  GameArtwork,
   LoadingScreen,
   MiniTile,
   Screen,
@@ -71,6 +72,12 @@ function Home() {
   const lastPlayed = app.activity[0] ? gameById(app.activity[0].game_id) : null;
   const featured = GAMES.filter((g) => g.featured);
   const discover = GAMES.filter((g) => !g.featured);
+  const favorites = GAMES.filter((g) => app.favorites.includes(g.id));
+  const recent = app.activity
+    .map((item) => gameById(item.game_id))
+    .filter((game, index, list) => game && list.findIndex((candidate) => candidate?.id === game.id) === index)
+    .slice(0, 4);
+  const quick = GAMES.filter((g) => g.quick).slice(0, 4);
   const played = app.activity.length;
 
   if (!app.hydrated || app.loading) return <LoadingScreen />;
@@ -144,7 +151,7 @@ function Home() {
             <p className="font-display truncate text-sm font-bold">
               {app.partner ? `You & ${app.partner.name}` : "No partner yet"}
             </p>
-            <p className="truncate text-[11px] text-night-muted">
+            <p className="truncate text-xs text-night-muted">
               {app.partner
                 ? `${played} ${played === 1 ? "game" : "games"} played together`
                 : "Add them to start a streak"}
@@ -154,7 +161,7 @@ function Home() {
             <DialogTrigger asChild>
               <button
                 type="button"
-                className="press shrink-0 rounded-full bg-primary px-3 py-2 text-[11px] font-bold text-primary-foreground"
+                className="press min-h-11 shrink-0 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
               >
                 <Link2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
                 {app.partner ? "Manage" : "Connect"}
@@ -213,11 +220,9 @@ function Home() {
           params={{ gameId: lastPlayed?.id ?? featured[0]!.id }}
           className="press relative mt-3 flex items-center gap-3 rounded-3xl bg-primary p-4 text-primary-foreground"
         >
-          <span className="text-3xl" aria-hidden>
-            {lastPlayed?.emoji ?? featured[0]!.emoji}
-          </span>
+          <GameArtwork game={lastPlayed ?? featured[0]!} className="h-12 w-12 bg-primary-foreground/15 text-primary-foreground" />
           <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-bold uppercase tracking-[0.16em] opacity-80">
+            <span className="block text-xs font-bold uppercase opacity-80">
               {lastPlayed ? "Continue" : "Start here"}
             </span>
             <span className="font-display block truncate text-lg font-bold">
@@ -231,6 +236,27 @@ function Home() {
       </section>
 
       <div className="px-4 pt-6">
+        {favorites.length ? (
+          <section aria-labelledby="favorites-h" className="mb-7">
+            <SectionHeading
+              title="Your favorites"
+              action={<Heart className="h-4 w-4 fill-primary text-primary" aria-hidden />}
+            />
+            <div className="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+              {favorites.map((g) => <FeatureTile key={g.id} game={g} />)}
+            </div>
+          </section>
+        ) : null}
+
+        {recent.length ? (
+          <section aria-labelledby="recent-h" className="mb-7">
+            <SectionHeading title="Recently played" />
+            <div className="grid grid-cols-2 gap-3">
+              {recent.map((g) => g ? <MiniTile key={g.id} game={g} /> : null)}
+            </div>
+          </section>
+        ) : null}
+
         {/* featured rail */}
         <section aria-labelledby="featured-h" className="mb-7">
           <SectionHeading
@@ -254,12 +280,22 @@ function Home() {
             Prompt of the day
           </h2>
           <div className="rounded-3xl bg-berry p-5 text-berry-foreground shadow-float">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] opacity-85">
+            <p className="flex items-center gap-1.5 text-xs font-bold uppercase opacity-85">
               <Sparkles className="h-3.5 w-3.5" aria-hidden /> Prompt of the day
             </p>
             <p className="font-display mt-2 text-lg font-bold leading-snug text-balance-tight">
               {dailyPrompt}
             </p>
+          </div>
+        </section>
+
+        <section aria-labelledby="quick-h" className="mb-7">
+          <SectionHeading
+            title="Quick start"
+            action={<Zap className="h-4 w-4 text-sunny-foreground" aria-hidden />}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            {quick.map((g) => <MiniTile key={g.id} game={g} />)}
           </div>
         </section>
 

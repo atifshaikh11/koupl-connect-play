@@ -2,6 +2,17 @@ import { RotateCcw, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AvatarBubble, ProgressDots } from "@/components/koupl/ui";
 import { cn } from "@/lib/utils";
 import type { GameDef, Player } from "@/lib/koupl/types";
@@ -27,14 +38,27 @@ export function GameFrame({
     <div className="flex min-h-dvh flex-col bg-background">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-8 pt-5">
         <div className="mb-3 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onExit}
-            aria-label="Leave game"
-            className="press flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card"
-          >
-            <X className="h-5 w-5" aria-hidden />
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                aria-label="Leave game"
+                className="press flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-display">Leave this game?</AlertDialogTitle>
+                <AlertDialogDescription>Your progress stays saved for one-phone games, so you can resume later.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="min-h-11 rounded-xl">Keep playing</AlertDialogCancel>
+                <AlertDialogAction className="min-h-11 rounded-xl" onClick={onExit}>Leave game</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <div className="min-w-0 flex-1">
             <p className="font-display truncate text-base font-bold">
               <span aria-hidden>{game.emoji}</span> {game.title}

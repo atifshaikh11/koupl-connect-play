@@ -2,7 +2,7 @@ import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-ro
 import { ChevronLeft, Clock, Play, Trophy, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { AvatarBubble, SectionHeading } from "@/components/koupl/ui";
+import { AvatarBubble, FavoriteButton, GameArtwork, SectionHeading } from "@/components/koupl/ui";
 import { CATEGORY_LABEL, GAMES, HOW_TO, gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
 import { cn } from "@/lib/utils";
@@ -72,19 +72,20 @@ function GameDetail() {
               type="button"
               onClick={() => void navigate({ to: "/games" })}
               aria-label="Go back"
-              className="press flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-night-foreground"
+              className="press flex h-11 w-11 items-center justify-center rounded-full bg-night-soft text-night-foreground"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden />
             </button>
-            <span className="rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-night-muted">
-              {CATEGORY_LABEL[game.category]}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-night-soft px-3 py-2 text-xs font-bold uppercase text-night-muted">
+                {CATEGORY_LABEL[game.category]}
+              </span>
+              <FavoriteButton gameId={game.id} inverse />
+            </div>
           </div>
 
           <div className="relative mt-6 flex flex-col items-center text-center">
-            <span className="animate-float text-7xl leading-none" aria-hidden>
-              {game.emoji}
-            </span>
+            <GameArtwork game={game} className="animate-float h-24 w-24 bg-night-soft text-night-foreground" />
             <h1 className="font-display mt-4 text-3xl font-bold leading-tight text-balance-tight">
               {game.title}
             </h1>
@@ -102,7 +103,7 @@ function GameDetail() {
                 className="flex flex-col items-center gap-1 rounded-2xl bg-white/8 px-2 py-3"
               >
                 <Icon className="h-4 w-4 text-night-muted" aria-hidden />
-                <span className="text-center text-[11px] font-bold leading-tight">{label}</span>
+                <span className="text-center text-xs font-bold leading-tight">{label}</span>
               </div>
             ))}
           </div>
@@ -156,11 +157,9 @@ function GameDetail() {
                     params={{ gameId: g.id }}
                     className="press surface flex w-40 shrink-0 snap-start flex-col gap-2 p-3"
                   >
-                    <span className="text-3xl" aria-hidden>
-                      {g.emoji}
-                    </span>
+                    <GameArtwork game={g} className="h-11 w-11" />
                     <span className="font-display truncate text-sm font-bold">{g.title}</span>
-                    <span className="truncate text-[11px] text-muted-foreground">{g.tagline}</span>
+                    <span className="truncate text-xs text-muted-foreground">{g.tagline}</span>
                   </Link>
                 ))}
               </div>
