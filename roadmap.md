@@ -28,3 +28,6 @@ Blocked (needs the app owner):
 
 - [ ] App store page /store (Play-style, real screenshots) — in progress
 - [ ] Lobby chat: real-time messages between partners before/during games
+- [x] Fixed build errors from store page (GameDef fields, icon import); build + typecheck green
+- [x] Realtime lobby chat (room_messages table + RLS + realtime; lobby panel + in-game chat dock)
+  Note: end-to-end two-account chat not verified in sandbox — backend has no signed-up users yet.

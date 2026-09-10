@@ -1,11 +1,13 @@
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Copy, Smartphone, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AvatarBubble, LoadingScreen, Wordmark } from "@/components/koupl/ui";
+import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
+import { useRoomChat } from "@/lib/koupl/useRoomChat";
 import { DualChoiceGame, type DualRound } from "@/components/games/DualChoiceGame";
 import { FourInARow } from "@/components/games/FourInARow";
 import { BasketballRivalry } from "@/components/games/BasketballRivalry";
@@ -60,6 +62,11 @@ function Play() {
   const navigate = useNavigate();
   const app = useApp();
   const room = useRoom(game.id, app.session?.user.id ?? null);
+  const chat = useRoomChat(room.room?.id ?? null, {
+    id: app.session?.user.id ?? null,
+    name: app.me.name,
+    avatar: app.me.avatar,
+  });
 
   const [started, setStarted] = useState(false);
   const [mode, setMode] = useState<"local" | "online">("local");
@@ -249,6 +256,15 @@ function Play() {
             </div>
           ) : null}
 
+          {mode === "online" && room.room ? (
+            <div className="surface mt-4 flex flex-col p-4">
+              <p className="mb-2 text-xs font-bold text-muted-foreground">
+                Chat — talk before you start
+              </p>
+              <ChatPanel chat={chat} myId={app.session?.user.id ?? null} />
+            </div>
+          ) : null}
+
           <div className="mt-auto space-y-2 pt-8">
             <Button
               size="lg"
@@ -292,7 +308,8 @@ function Play() {
     onExit: exit,
   };
 
-  switch (game.id) {
+  const gameScreen = ((): ReactNode => {
+    switch (game.id) {
     case "never-have-i-ever": {
       const rounds: DualRound[] = shuffle(NEVER_HAVE_I_EVER, seed)
         .slice(0, ROUNDS)
@@ -378,5 +395,13 @@ function Play() {
       return <CoupleQuiz {...base} questions={shuffle(COUPLE_QUIZ, seed).slice(0, 10)} />;
     default:
       return null;
-  }
+    }
+  })();
+
+  return (
+    <>
+      {gameScreen}
+      {mode === "online" && room.room ? <ChatDock chat={chat} myId={app.session?.user.id ?? null} /> : null}
+    </>
+  );
 }
