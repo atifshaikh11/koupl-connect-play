@@ -23,3 +23,5 @@ Blocked (needs the app owner):
 - [x] Game detail route /game/$gameId (poster hero, how-to-play, related, sticky Play)
 - [x] Dark games library with poster artwork tiles + dark search/filter header
 - [x] All tiles route through detail -> lobby -> game
+
+- [x] Dark welcome hero card + dark Activity header with stat tiles

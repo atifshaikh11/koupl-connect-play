@@ -44,41 +44,47 @@ function Activity() {
   const wins = app.activity.filter((a) => a.my_score > a.their_score).length;
 
   return (
-    <Screen>
-      <div className="mb-5 flex items-start">
-        <div className="flex-1">
-          <h1 className="font-display text-2xl font-bold">Activity</h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">Everything you've finished.</p>
-        </div>
-        {totalGames ? (
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Clear history"
-            className="rounded-full"
-            onClick={() => {
-              void app.clearActivity();
-              toast.success("History cleared");
-            }}
-          >
-            <Trash2 className="h-5 w-5" aria-hidden />
-          </Button>
-        ) : null}
-      </div>
-
-      <div className="mb-5 grid grid-cols-3 gap-2">
-        {[
-          { label: "Games", value: totalGames },
-          { label: "Your wins", value: wins },
-          { label: "Draws", value: app.activity.filter((a) => a.my_score === a.their_score).length },
-        ].map((s) => (
-          <div key={s.label} className="surface p-3 text-center">
-            <p className="font-display text-2xl font-bold tabular-nums">{s.value}</p>
-            <p className="text-[11px] font-bold text-muted-foreground">{s.label}</p>
+    <Screen className="px-0 pt-0">
+      <header className="rounded-b-[2rem] bg-night px-4 pb-5 pt-6 text-night-foreground">
+        <div className="flex items-start">
+          <div className="flex-1">
+            <h1 className="font-display text-3xl font-bold">Activity</h1>
+            <p className="mt-1 text-sm text-night-muted">Everything you've finished.</p>
           </div>
-        ))}
-      </div>
+          {totalGames ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Clear history"
+              className="rounded-full text-night-muted hover:bg-white/10 hover:text-night-foreground"
+              onClick={() => {
+                void app.clearActivity();
+                toast.success("History cleared");
+              }}
+            >
+              <Trash2 className="h-5 w-5" aria-hidden />
+            </Button>
+          ) : null}
+        </div>
 
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            { label: "Games", value: totalGames },
+            { label: "Your wins", value: wins },
+            {
+              label: "Draws",
+              value: app.activity.filter((a) => a.my_score === a.their_score).length,
+            },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl bg-white/10 p-3 text-center">
+              <p className="font-display text-2xl font-bold tabular-nums">{s.value}</p>
+              <p className="text-[11px] font-bold text-night-muted">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </header>
+
+      <div className="px-4 pt-6">
       {app.activityLoading ? (
         <div className="grid gap-3">
           {[0, 1, 2].map((i) => (
@@ -125,6 +131,7 @@ function Activity() {
           })}
         </ul>
       )}
+      </div>
     </Screen>
   );
 }

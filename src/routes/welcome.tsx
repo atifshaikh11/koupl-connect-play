@@ -76,22 +76,32 @@ function Welcome() {
         </div>
 
         {step === 0 ? (
-          <div className="animate-rise flex flex-1 flex-col justify-center text-center">
-            <div className="flex justify-center gap-2">
-              <span className="animate-float text-6xl" aria-hidden>
-                💞
-              </span>
+          <div className="animate-rise flex flex-1 flex-col justify-center">
+            <div className="relative overflow-hidden rounded-[2rem] bg-night px-6 py-10 text-center text-night-foreground shadow-float">
+              <span
+                aria-hidden
+                className="absolute -left-10 -top-10 h-36 w-36 rounded-full bg-primary opacity-30 blur-3xl"
+              />
+              <span
+                aria-hidden
+                className="absolute -bottom-12 -right-8 h-36 w-36 rounded-full bg-berry opacity-25 blur-3xl"
+              />
+              <div className="relative flex justify-center gap-2">
+                <span className="animate-float text-6xl" aria-hidden>
+                  💞
+                </span>
+              </div>
+              <h1 className="font-display relative mt-6 text-4xl font-bold leading-tight text-balance-tight">
+                Two people.
+                <br />
+                One phone. Or two.
+              </h1>
+              <p className="relative mt-4 text-base text-night-muted text-balance-tight">
+                Koupl is a small pile of games built for couples — confessions, quizzes, deep
+                questions and the occasional basketball rivalry.
+              </p>
             </div>
-            <h1 className="font-display mt-6 text-4xl font-bold leading-tight text-balance-tight">
-              Two people.
-              <br />
-              One phone. Or two.
-            </h1>
-            <p className="mt-4 text-base text-muted-foreground text-balance-tight">
-              Koupl is a small pile of games built for couples — confessions, quizzes, deep
-              questions and the occasional basketball rivalry.
-            </p>
-            <div className="mt-8 grid gap-2">
+            <div className="mt-6 grid gap-2">
               <Button
                 size="lg"
                 className="h-14 rounded-2xl text-base"
