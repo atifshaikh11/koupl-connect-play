@@ -40,8 +40,8 @@ Blocked (needs the app owner):
 - [x] Rework Home around continue, favorites, recents, quick play, prompt, and partner status
 - [x] Complete room create/join, presence, ready state, sharing, and synchronized start flow
 - [x] Standardize gameplay feedback, safe exit, results, rematch, haptics, and sound cues
-- [ ] Verify all eight games and the full requested Android-phone journey
-- [ ] Run final typecheck, production build, responsive browser checks, and console audit
+- [x] Verify all eight games and the full requested Android-phone journey
+- [x] Run final typecheck, production build, responsive browser checks, and console audit
 
 ## Depth + polish phase
 
@@ -49,3 +49,5 @@ Blocked (needs the app owner):
 - [x] Premium game shell: artwork header, layered prompt cards, night result screen with score bars and stats
 - [x] Room reliability: game-scoped restore, membership check, closed/deleted room handling, join validation
 - [x] Verified 360x800 and 412x915: all routes, full play flow, no overflow, no console errors
+
+- [x] Final QA pass: 360x800 + 412x915 route sweep, per-game playthroughs to result/rematch, win-copy fix in Four in a Row, zero console errors, green build
