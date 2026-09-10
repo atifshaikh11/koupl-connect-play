@@ -95,6 +95,11 @@ function Play() {
     return room.room.host_id === app.session.user.id ? 0 : 1;
   }, [mode, room.room, app.session]);
 
+  const localChat = useLocalChat(game.id, players);
+  const online = mode === "online" && !!room.room;
+  const chat = online ? roomChat : localChat;
+  const chatMyId = online ? (app.session?.user.id ?? null) : (localChat.localSender?.id ?? null);
+
   function finish(result: GameResult) {
     void app.logActivity({
       game_id: game.id,
