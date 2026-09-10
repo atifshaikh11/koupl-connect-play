@@ -33,7 +33,12 @@ function readLocal<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(key);
-    return raw ? ({ ...fallback, ...JSON.parse(raw) } as T) : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(fallback) || Array.isArray(parsed)) {
+      return (Array.isArray(parsed) ? parsed : fallback) as T;
+    }
+    return { ...fallback, ...(parsed as object) } as T;
   } catch {
     return fallback;
   }
@@ -72,6 +77,7 @@ type Ctx = {
   setSettings: (patch: Partial<Settings>) => void;
   saveGuest: (patch: Partial<GuestProfile>) => void;
   clearGuest: () => void;
+  startDemo: () => void;
   updateProfile: (patch: Partial<ProfileRow>) => Promise<void>;
   linkPartner: (code: string) => Promise<{ name: string } | null>;
   unlinkPartner: () => Promise<void>;
@@ -230,6 +236,53 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") window.localStorage.removeItem(GUEST_KEY);
   }, []);
 
+  /** One-tap demo: a ready-made couple plus a little history to look at. */
+  const startDemo = useCallback(() => {
+    const demoGuest: GuestProfile = {
+      name: "Sam",
+      avatar: "🦊",
+      relationship: "dating",
+      partnerName: "Alex",
+      partnerAvatar: "🐼",
+      code: randomCode(),
+    };
+    setGuestState(demoGuest);
+    writeLocal(GUEST_KEY, demoGuest);
+
+    const now = Date.now();
+    const demoActivity: ActivityItem[] = [
+      {
+        id: "demo-1",
+        game_id: "this-or-that",
+        mode: "local",
+        summary: "8 of 10 matched",
+        my_score: 8,
+        their_score: 8,
+        created_at: new Date(now - 3 * 3_600_000).toISOString(),
+      },
+      {
+        id: "demo-2",
+        game_id: "couple-quiz",
+        mode: "local",
+        summary: "Sam 5 — Alex 6",
+        my_score: 5,
+        their_score: 6,
+        created_at: new Date(now - 26 * 3_600_000).toISOString(),
+      },
+      {
+        id: "demo-3",
+        game_id: "four-in-a-row",
+        mode: "local",
+        summary: "Sam wins",
+        my_score: 1,
+        their_score: 0,
+        created_at: new Date(now - 3 * 86_400_000).toISOString(),
+      },
+    ];
+    setActivity(demoActivity);
+    writeLocal(ACTIVITY_KEY, demoActivity);
+  }, []);
+
   const updateProfile = useCallback(
     async (patch: Partial<ProfileRow>) => {
       if (!userId) return;
@@ -346,6 +399,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings,
     saveGuest,
     clearGuest,
+    startDemo,
     updateProfile,
     linkPartner,
     unlinkPartner,

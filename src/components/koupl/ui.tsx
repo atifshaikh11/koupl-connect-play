@@ -190,6 +190,83 @@ export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }
   );
 }
 
+const ACCENT_DOT: Record<GameDef["accent"], string> = {
+  primary: "bg-primary",
+  berry: "bg-berry",
+  sunny: "bg-sunny",
+  mint: "bg-mint",
+  sky: "bg-sky",
+};
+
+/** Dark, poster-style tile used for the featured rail on Home. */
+export function FeatureTile({ game }: { game: GameDef }) {
+  return (
+    <Link
+      to="/play/$gameId"
+      params={{ gameId: game.id }}
+      className="press relative flex w-[9.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-25 blur-xl",
+          ACCENT_DOT[game.accent],
+        )}
+      />
+      <span className="relative text-4xl" aria-hidden>
+        {game.emoji}
+      </span>
+      <span className="relative mt-6 block">
+        <span className="font-display block text-base font-bold leading-tight">{game.title}</span>
+        <span className="mt-1 block truncate text-[11px] text-night-muted">{game.minutes}</span>
+      </span>
+      <span className="relative mt-3 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">
+        Play
+      </span>
+    </Link>
+  );
+}
+
+/** Compact square tile for the discovery grid. */
+export function MiniTile({ game }: { game: GameDef }) {
+  return (
+    <Link
+      to="/play/$gameId"
+      params={{ gameId: game.id }}
+      className="press surface flex flex-col gap-2 p-3"
+    >
+      <span
+        className={cn(
+          "flex h-11 w-11 items-center justify-center rounded-2xl text-2xl",
+          ACCENT_BG[game.accent],
+        )}
+        aria-hidden
+      >
+        {game.emoji}
+      </span>
+      <span className="min-w-0">
+        <span className="font-display block truncate text-sm font-bold">{game.title}</span>
+        <span className="block truncate text-[11px] text-muted-foreground">{game.tagline}</span>
+      </span>
+    </Link>
+  );
+}
+
+export function SectionHeading({
+  title,
+  action,
+}: {
+  title: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="mb-3 flex items-baseline justify-between gap-3">
+      <h2 className="font-display truncate text-base font-bold">{title}</h2>
+      {action}
+    </div>
+  );
+}
+
 export function Chip({
   children,
   tone = "muted",

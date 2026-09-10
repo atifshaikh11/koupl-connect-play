@@ -14,3 +14,8 @@
 
 Blocked (needs the app owner):
 - Google sign-in needs Google client credentials added in backend auth settings.
+
+- [x] Dark hero home redesign, feature/mini tiles, category pills -> /games?c=
+- [x] One-tap demo mode on welcome (seeded couple + history)
+- [x] Fixed localStorage array hydration bug (activity)
+- [x] Verified all 8 game screens + nav, no console errors

@@ -35,7 +35,7 @@ const STEPS = ["Welcome", "You", "Us", "Partner"] as const;
 
 function Welcome() {
   const navigate = useNavigate();
-  const { hydrated, saveGuest, inviteCode, session } = useApp();
+  const { hydrated, saveGuest, startDemo, inviteCode, session } = useApp();
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState(AVATARS[0]!);
@@ -98,6 +98,18 @@ function Welcome() {
                 onClick={() => setStep(1)}
               >
                 Get started <ArrowRight className="ml-1 h-5 w-5" aria-hidden />
+              </Button>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="h-14 rounded-2xl text-base font-bold"
+                onClick={() => {
+                  startDemo();
+                  toast.success("Demo loaded — you're Sam, playing with Alex");
+                  void navigate({ to: "/" });
+                }}
+              >
+                Try the demo — no account
               </Button>
               <Button
                 size="lg"
