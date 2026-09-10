@@ -25,7 +25,7 @@ import {
   shuffle,
 } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
-import { useRoom } from "@/lib/koupl/useRoom";
+import { clearSavedGame, useRoom } from "@/lib/koupl/useRoom";
 import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
 
 export const Route = createFileRoute("/play/$gameId")({
