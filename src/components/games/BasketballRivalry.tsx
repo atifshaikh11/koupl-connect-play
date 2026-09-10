@@ -112,6 +112,7 @@ export function BasketballRivalry({
       onExit={onExit}
       step={s.shots0 + s.shots1}
       total={SHOTS_EACH * 2}
+      stepNoun="Shot"
       header={<ScoreBar players={players} scores={[s.s0, s.s1]} activeSlot={s.turn} />}
     >
       <div className="mt-1">
