@@ -39,7 +39,7 @@ export type ActivityItem = {
   created_at: string;
 };
 
-export type GameCategory = "party" | "deep" | "arcade" | "quiz";
+export type GameCategory = "competitive" | "cooperative" | "conversation" | "quick";
 
 export type GameDef = {
   id: string;
@@ -51,6 +51,7 @@ export type GameDef = {
   players: string;
   minutes: string;
   featured?: boolean;
+  quick?: boolean;
   scored: boolean;
   description: string;
 };

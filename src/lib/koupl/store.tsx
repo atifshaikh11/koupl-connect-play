@@ -8,6 +8,7 @@ import type { ActivityItem, GuestProfile, Player, Settings } from "./types";
 const GUEST_KEY = "koupl.guest.v1";
 const SETTINGS_KEY = "koupl.settings.v1";
 const ACTIVITY_KEY = "koupl.activity.v1";
+const FAVORITES_KEY = "koupl.favorites.v1";
 
 export type ProfileRow = {
   id: string;
@@ -74,6 +75,7 @@ type Ctx = {
   settings: Settings;
   activity: ActivityItem[];
   activityLoading: boolean;
+  favorites: string[];
   setSettings: (patch: Partial<Settings>) => void;
   saveGuest: (patch: Partial<GuestProfile>) => void;
   clearGuest: () => void;
@@ -83,6 +85,7 @@ type Ctx = {
   unlinkPartner: () => Promise<void>;
   logActivity: (item: Omit<ActivityItem, "id" | "created_at">) => Promise<void>;
   clearActivity: () => Promise<void>;
+  toggleFavorite: (gameId: string) => void;
   refreshActivity: () => Promise<void>;
   signOut: () => Promise<void>;
   buzz: (ms?: number) => void;
@@ -102,6 +105,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useState<Settings>(DEFAULT_SETTINGS);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   /* -------- hydration from localStorage -------- */
   useEffect(() => {
@@ -111,6 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGuestState(g && g.name ? g : null);
     setSettingsState(readLocal<Settings>(SETTINGS_KEY, DEFAULT_SETTINGS));
     setActivity(readLocal<ActivityItem[]>(ACTIVITY_KEY, [] as ActivityItem[]));
+    setFavorites(readLocal<string[]>(FAVORITES_KEY, [] as string[]));
     setHydrated(true);
   }, []);
 
@@ -343,6 +348,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     writeLocal(ACTIVITY_KEY, []);
   }, [userId, refreshActivity]);
 
+  const toggleFavorite = useCallback((gameId: string) => {
+    setFavorites((prev) => {
+      const next = prev.includes(gameId) ? prev.filter((id) => id !== gameId) : [...prev, gameId];
+      writeLocal(FAVORITES_KEY, next);
+      return next;
+    });
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -396,6 +409,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     settings,
     activity,
     activityLoading,
+    favorites,
     setSettings,
     saveGuest,
     clearGuest,
@@ -405,6 +419,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     unlinkPartner,
     logActivity,
     clearActivity,
+    toggleFavorite,
     refreshActivity,
     signOut,
     buzz,
