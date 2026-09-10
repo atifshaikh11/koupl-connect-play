@@ -8,6 +8,9 @@ import { CATEGORY_LABEL, GAMES } from "@/lib/koupl/games";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/games")({
+  validateSearch: (search: Record<string, unknown>): { c?: string } => ({
+    c: typeof search['c'] === "string" ? search['c'] : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Games library — Koupl" },
