@@ -1,5 +1,7 @@
+import { MessageCircleQuestion, Zap } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { GameFrame, GameSummary, PromptCard } from "@/components/koupl/GameShell";
+import { GameFrame, GameSummary, PromptCard, StatPill } from "@/components/koupl/GameShell";
 import { ScoreBar, TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import type { GameProps } from "./shared";
@@ -9,12 +11,30 @@ const ROUNDS = 12;
 type State = {
   i: number;
   pick: "" | "truth" | "dare";
+  tUsed: number;
+  dUsed: number;
+  truths0: number;
+  dares0: number;
+  truths1: number;
+  dares1: number;
   s0: number;
   s1: number;
   done: boolean;
 };
 
-const initial: State = { i: 0, pick: "", s0: 0, s1: 0, done: false };
+const initial: State = {
+  i: 0,
+  pick: "",
+  tUsed: 0,
+  dUsed: 0,
+  truths0: 0,
+  dares0: 0,
+  truths1: 0,
+  dares1: 0,
+  s0: 0,
+  s1: 0,
+  done: false,
+};
 
 export function TruthOrDare({
   game,
@@ -29,16 +49,35 @@ export function TruthOrDare({
   const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const active: 0 | 1 = (s.i % 2) as 0 | 1;
   const myTurn = mySlot === null || mySlot === active;
-  const deck = s.pick === "truth" ? truths : dares;
-  const card = deck[Math.floor(s.i / 2) % deck.length]!;
+  // Each pick consumes its own deck, so no card is repeated back-to-back.
+  const card =
+    s.pick === "truth"
+      ? truths[s.tUsed % truths.length]!
+      : dares[s.dUsed % dares.length]!;
+
+  function pickCard(kind: "truth" | "dare") {
+    patch({
+      pick: kind,
+      ...(kind === "truth"
+        ? active === 0
+          ? { truths0: s.truths0 + 1 }
+          : { truths1: s.truths1 + 1 }
+        : active === 0
+          ? { dares0: s.dares0 + 1 }
+          : { dares1: s.dares1 + 1 }),
+    });
+  }
 
   function resolve(completed: boolean) {
     const done = s.i + 1 >= ROUNDS;
+    const points = completed ? (s.pick === "dare" ? 2 : 1) : 0;
     patch({
       i: s.i + 1,
       pick: "",
-      s0: s.s0 + (completed && active === 0 ? 1 : 0),
-      s1: s.s1 + (completed && active === 1 ? 1 : 0),
+      tUsed: s.pick === "truth" ? s.tUsed + 1 : s.tUsed,
+      dUsed: s.pick === "dare" ? s.dUsed + 1 : s.dUsed,
+      s0: s.s0 + (active === 0 ? points : 0),
+      s1: s.s1 + (active === 1 ? points : 0),
       done,
     });
   }
@@ -50,8 +89,12 @@ export function TruthOrDare({
           players={players}
           scores={[s.s0, s.s1]}
           headline={s.s0 === s.s1 ? "Equally brave" : `${players[s.s0 > s.s1 ? 0 : 1].name} is bolder`}
-          detail="Points for everything actually completed. Chickening out is allowed, just costly."
+          detail="Truths are worth one point, dares two. Chickening out is allowed, just costly."
           scored
+          stats={[
+            { label: `${players[0].name}`, value: `${s.truths0}T · ${s.dares0}D` },
+            { label: `${players[1].name}`, value: `${s.truths1}T · ${s.dares1}D` },
+          ]}
           onRematch={() => reset(initial)}
           onExit={() =>
             onFinish({
@@ -78,39 +121,47 @@ export function TruthOrDare({
       </div>
 
       {s.pick === "" ? (
-        <div className="mt-6 grid flex-1 grid-rows-2 gap-4">
+        <div className="mt-5 grid flex-1 grid-rows-2 gap-4">
           <button
             type="button"
             disabled={!myTurn}
-            onClick={() => patch({ pick: "truth" })}
-            className="press flex flex-col items-center justify-center rounded-3xl bg-sky text-sky-foreground shadow-float disabled:opacity-55"
+            onClick={() => pickCard("truth")}
+            className="press relative flex flex-col items-center justify-center overflow-hidden rounded-[1.75rem] bg-sky text-sky-foreground shadow-float disabled:opacity-55"
           >
-            <span className="text-5xl" aria-hidden>
-              💬
-            </span>
-            <span className="font-display mt-2 text-2xl font-bold">Truth</span>
-            <span className="text-xs opacity-80">Answer honestly</span>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-current opacity-10"
+            />
+            <MessageCircleQuestion className="relative h-11 w-11" aria-hidden />
+            <span className="font-display relative mt-2 text-2xl font-bold">Truth</span>
+            <span className="relative text-xs opacity-80">Answer honestly · 1 point</span>
           </button>
           <button
             type="button"
             disabled={!myTurn}
-            onClick={() => patch({ pick: "dare" })}
-            className="press flex flex-col items-center justify-center rounded-3xl bg-primary text-primary-foreground shadow-float disabled:opacity-55"
+            onClick={() => pickCard("dare")}
+            className="press relative flex flex-col items-center justify-center overflow-hidden rounded-[1.75rem] bg-primary text-primary-foreground shadow-float disabled:opacity-55"
           >
-            <span className="text-5xl" aria-hidden>
-              ⚡️
-            </span>
-            <span className="font-display mt-2 text-2xl font-bold">Dare</span>
-            <span className="text-xs opacity-80">Do it right now</span>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -left-8 -bottom-8 h-28 w-28 rounded-full bg-current opacity-10"
+            />
+            <Zap className="relative h-11 w-11" aria-hidden />
+            <span className="font-display relative mt-2 text-2xl font-bold">Dare</span>
+            <span className="relative text-xs opacity-80">Do it right now · 2 points</span>
           </button>
         </div>
       ) : (
         <>
-          <div className="mt-5">
-            <PromptCard tone={s.pick === "truth" ? "sky" : "primary"} animateKey={s.i}>
-              <span className="mb-2 text-xs font-bold uppercase tracking-widest opacity-80">
-                {s.pick}
-              </span>
+          <div className="mt-4 flex justify-center">
+            <StatPill
+              label={s.pick === "truth" ? "Truth" : "Dare"}
+              value={s.pick === "truth" ? "1 point" : "2 points"}
+              tone="primary"
+            />
+          </div>
+          <div className="mt-3">
+            <PromptCard tone={s.pick === "truth" ? "sky" : "primary"} animateKey={`${s.i}-${s.pick}`}>
               <p className="font-display text-xl font-bold leading-snug text-balance-tight">
                 {card}
               </p>
@@ -123,7 +174,7 @@ export function TruthOrDare({
               disabled={!myTurn}
               onClick={() => resolve(true)}
             >
-              Did it — +1 point
+              Did it — +{s.pick === "dare" ? 2 : 1}
             </Button>
             <Button
               size="lg"
