@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Copy, Smartphone, Users } from "lucide-react";
+import { Check, Copy, Share2, Smartphone, Users, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -73,10 +73,35 @@ function Play() {
   const [joinCode, setJoinCode] = useState("");
   const [seed, setSeed] = useState(() => Math.random());
   const [saved, setSaved] = useState(false);
+  const [onlineNow, setOnlineNow] = useState(true);
 
   useEffect(() => {
     setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
   }, [game.id]);
+
+  useEffect(() => {
+    const update = () => setOnlineNow(navigator.onLine);
+    update();
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  const lobbyState = (room.room?.state ?? {}) as {
+    hostReady?: boolean;
+    guestReady?: boolean;
+    started?: boolean;
+  };
+  const amHost = room.room?.host_id === app.session?.user.id;
+  const myReady = amHost ? !!lobbyState.hostReady : !!lobbyState.guestReady;
+  const bothReady = !!lobbyState.hostReady && !!lobbyState.guestReady;
+
+  useEffect(() => {
+    if (mode === "online" && lobbyState.started) setStarted(true);
+  }, [lobbyState.started, mode]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
@@ -109,6 +134,7 @@ function Play() {
       their_score: result.theirScore,
     });
     clearSavedGame(game.id);
+    if (mode === "online") void room.leave();
     app.buzz(20);
     void navigate({ to: "/activity" });
   }
@@ -130,7 +156,7 @@ function Play() {
             <button
               type="button"
               onClick={() => void navigate({ to: "/games" })}
-              className="press rounded-full border border-border bg-card px-4 py-2 text-sm font-bold"
+              className="press min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold"
             >
               Back
             </button>
@@ -138,14 +164,12 @@ function Play() {
           </div>
 
           <div className="animate-rise text-center">
-            <span className="animate-float inline-block text-6xl" aria-hidden>
-              {game.emoji}
-            </span>
+            <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-secondary text-4xl" aria-hidden>{game.emoji}</div>
             <h1 className="font-display mt-3 text-3xl font-bold">{game.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground text-balance-tight">
               {game.description}
             </p>
-            <div className="mt-3 flex justify-center gap-2 text-[11px] font-bold text-muted-foreground">
+            <div className="mt-3 flex justify-center gap-2 text-xs font-bold text-muted-foreground">
               <span className="rounded-full bg-muted px-3 py-1">{game.minutes}</span>
               <span className="rounded-full bg-muted px-3 py-1">{game.players}</span>
               <span className="rounded-full bg-muted px-3 py-1">
@@ -171,13 +195,13 @@ function Play() {
               type="button"
               aria-pressed={mode === "local"}
               onClick={() => setMode("local")}
-              className={`press flex flex-col items-center gap-1 rounded-2xl border-2 bg-card p-4 ${
+               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
                 mode === "local" ? "border-primary bg-primary/10" : "border-border"
               }`}
             >
               <Smartphone className="h-6 w-6" aria-hidden />
               <span className="text-sm font-bold">One phone</span>
-              <span className="text-[11px] text-muted-foreground">Pass it back and forth</span>
+              <span className="text-xs text-muted-foreground">Pass it back and forth</span>
             </button>
             <button
               type="button"
@@ -189,18 +213,22 @@ function Play() {
                 }
                 setMode("online");
               }}
-              className={`press flex flex-col items-center gap-1 rounded-2xl border-2 bg-card p-4 ${
+               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
                 mode === "online" ? "border-primary bg-primary/10" : "border-border"
               }`}
             >
               <Users className="h-6 w-6" aria-hidden />
               <span className="text-sm font-bold">Two phones</span>
-              <span className="text-[11px] text-muted-foreground">Live room</span>
+              <span className="text-xs text-muted-foreground">Live room</span>
             </button>
           </div>
 
           {mode === "online" ? (
             <div className="surface mt-4 p-4">
+              <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground" aria-live="polite">
+                {onlineNow ? <Wifi className="h-4 w-4 text-success" aria-hidden /> : <WifiOff className="h-4 w-4 text-destructive" aria-hidden />}
+                {onlineNow ? "Connected" : "You’re offline — reconnect to continue"}
+              </div>
               {room.room ? (
                 <div className="text-center">
                   <p className="text-xs font-bold text-muted-foreground">Room code</p>
@@ -211,7 +239,7 @@ function Play() {
                     <button
                       type="button"
                       aria-label="Copy room code"
-                      className="press flex h-10 w-10 items-center justify-center rounded-full border border-border"
+                      className="press flex h-11 w-11 items-center justify-center rounded-full border border-border"
                       onClick={() => {
                         void navigator.clipboard?.writeText(room.room!.code);
                         toast.success("Room code copied");
@@ -220,9 +248,33 @@ function Play() {
                       <Copy className="h-4 w-4" aria-hidden />
                     </button>
                   </div>
+                  <Button
+                    variant="ghost"
+                    className="mt-2 min-h-11 rounded-2xl"
+                    onClick={() => {
+                      const text = `Join my ${game.title} room on Koupl with code ${room.room?.code ?? ""}`;
+                      if (navigator.share) void navigator.share({ title: "Join my Koupl room", text });
+                      else {
+                        void navigator.clipboard?.writeText(text);
+                        toast.success("Invite copied");
+                      }
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden /> Share invite
+                  </Button>
                   <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
                     {waiting ? "Waiting for your partner to join…" : "Both players are in."}
                   </p>
+                  {!waiting ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold">
+                      <div className="rounded-2xl bg-muted p-3">
+                        <span className={lobbyState.hostReady ? "text-success" : "text-muted-foreground"}>{lobbyState.hostReady ? "Ready" : "Not ready"}</span>
+                      </div>
+                      <div className="rounded-2xl bg-muted p-3">
+                        <span className={lobbyState.guestReady ? "text-success" : "text-muted-foreground"}>{lobbyState.guestReady ? "Ready" : "Not ready"}</span>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="grid gap-3">
@@ -272,14 +324,31 @@ function Play() {
 
 
           <div className="mt-auto space-y-2 pt-8">
+            {mode === "online" && room.room?.guest_id ? (
+              <Button
+                variant={myReady ? "secondary" : "outline"}
+                className="h-12 w-full rounded-2xl"
+                onClick={() => void room.patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })}
+              >
+                {myReady ? <Check className="h-5 w-5" aria-hidden /> : null}
+                {myReady ? "You’re ready" : "Mark me ready"}
+              </Button>
+            ) : null}
             <Button
               size="lg"
               className="h-16 w-full rounded-3xl text-lg"
-              disabled={mode === "online" && (!room.room || !room.room.guest_id)}
-              onClick={() => setStarted(true)}
+              disabled={mode === "online" && (!room.room || !room.room.guest_id || !bothReady || !amHost || !onlineNow)}
+              onClick={() => {
+                if (mode === "online") void room.patchState({ started: true });
+                setStarted(true);
+              }}
             >
               {mode === "online" && waiting
                 ? "Waiting for partner…"
+                : mode === "online" && !bothReady
+                  ? "Both players need to be ready"
+                  : mode === "online" && !amHost
+                    ? "Waiting for host to start…"
                 : saved && mode === "local"
                   ? "Resume game"
                   : "Start game"}

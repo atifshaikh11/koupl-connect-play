@@ -57,7 +57,7 @@ export function ChatPanel({
             ))}
           </div>
         ) : chat.messages.length === 0 ? (
-          <p className="py-6 text-center text-xs text-muted-foreground">
+          <p className="py-6 text-center text-sm text-muted-foreground">
             No messages yet — say hi before you start 👋
           </p>
         ) : (
@@ -82,10 +82,10 @@ export function ChatPanel({
                   )}
                 >
                   {!mine ? (
-                    <p className="text-[10px] font-bold opacity-70">{m.sender_name}</p>
+                    <p className="text-xs font-bold opacity-70">{m.sender_name}</p>
                   ) : null}
                   <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                  <p className="mt-0.5 text-[10px] opacity-60">{timeOf(m.created_at)}</p>
+                  <p className="mt-0.5 text-xs opacity-60">{timeOf(m.created_at)}</p>
                 </div>
               </div>
             );
@@ -95,7 +95,7 @@ export function ChatPanel({
       </div>
 
       {chat.error ? (
-        <p className="mt-2 text-center text-[11px] font-bold text-destructive" role="alert">
+        <p className="mt-2 text-center text-xs font-bold text-destructive" role="alert">
           {chat.error}
         </p>
       ) : null}
@@ -107,7 +107,7 @@ export function ChatPanel({
               key={q}
               type="button"
               onClick={() => void chat.send(q)}
-              className="press rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold"
+              className="press min-h-11 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold"
             >
               {q}
             </button>
@@ -119,7 +119,7 @@ export function ChatPanel({
         <button
           type="button"
           onClick={chat.switchLocalSender}
-          className="press mt-3 self-start rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold"
+          className="press mt-3 min-h-11 self-start rounded-full border border-border bg-card px-3 py-2 text-xs font-bold"
         >
           Typing as {chat.localSender.avatar} {chat.localSender.name} — tap to switch
         </button>
@@ -175,7 +175,7 @@ export function ChatDock({ chat, myId }: { chat: ChatApi; myId: string | null })
       >
         <MessageCircle className="h-6 w-6" aria-hidden />
         {chat.unread ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-berry px-1.5 text-[11px] font-bold text-berry-foreground">
+            <span className="absolute -right-0.5 -top-0.5 flex h-6 min-w-6 items-center justify-center rounded-full bg-berry px-1.5 text-xs font-bold text-berry-foreground">
             {chat.unread > 9 ? "9+" : chat.unread}
           </span>
         ) : null}
@@ -196,7 +196,7 @@ export function ChatDock({ chat, myId }: { chat: ChatApi; myId: string | null })
                 type="button"
                 aria-label="Close chat"
                 onClick={() => setOpen(false)}
-                className="press flex h-9 w-9 items-center justify-center rounded-full border border-border"
+                className="press flex h-11 w-11 items-center justify-center rounded-full border border-border"
               >
                 <X className="h-4 w-4" aria-hidden />
               </button>

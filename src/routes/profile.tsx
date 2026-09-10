@@ -199,14 +199,14 @@ function Profile() {
             <AvatarBubble emoji={app.partner.avatar} size="md" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{app.partner.name}</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {app.session ? "Linked account" : "Local partner"}
               </p>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="rounded-full"
+              className="min-h-11 rounded-full"
               onClick={() => {
                 if (app.session) void app.unlinkPartner();
                 else app.saveGuest({ partnerName: "" });
@@ -227,7 +227,7 @@ function Profile() {
 
         <div className="surface mt-4 flex items-center gap-3 p-3">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold text-muted-foreground">Your invite code</p>
+            <p className="text-xs font-bold text-muted-foreground">Your invite code</p>
             <p className="font-display text-lg font-bold tracking-[0.2em]">
               {app.inviteCode || "——————"}
             </p>
@@ -235,7 +235,7 @@ function Profile() {
           <button
             type="button"
             aria-label="Copy invite code"
-            className="press flex h-10 w-10 items-center justify-center rounded-full border border-border"
+            className="press flex h-11 w-11 items-center justify-center rounded-full border border-border"
             onClick={() => {
               void navigator.clipboard?.writeText(app.inviteCode);
               toast.success("Code copied");

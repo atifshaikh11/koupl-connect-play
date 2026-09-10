@@ -78,7 +78,7 @@ function Activity() {
           ].map((s) => (
             <div key={s.label} className="rounded-2xl bg-white/10 p-3 text-center">
               <p className="font-display text-2xl font-bold tabular-nums">{s.value}</p>
-              <p className="text-[11px] font-bold text-night-muted">{s.label}</p>
+              <p className="text-xs font-bold text-night-muted">{s.label}</p>
             </div>
           ))}
         </div>

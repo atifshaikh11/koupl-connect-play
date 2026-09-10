@@ -285,6 +285,7 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
   }
 
   body {
@@ -292,6 +293,7 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     overscroll-behavior-y: none;
+    overflow-x: clip;
   }
 
   h1,
@@ -299,7 +301,12 @@
   h3,
   .font-display {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
   }
 
   @media (prefers-reduced-motion: reduce) {

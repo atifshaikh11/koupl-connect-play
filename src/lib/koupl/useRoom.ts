@@ -33,6 +33,25 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   roomIdRef.current = room?.id ?? null;
 
   useEffect(() => {
+    if (!userId || typeof window === "undefined") return;
+    const savedCode = window.localStorage.getItem(`koupl.room.${gameId}`);
+    if (!savedCode) return;
+    let active = true;
+    void supabase
+      .from("rooms")
+      .select("*")
+      .eq("code", savedCode)
+      .in("status", ["waiting", "playing"])
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active && data) setRoom(data as RoomRow);
+      });
+    return () => {
+      active = false;
+    };
+  }, [gameId, userId]);
+
+  useEffect(() => {
     if (!room?.id) return;
     const channel = supabase
       .channel(`room-${room.id}`)
@@ -63,6 +82,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       return null;
     }
     setRoom(data as RoomRow);
+    if (typeof window !== "undefined") window.localStorage.setItem(`koupl.room.${gameId}`, data.code);
     return data as RoomRow;
   }, [gameId, userId]);
 
@@ -77,27 +97,29 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       return null;
     }
     setRoom(row);
+    if (typeof window !== "undefined") window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
     return row;
   }, []);
 
   const leave = useCallback(async () => {
     const id = roomIdRef.current;
     setRoom(null);
+    if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
     if (!id || !userId) return;
     await supabase.from("rooms").update({ status: "closed" }).eq("id", id);
-  }, [userId]);
+  }, [gameId, userId]);
 
   const patchState = useCallback(async (patch: Record<string, unknown>) => {
     const id = roomIdRef.current;
     if (!id) return;
     setRoom((prev) => (prev ? { ...prev, state: { ...prev.state, ...patch } } : prev));
-    const { data } = await supabase.from("rooms").select("state").eq("id", id).single();
-    const current = (data?.state ?? {}) as Record<string, unknown>;
-    const merged = { ...current, ...patch };
-    await supabase
-      .from("rooms")
-      .update({ state: merged as never })
-      .eq("id", id);
+    const { data, error: err } = await supabase.rpc("patch_room_state", {
+      p_room_id: id,
+      p_patch: patch as never,
+    });
+    const updated = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
+    if (updated) setRoom(updated);
+    if (err) setError(err.message);
   }, []);
 
   return { room, error, busy, create, join, leave, patchState };

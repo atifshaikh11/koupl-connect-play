@@ -208,6 +208,27 @@ export type Database = {
           id: string
         }[]
       }
+      patch_room_state: {
+        Args: { p_patch: Json; p_room_id: string }
+        Returns: {
+          code: string
+          created_at: string
+          game_id: string
+          guest_id: string | null
+          host_id: string
+          id: string
+          state: Json
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "rooms"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      unlink_partner: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
