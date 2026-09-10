@@ -18,7 +18,7 @@ export function PillowTalk({
   onExit,
   cards,
 }: GameProps & { cards: string[] }) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const asker: 0 | 1 = (s.i % 2) as 0 | 1;
   const myTurn = mySlot === null || mySlot === asker;
 

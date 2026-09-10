@@ -58,7 +58,7 @@ function findWinner(b: string): number | null {
 }
 
 export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: GameProps) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const myTurn = mySlot === null || mySlot === s.turn;
   const finished = s.winner !== null || s.draw;
 

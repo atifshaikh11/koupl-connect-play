@@ -28,7 +28,7 @@ export function CoupleQuiz({
   onExit,
   questions,
 }: GameProps & { questions: QuizQuestion[] }) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [passed, setPassed] = useState(false);
 
   const total = questions.length;

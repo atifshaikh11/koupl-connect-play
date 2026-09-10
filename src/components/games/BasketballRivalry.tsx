@@ -38,7 +38,7 @@ export function BasketballRivalry({
   onFinish,
   onExit,
 }: GameProps) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [pos, setPos] = useState(50);
   const [locked, setLocked] = useState(false);
   const frame = useRef<number | null>(null);

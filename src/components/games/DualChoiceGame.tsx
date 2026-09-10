@@ -46,7 +46,7 @@ export function DualChoiceGame({
   matchCopy: { hit: string; miss: string };
   summaryNoun?: string;
 }) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [passed, setPassed] = useState(false);
 
   const round = rounds[Math.min(s.i, rounds.length - 1)]!;
