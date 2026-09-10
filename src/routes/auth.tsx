@@ -114,7 +114,7 @@ function Auth() {
             type="button"
             aria-label="Go back"
             onClick={() => void navigate({ to: "/" })}
-            className="press flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card"
+            className="press flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
           >
             <ChevronLeft className="h-5 w-5" aria-hidden />
           </button>
@@ -195,7 +195,7 @@ function Auth() {
 
         <button
           type="button"
-          className="mt-6 text-sm font-bold text-primary"
+          className="mt-6 min-h-11 text-sm font-bold text-primary"
           onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
         >
           {mode === "signup" ? "I already have an account" : "I need an account"}
@@ -203,7 +203,7 @@ function Auth() {
 
         <button
           type="button"
-          className="mt-auto pt-8 text-sm font-bold text-muted-foreground"
+          className="mt-auto min-h-11 pt-8 text-sm font-bold text-muted-foreground"
           onClick={() => void navigate({ to: "/" })}
         >
           Keep playing as a guest

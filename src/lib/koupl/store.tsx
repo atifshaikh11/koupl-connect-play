@@ -364,16 +364,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const buzz = useCallback(
     (ms = 12) => {
-      if (!settings.haptics) return;
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      if (settings.haptics && typeof navigator !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(ms);
         } catch {
           /* ignore */
         }
       }
+      if (settings.sound && typeof window !== "undefined") {
+        try {
+          const AudioCtx = window.AudioContext ??
+            (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (!AudioCtx) return;
+          const ctx = new AudioCtx();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.frequency.value = 520;
+          gain.gain.setValueAtTime(0.035, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.055);
+          oscillator.connect(gain).connect(ctx.destination);
+          oscillator.start();
+          oscillator.stop(ctx.currentTime + 0.06);
+          oscillator.addEventListener("ended", () => void ctx.close());
+        } catch {
+          /* audio may be unavailable until a user gesture */
+        }
+      }
     },
-    [settings.haptics],
+    [settings.haptics, settings.sound],
   );
 
   const me: Player = useMemo(() => {

@@ -113,13 +113,13 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     const id = roomIdRef.current;
     if (!id) return;
     setRoom((prev) => (prev ? { ...prev, state: { ...prev.state, ...patch } } : prev));
-    const { data } = await supabase.from("rooms").select("state").eq("id", id).single();
-    const current = (data?.state ?? {}) as Record<string, unknown>;
-    const merged = { ...current, ...patch };
-    await supabase
-      .from("rooms")
-      .update({ state: merged as never })
-      .eq("id", id);
+    const { data, error: err } = await supabase.rpc("patch_room_state", {
+      p_room_id: id,
+      p_patch: patch as never,
+    });
+    const updated = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
+    if (updated) setRoom(updated);
+    if (err) setError(err.message);
   }, []);
 
   return { room, error, busy, create, join, leave, patchState };
