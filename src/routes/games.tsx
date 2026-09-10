@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
-import { EmptyState, GameCard, Screen } from "@/components/koupl/ui";
+import { EmptyState, PosterTile, Screen, SectionHeading } from "@/components/koupl/ui";
 import { CATEGORY_LABEL, GAMES } from "@/lib/koupl/games";
 import { cn } from "@/lib/utils";
 
@@ -45,49 +45,74 @@ function GamesLibrary() {
         `${g.title} ${g.tagline} ${g.description}`.toLowerCase().includes(q.toLowerCase())),
   );
 
+  const featured = list.filter((g) => g.featured);
+  const rest = list.filter((g) => !g.featured);
+
   return (
-    <Screen>
-      <h1 className="font-display text-2xl font-bold">Games</h1>
-      <p className="mt-0.5 text-sm text-muted-foreground">
-        Eight ways to spend an evening together.
-      </p>
+    <Screen className="px-0 pt-0">
+      <header className="rounded-b-[2rem] bg-night px-4 pb-5 pt-6 text-night-foreground">
+        <h1 className="font-display text-3xl font-bold">Games</h1>
+        <p className="mt-1 text-sm text-night-muted">Eight ways to spend an evening together.</p>
 
-      <div className="relative mt-4">
-        <Search
-          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search games"
-          aria-label="Search games"
-          className="h-13 rounded-2xl pl-11 text-base"
-        />
-      </div>
+        <div className="relative mt-4">
+          <Search
+            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-night-muted"
+            aria-hidden
+          />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search games"
+            aria-label="Search games"
+            className="h-13 rounded-2xl border-white/10 bg-white/10 pl-11 text-base text-night-foreground placeholder:text-night-muted"
+          />
+        </div>
 
-      <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "press shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition-colors",
-              filter === f
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-border bg-card text-muted-foreground",
-            )}
-          >
-            {f === "all" ? "All" : CATEGORY_LABEL[f]}
-          </button>
-        ))}
-      </div>
+        <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={filter === f}
+              onClick={() => setFilter(f)}
+              className={cn(
+                "press shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors",
+                filter === f
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-white/10 text-night-muted",
+              )}
+            >
+              {f === "all" ? "All" : CATEGORY_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      </header>
 
-      <div className="mt-4 grid gap-3">
+      <div className="px-4 pt-6">
         {list.length ? (
-          list.map((g) => <GameCard key={g.id} game={g} />)
+          <>
+            {featured.length ? (
+              <section className="mb-6">
+                <SectionHeading title="Most played" />
+                <div className="grid grid-cols-2 gap-3">
+                  {featured.map((g) => (
+                    <PosterTile key={g.id} game={g} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {rest.length ? (
+              <section>
+                <SectionHeading title={featured.length ? "Everything else" : "All games"} />
+                <div className="grid grid-cols-2 gap-3">
+                  {rest.map((g) => (
+                    <PosterTile key={g.id} game={g} />
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </>
         ) : (
           <EmptyState
             emoji="🔍"
