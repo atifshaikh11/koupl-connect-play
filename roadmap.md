@@ -25,3 +25,6 @@ Blocked (needs the app owner):
 - [x] All tiles route through detail -> lobby -> game
 
 - [x] Dark welcome hero card + dark Activity header with stat tiles
+
+- [ ] App store page /store (Play-style, real screenshots) — in progress
+- [ ] Lobby chat: real-time messages between partners before/during games
