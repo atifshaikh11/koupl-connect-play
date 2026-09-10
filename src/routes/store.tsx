@@ -353,8 +353,8 @@ function StorePage() {
                 <div className="grid aspect-square w-full place-items-center rounded-3xl bg-night-soft text-5xl shadow-inner">
                   <span aria-hidden>{g.emoji}</span>
                 </div>
-                <p className="mt-2 truncate text-sm font-semibold">{g.name}</p>
-                <p className="text-xs text-night-muted">{g.duration}</p>
+                <p className="mt-2 truncate text-sm font-semibold">{g.title}</p>
+                <p className="text-xs text-night-muted">{g.minutes}</p>
               </Link>
             ))}
           </div>
