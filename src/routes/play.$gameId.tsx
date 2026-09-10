@@ -261,14 +261,15 @@ function Play() {
             </div>
           ) : null}
 
-          {mode === "online" && room.room ? (
+          {mode === "local" || room.room ? (
             <div className="surface mt-4 flex flex-col p-4">
               <p className="mb-2 text-xs font-bold text-muted-foreground">
-                Chat — talk before you start
+                {online ? "Chat — talk before you start" : "Notes — leave each other a message"}
               </p>
-              <ChatPanel chat={chat} myId={app.session?.user.id ?? null} />
+              <ChatPanel chat={chat} myId={chatMyId} />
             </div>
           ) : null}
+
 
           <div className="mt-auto space-y-2 pt-8">
             <Button
