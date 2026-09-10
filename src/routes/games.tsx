@@ -32,7 +32,10 @@ export const Route = createFileRoute("/games")({
 const FILTERS = ["all", "party", "deep", "arcade", "quiz"] as const;
 
 function GamesLibrary() {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
+  const { c } = Route.useSearch();
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>(() =>
+    FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all",
+  );
   const [q, setQ] = useState("");
 
   const list = GAMES.filter(
