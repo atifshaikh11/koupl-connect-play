@@ -28,3 +28,4 @@ Blocked (needs the app owner):
 
 - [ ] App store page /store (Play-style, real screenshots) — in progress
 - [ ] Lobby chat: real-time messages between partners before/during games
+- [x] Fixed build errors from store page (GameDef fields, icon import); build + typecheck green
