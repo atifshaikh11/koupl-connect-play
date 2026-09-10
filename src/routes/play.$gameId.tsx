@@ -407,7 +407,7 @@ function Play() {
   return (
     <>
       {gameScreen}
-      {mode === "online" && room.room ? <ChatDock chat={chat} myId={app.session?.user.id ?? null} /> : null}
+      <ChatDock chat={chat} myId={chatMyId} />
     </>
   );
 }
