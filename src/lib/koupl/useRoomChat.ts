@@ -20,9 +20,14 @@ export type ChatApi = {
   /** Messages that arrived since the panel was last marked as read. */
   unread: number;
   markRead: () => void;
+  /** One-phone mode only: which player the next message is from. */
+  localSender?: { id: string; name: string; avatar: string };
+  /** One-phone mode only: switch who is typing. */
+  switchLocalSender?: () => void;
 };
 
 const MAX_LEN = 500;
+
 
 /** Realtime chat for a two-player room. Idle when there is no room. */
 export function useRoomChat(
