@@ -1,9 +1,16 @@
 import { useState } from "react";
+import { Hourglass } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { AvatarBubble, ScoreBar, TurnBanner } from "@/components/koupl/ui";
-import { ChoiceButton, GameFrame, GameSummary, PromptCard } from "@/components/koupl/GameShell";
+import {
+  ChoiceButton,
+  GameFrame,
+  GameSummary,
+  PromptCard,
+  StatPill,
+} from "@/components/koupl/GameShell";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import { cn } from "@/lib/utils";
 import { REACTIONS, type GameProps } from "./shared";
@@ -19,11 +26,22 @@ type State = {
   a0: string | null;
   a1: string | null;
   score: number;
+  streak: number;
+  best: number;
   done: boolean;
   reaction: string | null;
 };
 
-const initial: State = { i: 0, a0: null, a1: null, score: 0, done: false, reaction: null };
+const initial: State = {
+  i: 0,
+  a0: null,
+  a1: null,
+  score: 0,
+  streak: 0,
+  best: 0,
+  done: false,
+  reaction: null,
+};
 
 /**
  * Engine for every "both players secretly choose, then reveal" game.
