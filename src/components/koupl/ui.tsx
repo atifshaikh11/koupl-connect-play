@@ -1,9 +1,25 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, Gamepad2, History, Home, User } from "lucide-react";
+import {
+  CircleDot,
+  ChevronLeft,
+  Gamepad2,
+  Heart,
+  History,
+  Home,
+  MessageCircleHeart,
+  Scale,
+  Sparkles,
+  Target,
+  Trophy,
+  User,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 import type { GameDef, Player } from "@/lib/koupl/types";
+import { useApp } from "@/lib/koupl/store";
 
 /* ------------------------------------------------------------------ */
 /* Layout                                                              */
@@ -58,13 +74,13 @@ export function BottomNav() {
               to={to}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "press flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-bold",
+                "press flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-xs font-bold",
                 active ? "text-primary" : "text-muted-foreground",
               )}
             >
               <span
                 className={cn(
-                  "flex h-9 w-14 items-center justify-center rounded-full transition-colors",
+                  "flex h-8 w-14 items-center justify-center rounded-full transition-colors",
                   active && "bg-primary/12",
                 )}
               >
@@ -96,7 +112,7 @@ export function PageHeader({
         <Link
           to={back}
           aria-label="Go back"
-          className="press mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card"
+          className="press mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-card"
         >
           <ChevronLeft className="h-5 w-5" aria-hidden />
         </Link>
@@ -154,6 +170,57 @@ const ACCENT_BG: Record<GameDef["accent"], string> = {
   sky: "bg-sky/20 text-sky-foreground",
 };
 
+const GAME_ICONS: Record<string, LucideIcon> = {
+  "never-have-i-ever": Sparkles,
+  "whos-more-likely": UsersRound,
+  "four-in-a-row": CircleDot,
+  "basketball-rivalry": Target,
+  "pillow-talk": MessageCircleHeart,
+  "this-or-that": Scale,
+  "truth-or-dare": Trophy,
+  "couple-quiz": Gamepad2,
+};
+
+export function GameArtwork({ game, className }: { game: GameDef; className?: string }) {
+  const Icon = GAME_ICONS[game.id] ?? Gamepad2;
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "relative grid aspect-square place-items-center overflow-hidden rounded-2xl",
+        ACCENT_BG[game.accent],
+        className,
+      )}
+    >
+      <span className="absolute -right-3 -top-3 h-10 w-10 rounded-full border-4 border-current opacity-10" />
+      <Icon className="relative h-[48%] w-[48%]" strokeWidth={2.4} />
+    </span>
+  );
+}
+
+export function FavoriteButton({ gameId, inverse = false }: { gameId: string; inverse?: boolean }) {
+  const app = useApp();
+  const active = app.favorites.includes(gameId);
+  return (
+    <button
+      type="button"
+      aria-label={active ? "Remove from favorites" : "Add to favorites"}
+      aria-pressed={active}
+      onClick={() => {
+        app.toggleFavorite(gameId);
+        app.buzz(10);
+      }}
+      className={cn(
+        "press grid h-11 w-11 place-items-center rounded-full border",
+        inverse ? "border-night-foreground/15 bg-night-soft text-night-foreground" : "border-border bg-card",
+        active && "border-primary bg-primary text-primary-foreground",
+      )}
+    >
+      <Heart className={cn("h-5 w-5", active && "fill-current")} aria-hidden />
+    </button>
+  );
+}
+
 export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }) {
   return (
     <Link
@@ -164,23 +231,14 @@ export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }
         compact ? "w-44 shrink-0 flex-col gap-2 p-4" : "items-center gap-4 p-4",
       )}
     >
-      <span
-        className={cn(
-          "flex items-center justify-center rounded-2xl",
-          ACCENT_BG[game.accent],
-          compact ? "h-14 w-14 text-3xl" : "h-14 w-14 shrink-0 text-3xl",
-        )}
-        aria-hidden
-      >
-        {game.emoji}
-      </span>
+      <GameArtwork game={game} className={compact ? "h-14 w-14" : "h-14 w-14 shrink-0"} />
       <span className="min-w-0 flex-1">
         <span className="font-display block truncate text-base font-semibold">{game.title}</span>
         <span className="mt-0.5 block truncate text-xs text-muted-foreground">
           {game.tagline}
         </span>
         {!compact ? (
-          <span className="mt-2 flex gap-1.5 text-[10px] font-bold text-muted-foreground">
+          <span className="mt-2 flex gap-1.5 text-xs font-bold text-muted-foreground">
             <span className="rounded-full bg-muted px-2 py-0.5">{game.minutes}</span>
             <span className="rounded-full bg-muted px-2 py-0.5">{game.players}</span>
           </span>
@@ -213,12 +271,10 @@ export function FeatureTile({ game }: { game: GameDef }) {
           ACCENT_DOT[game.accent],
         )}
       />
-      <span className="relative text-4xl" aria-hidden>
-        {game.emoji}
-      </span>
+      <GameArtwork game={game} className="relative h-14 w-14 bg-night-soft text-night-foreground" />
       <span className="relative mt-6 block">
         <span className="font-display block text-base font-bold leading-tight">{game.title}</span>
-        <span className="mt-1 block truncate text-[11px] text-night-muted">{game.minutes}</span>
+        <span className="mt-1 block truncate text-xs text-night-muted">{game.minutes}</span>
       </span>
       <span className="relative mt-3 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-[11px] font-bold text-primary-foreground">
         Play
@@ -235,15 +291,7 @@ export function MiniTile({ game }: { game: GameDef }) {
       params={{ gameId: game.id }}
       className="press surface flex flex-col gap-2 p-3"
     >
-      <span
-        className={cn(
-          "flex h-11 w-11 items-center justify-center rounded-2xl text-2xl",
-          ACCENT_BG[game.accent],
-        )}
-        aria-hidden
-      >
-        {game.emoji}
-      </span>
+      <GameArtwork game={game} className="h-11 w-11" />
       <span className="min-w-0">
         <span className="font-display block truncate text-sm font-bold">{game.title}</span>
         <span className="block truncate text-[11px] text-muted-foreground">{game.tagline}</span>
@@ -254,12 +302,15 @@ export function MiniTile({ game }: { game: GameDef }) {
 
 /** Tall dark artwork tile used in the games library grid. */
 export function PosterTile({ game }: { game: GameDef }) {
+  const app = useApp();
+  const favorite = app.favorites.includes(game.id);
   return (
-    <Link
-      to="/game/$gameId"
-      params={{ gameId: game.id }}
-      className="press relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
-    >
+    <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-night text-night-foreground shadow-float">
+      <Link
+        to="/game/$gameId"
+        params={{ gameId: game.id }}
+        className="press absolute inset-0 flex flex-col justify-end p-4"
+      >
       <span
         aria-hidden
         className={cn(
@@ -267,17 +318,26 @@ export function PosterTile({ game }: { game: GameDef }) {
           ACCENT_DOT[game.accent],
         )}
       />
-      <span
-        aria-hidden
-        className="absolute left-1/2 top-[30%] -translate-x-1/2 -translate-y-1/2 text-6xl drop-shadow"
-      >
-        {game.emoji}
-      </span>
+      <GameArtwork game={game} className="absolute left-4 top-4 h-16 w-16 bg-night-soft text-night-foreground" />
       <span className="relative">
         <span className="font-display block text-sm font-bold leading-tight">{game.title}</span>
-        <span className="mt-0.5 block truncate text-[11px] text-night-muted">{game.minutes}</span>
+        <span className="mt-1 block text-xs leading-snug text-night-muted">{game.tagline}</span>
+        <span className="mt-2 block text-xs font-bold text-night-muted">{game.minutes} · {game.players}</span>
       </span>
-    </Link>
+      </Link>
+      <button
+        type="button"
+        aria-label={favorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+        aria-pressed={favorite}
+        onClick={() => app.toggleFavorite(game.id)}
+        className={cn(
+          "press absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-full bg-night-soft text-night-foreground",
+          favorite && "bg-primary text-primary-foreground",
+        )}
+      >
+        <Heart className={cn("h-5 w-5", favorite && "fill-current")} aria-hidden />
+      </button>
+    </div>
   );
 }
 

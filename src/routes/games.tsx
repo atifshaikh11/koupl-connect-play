@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { EmptyState, PosterTile, Screen, SectionHeading } from "@/components/koupl/ui";
 import { CATEGORY_LABEL, GAMES } from "@/lib/koupl/games";
+import { useApp } from "@/lib/koupl/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/games")({
@@ -29,10 +30,11 @@ export const Route = createFileRoute("/games")({
   component: GamesLibrary,
 });
 
-const FILTERS = ["all", "party", "deep", "arcade", "quiz"] as const;
+const FILTERS = ["all", "competitive", "cooperative", "conversation", "quick", "favorites"] as const;
 
 function GamesLibrary() {
   const { c } = Route.useSearch();
+  const app = useApp();
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>(() =>
     FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all",
   );
@@ -40,7 +42,7 @@ function GamesLibrary() {
 
   const list = GAMES.filter(
     (g) =>
-      (filter === "all" || g.category === filter) &&
+      (filter === "all" || (filter === "favorites" ? app.favorites.includes(g.id) : g.category === filter)) &&
       (q.trim() === "" ||
         `${g.title} ${g.tagline} ${g.description}`.toLowerCase().includes(q.toLowerCase())),
   );
@@ -52,7 +54,7 @@ function GamesLibrary() {
     <Screen className="px-0 pt-0">
       <header className="rounded-b-[2rem] bg-night px-4 pb-5 pt-6 text-night-foreground">
         <h1 className="font-display text-3xl font-bold">Games</h1>
-        <p className="mt-1 text-sm text-night-muted">Eight ways to spend an evening together.</p>
+        <p className="mt-1 text-sm text-night-muted">Pick the mood. We’ll bring the game.</p>
 
         <div className="relative mt-4">
           <Search
@@ -76,13 +78,13 @@ function GamesLibrary() {
               aria-pressed={filter === f}
               onClick={() => setFilter(f)}
               className={cn(
-                "press shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors",
+                "press min-h-11 shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "bg-white/10 text-night-muted",
               )}
             >
-              {f === "all" ? "All" : CATEGORY_LABEL[f]}
+              {f === "all" ? "All" : f === "favorites" ? "Favorites" : CATEGORY_LABEL[f]}
             </button>
           ))}
         </div>
@@ -116,8 +118,8 @@ function GamesLibrary() {
         ) : (
           <EmptyState
             emoji="🔍"
-            title="No games match"
-            body="Try a different word, or clear the filter to see everything."
+            title={filter === "favorites" ? "No favorites yet" : "No games match"}
+            body={filter === "favorites" ? "Tap the heart on a game to keep it close." : "Try a different word, or clear the filter to see everything."}
           />
         )}
       </div>
