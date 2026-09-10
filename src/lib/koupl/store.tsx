@@ -33,7 +33,12 @@ function readLocal<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(key);
-    return raw ? ({ ...fallback, ...JSON.parse(raw) } as T) : fallback;
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(fallback) || Array.isArray(parsed)) {
+      return (Array.isArray(parsed) ? parsed : fallback) as T;
+    }
+    return { ...fallback, ...(parsed as object) } as T;
   } catch {
     return fallback;
   }
