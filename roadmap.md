@@ -42,3 +42,10 @@ Blocked (needs the app owner):
 - [x] Standardize gameplay feedback, safe exit, results, rematch, haptics, and sound cues
 - [ ] Verify all eight games and the full requested Android-phone journey
 - [ ] Run final typecheck, production build, responsive browser checks, and console audit
+
+## Depth + polish phase
+
+- [x] Deeper loops: 4-in-a-row rounds/win-line, basketball perfect+streak scoring, truth/dare card decks & weighting, quiz reveal + streaks, dual-choice sync streaks
+- [x] Premium game shell: artwork header, layered prompt cards, night result screen with score bars and stats
+- [x] Room reliability: game-scoped restore, membership check, closed/deleted room handling, join validation
+- [x] Verified 360x800 and 412x915: all routes, full play flow, no overflow, no console errors

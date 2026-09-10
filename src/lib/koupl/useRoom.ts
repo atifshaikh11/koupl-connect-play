@@ -32,6 +32,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
 
   roomIdRef.current = room?.id ?? null;
 
+  // Restore the room this device was last in, so a refresh never loses it.
   useEffect(() => {
     if (!userId || typeof window === "undefined") return;
     const savedCode = window.localStorage.getItem(`koupl.room.${gameId}`);
@@ -41,10 +42,15 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       .from("rooms")
       .select("*")
       .eq("code", savedCode)
+      .eq("game_id", gameId)
       .in("status", ["waiting", "playing"])
       .maybeSingle()
       .then(({ data }) => {
-        if (active && data) setRoom(data as RoomRow);
+        if (!active) return;
+        const row = data as RoomRow | null;
+        const member = !!row && (row.host_id === userId || row.guest_id === userId);
+        if (member) setRoom(row);
+        else window.localStorage.removeItem(`koupl.room.${gameId}`);
       });
     return () => {
       active = false;
@@ -53,18 +59,40 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
 
   useEffect(() => {
     if (!room?.id) return;
+    const id = room.id;
     const channel = supabase
-      .channel(`room-${room.id}`)
+      .channel(`room-${id}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${room.id}` },
-        (payload) => setRoom(payload.new as RoomRow),
+        { event: "UPDATE", schema: "public", table: "rooms", filter: `id=eq.${id}` },
+        (payload) => {
+          const next = payload.new as RoomRow;
+          // The other player closed the room — drop out cleanly instead of
+          // holding on to a dead room row.
+          if (next.status === "closed") {
+            setRoom(null);
+            setError("The room was closed.");
+            if (typeof window !== "undefined")
+              window.localStorage.removeItem(`koupl.room.${gameId}`);
+            return;
+          }
+          setRoom(next);
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "rooms", filter: `id=eq.${id}` },
+        () => {
+          setRoom(null);
+          if (typeof window !== "undefined")
+            window.localStorage.removeItem(`koupl.room.${gameId}`);
+        },
       )
       .subscribe();
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [room?.id]);
+  }, [room?.id, gameId]);
 
   const create = useCallback(async () => {
     if (!userId) return null;
@@ -86,20 +114,33 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     return data as RoomRow;
   }, [gameId, userId]);
 
-  const join = useCallback(async (code: string) => {
-    setBusy(true);
-    setError(null);
-    const { data, error: err } = await supabase.rpc("join_room", { p_code: code.trim() });
-    setBusy(false);
-    const row = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
-    if (err || !row) {
-      setError(err?.message ?? "Room not found");
-      return null;
-    }
-    setRoom(row);
-    if (typeof window !== "undefined") window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
-    return row;
-  }, []);
+  const join = useCallback(
+    async (code: string) => {
+      const clean = code.trim().toUpperCase();
+      if (clean.length < 4) {
+        setError("Enter the full room code.");
+        return null;
+      }
+      setBusy(true);
+      setError(null);
+      const { data, error: err } = await supabase.rpc("join_room", { p_code: clean });
+      setBusy(false);
+      const row = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
+      if (err || !row) {
+        setError(err?.message ?? "No open room with that code.");
+        return null;
+      }
+      if (row.game_id !== gameId) {
+        setError("That room is for a different game.");
+        return null;
+      }
+      setRoom(row);
+      if (typeof window !== "undefined")
+        window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
+      return row;
+    },
+    [gameId],
+  );
 
   const leave = useCallback(async () => {
     const id = roomIdRef.current;

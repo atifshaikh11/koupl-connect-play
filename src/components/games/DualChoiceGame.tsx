@@ -1,9 +1,16 @@
 import { useState } from "react";
+import { Hourglass } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { AvatarBubble, ScoreBar, TurnBanner } from "@/components/koupl/ui";
-import { ChoiceButton, GameFrame, GameSummary, PromptCard } from "@/components/koupl/GameShell";
+import {
+  ChoiceButton,
+  GameFrame,
+  GameSummary,
+  PromptCard,
+  StatPill,
+} from "@/components/koupl/GameShell";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import { cn } from "@/lib/utils";
 import { REACTIONS, type GameProps } from "./shared";
@@ -19,11 +26,22 @@ type State = {
   a0: string | null;
   a1: string | null;
   score: number;
+  streak: number;
+  best: number;
   done: boolean;
   reaction: string | null;
 };
 
-const initial: State = { i: 0, a0: null, a1: null, score: 0, done: false, reaction: null };
+const initial: State = {
+  i: 0,
+  a0: null,
+  a1: null,
+  score: 0,
+  streak: 0,
+  best: 0,
+  done: false,
+  reaction: null,
+};
 
 /**
  * Engine for every "both players secretly choose, then reveal" game.
@@ -69,11 +87,21 @@ export function DualChoiceGame({
 
   function next() {
     const gained = matched ? 1 : 0;
+    const streak = matched ? s.streak + 1 : 0;
+    const best = Math.max(s.best, streak);
     if (s.i + 1 >= rounds.length) {
-      patch({ score: s.score + gained, done: true });
+      patch({ score: s.score + gained, streak, best, done: true });
       return;
     }
-    patch({ i: s.i + 1, a0: null, a1: null, score: s.score + gained, reaction: null });
+    patch({
+      i: s.i + 1,
+      a0: null,
+      a1: null,
+      score: s.score + gained,
+      streak,
+      best,
+      reaction: null,
+    });
   }
 
   if (s.done) {
@@ -92,6 +120,10 @@ export function DualChoiceGame({
                 : "Opposites, confirmed. That's what makes it fun."
           }
           scored
+          stats={[
+            { label: "Best run", value: s.best },
+            { label: "Rounds", value: total },
+          ]}
           onRematch={() => {
             reset(initial);
             setPassed(false);
@@ -124,11 +156,21 @@ export function DualChoiceGame({
         />
       }
     >
-      <PromptCard tone={tone} animateKey={round.key}>
-        <p className="font-display text-xl font-bold leading-snug text-balance-tight">
-          {round.prompt}
-        </p>
-      </PromptCard>
+      {s.streak >= 2 ? (
+        <div className="mt-3 flex justify-center">
+          <StatPill label="In sync" value={`${s.streak} in a row`} tone="success" />
+        </div>
+      ) : null}
+
+      <div className="mt-3">
+        <PromptCard tone={tone} animateKey={round.key}>
+          <p className="font-display text-xl font-bold leading-snug text-balance-tight">
+            {round.prompt}
+          </p>
+        </PromptCard>
+      </div>
+
+
 
       <div className="mt-5 flex flex-1 flex-col justify-end gap-3">
         {bothIn ? (
@@ -179,9 +221,7 @@ export function DualChoiceGame({
           </div>
         ) : waitingForPartner ? (
           <div className="surface animate-pop-in p-6 text-center" aria-live="polite">
-            <span className="animate-float inline-block text-4xl" aria-hidden>
-              ⏳
-            </span>
+            <Hourglass className="animate-float mx-auto h-9 w-9 text-primary" aria-hidden />
             <p className="mt-2 text-sm font-bold">Locked in.</p>
             <p className="text-sm text-muted-foreground">
               Waiting for {players[mySlot === 0 ? 1 : 0].name} to choose…

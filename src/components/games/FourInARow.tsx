@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { GameFrame, GameSummary } from "@/components/koupl/GameShell";
+import { GameFrame, GameSummary, StatPill } from "@/components/koupl/GameShell";
 import { ScoreBar, TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,10 @@ type State = {
   draw: boolean;
   s0: number;
   s1: number;
+  round: number;
+  lastMove: number;
+  /** Comma separated cell indexes of the winning line. */
+  line: string;
   roundOver: boolean;
 };
 
@@ -26,12 +30,15 @@ const initial: State = {
   draw: false,
   s0: 0,
   s1: 0,
+  round: 1,
+  lastMove: -1,
+  line: "",
   roundOver: false,
 };
 
 const idx = (r: number, c: number) => r * COLS + c;
 
-function findWinner(b: string): number | null {
+function findWin(b: string): { player: number; cells: number[] } | null {
   const dirs = [
     [0, 1],
     [1, 0],
@@ -43,14 +50,14 @@ function findWinner(b: string): number | null {
       const v = b[idx(r, c)];
       if (v === ".") continue;
       for (const [dr, dc] of dirs) {
-        let n = 1;
-        while (n < 4) {
+        const cells = [idx(r, c)];
+        for (let n = 1; n < 4; n++) {
           const rr = r + dr! * n;
           const cc = c + dc! * n;
           if (rr < 0 || rr >= ROWS || cc < 0 || cc >= COLS || b[idx(rr, cc)] !== v) break;
-          n++;
+          cells.push(idx(rr, cc));
         }
-        if (n === 4) return Number(v);
+        if (cells.length === 4) return { player: Number(v), cells };
       }
     }
   }
@@ -61,6 +68,7 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
   const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const myTurn = mySlot === null || mySlot === s.turn;
   const finished = s.winner !== null || s.draw;
+  const line = s.line ? s.line.split(",").map(Number) : [];
 
   function drop(col: number) {
     if (finished || !myTurn) return;
@@ -73,17 +81,33 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
     }
     if (row < 0) return;
     const arr = s.board.split("");
-    arr[idx(row, col)] = String(s.turn);
+    const cell = idx(row, col);
+    arr[cell] = String(s.turn);
     const board = arr.join("");
-    const winner = findWinner(board);
-    const draw = !winner && !board.includes(".");
+    const win = findWin(board);
+    const draw = !win && !board.includes(".");
     patch({
       board,
-      winner,
+      lastMove: cell,
+      winner: win ? win.player : null,
+      line: win ? win.cells.join(",") : "",
       draw,
       turn: (s.turn === 0 ? 1 : 0) as 0 | 1,
-      ...(winner === 0 ? { s0: s.s0 + 1 } : {}),
-      ...(winner === 1 ? { s1: s.s1 + 1 } : {}),
+      ...(win?.player === 0 ? { s0: s.s0 + 1 } : {}),
+      ...(win?.player === 1 ? { s1: s.s1 + 1 } : {}),
+    });
+  }
+
+  function nextRound() {
+    patch({
+      board: EMPTY,
+      winner: null,
+      draw: false,
+      line: "",
+      lastMove: -1,
+      round: s.round + 1,
+      // Loser of the last round starts the next one.
+      turn: (s.winner === 0 ? 1 : 0) as 0 | 1,
     });
   }
 
@@ -94,16 +118,15 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
           players={players}
           scores={[s.s0, s.s1]}
           headline={
-            s.s0 === s.s1
-              ? "Dead even"
-              : `${players[s.s0 > s.s1 ? 0 : 1].name} takes the series`
+            s.s0 === s.s1 ? "Dead even" : `${players[s.s0 > s.s1 ? 0 : 1].name} takes the series`
           }
           detail="Loser owes the winner one small favour. Those are the rules now."
           scored
-          onRematch={() => reset({ ...initial, s0: s.s0, s1: s.s1 })}
+          stats={[{ label: "Rounds", value: s.round }]}
+          onRematch={() => reset({ ...initial })}
           onExit={() =>
             onFinish({
-              summary: `${s.s0}–${s.s1} on the board`,
+              summary: `${s.s0}–${s.s1} across ${s.round} round${s.round === 1 ? "" : "s"}`,
               myScore: mySlot === 1 ? s.s1 : s.s0,
               theirScore: mySlot === 1 ? s.s0 : s.s1,
             })
@@ -113,6 +136,8 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
     );
   }
 
+  const fullCols = Array.from({ length: COLS }, (_, c) => s.board[idx(0, c)] !== ".");
+
   return (
     <GameFrame
       game={game}
@@ -121,45 +146,52 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
         <ScoreBar players={players} scores={[s.s0, s.s1]} activeSlot={finished ? null : s.turn} />
       }
     >
-      <div className="mt-1">
-        {finished ? (
-          <div
-            className="rounded-full bg-success/15 px-4 py-2 text-center text-sm font-bold text-success"
-            aria-live="polite"
-          >
-            {s.draw ? "Board full — it's a draw" : `${players[s.winner!]!.name} connects four!`}
-          </div>
-        ) : (
-          <TurnBanner
-            player={players[s.turn]}
-            action={myTurn ? "drop a disc" : "thinking about it"}
-          />
-        )}
+      <div className="mt-1 flex items-center justify-between gap-2">
+        <StatPill label="Round" value={s.round} />
+        <div className="min-w-0 flex-1">
+          {finished ? (
+            <div
+              className="animate-pop-in truncate rounded-full bg-success/15 px-4 py-2 text-center text-sm font-bold text-success"
+              aria-live="polite"
+            >
+              {s.draw ? "Board full — draw" : `${players[s.winner!]!.name} connects four!`}
+            </div>
+          ) : (
+            <TurnBanner
+              player={players[s.turn]}
+              action={myTurn ? "drop a disc" : "thinking about it"}
+            />
+          )}
+        </div>
       </div>
 
-      <div className="mt-4 rounded-3xl bg-sky/25 p-2.5 shadow-float">
+      <div className="mt-4 rounded-[1.75rem] bg-sky/25 p-2.5 shadow-float ring-1 ring-inset ring-sky/30">
         <div className="grid grid-cols-7 gap-1.5">
           {Array.from({ length: COLS }).map((_, c) => (
             <button
               key={c}
               type="button"
               aria-label={`Drop in column ${c + 1}`}
-              disabled={finished || !myTurn}
+              disabled={finished || !myTurn || fullCols[c]}
               onClick={() => drop(c)}
-              className="press flex flex-col gap-1.5 rounded-xl disabled:cursor-not-allowed"
+              className="press group flex flex-col gap-1.5 rounded-xl py-0.5 disabled:cursor-not-allowed"
             >
               {Array.from({ length: ROWS }).map((__, r) => {
-                const v = s.board[idx(r, c)];
+                const cell = idx(r, c);
+                const v = s.board[cell];
+                const inLine = line.includes(cell);
                 return (
                   <span
                     key={r}
                     className={cn(
-                      "aspect-square w-full rounded-full transition-colors",
+                      "aspect-square w-full rounded-full shadow-inner transition-all",
                       v === "0"
                         ? "animate-drop bg-primary"
                         : v === "1"
                           ? "animate-drop bg-sunny"
-                          : "bg-card",
+                          : "bg-card/80 group-enabled:group-hover:bg-card",
+                      inLine && "ring-2 ring-success ring-offset-1 ring-offset-sky/25",
+                      s.lastMove === cell && !inLine && "ring-2 ring-foreground/25",
                     )}
                   />
                 );
@@ -171,13 +203,7 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
 
       <div className="mt-auto flex flex-col gap-2 pt-5">
         {finished ? (
-          <Button
-            size="lg"
-            className="h-14 rounded-2xl text-base"
-            onClick={() =>
-              patch({ board: EMPTY, winner: null, draw: false, turn: 0 })
-            }
-          >
+          <Button size="lg" className="h-14 rounded-2xl text-base" onClick={nextRound}>
             Next round
           </Button>
         ) : null}
