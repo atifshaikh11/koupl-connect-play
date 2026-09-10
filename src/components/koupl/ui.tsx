@@ -157,7 +157,7 @@ const ACCENT_BG: Record<GameDef["accent"], string> = {
 export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }) {
   return (
     <Link
-      to="/play/$gameId"
+      to="/game/$gameId"
       params={{ gameId: game.id }}
       className={cn(
         "press surface group relative flex overflow-hidden",
