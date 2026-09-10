@@ -26,7 +26,7 @@ export function TruthOrDare({
   truths,
   dares,
 }: GameProps & { truths: string[]; dares: string[] }) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const active: 0 | 1 = (s.i % 2) as 0 | 1;
   const myTurn = mySlot === null || mySlot === active;
   const deck = s.pick === "truth" ? truths : dares;

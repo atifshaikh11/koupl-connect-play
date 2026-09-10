@@ -46,12 +46,13 @@ export function DualChoiceGame({
   matchCopy: { hit: string; miss: string };
   summaryNoun?: string;
 }) {
-  const { value: s, patch, reset } = useSharedState<State>(initial, room);
+  const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [passed, setPassed] = useState(false);
 
   const round = rounds[Math.min(s.i, rounds.length - 1)]!;
   const bothIn = s.a0 !== null && s.a1 !== null;
   const matched = bothIn && s.a0 === s.a1;
+  const shownScore = s.score + (matched ? 1 : 0);
 
   // Whose input is being collected right now.
   const pendingSlot: 0 | 1 | null = s.a0 === null ? 0 : s.a1 === null ? 1 : null;
@@ -118,7 +119,7 @@ export function DualChoiceGame({
       header={
         <ScoreBar
           players={players}
-          scores={[s.score, s.score]}
+          scores={[shownScore, shownScore]}
           activeSlot={bothIn ? null : answeringSlot}
         />
       }

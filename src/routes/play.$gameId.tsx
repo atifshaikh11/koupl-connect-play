@@ -1,5 +1,5 @@
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Copy, Smartphone, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -25,7 +25,7 @@ import {
   shuffle,
 } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
-import { useRoom } from "@/lib/koupl/useRoom";
+import { clearSavedGame, useRoom } from "@/lib/koupl/useRoom";
 import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
 
 export const Route = createFileRoute("/play/$gameId")({
@@ -64,7 +64,12 @@ function Play() {
   const [started, setStarted] = useState(false);
   const [mode, setMode] = useState<"local" | "online">("local");
   const [joinCode, setJoinCode] = useState("");
-  const [seed] = useState(() => Math.random());
+  const [seed, setSeed] = useState(() => Math.random());
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
+  }, [game.id]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
@@ -91,6 +96,7 @@ function Play() {
       my_score: result.myScore,
       their_score: result.theirScore,
     });
+    clearSavedGame(game.id);
     app.buzz(20);
     void navigate({ to: "/activity" });
   }
@@ -243,15 +249,33 @@ function Play() {
             </div>
           ) : null}
 
-          <div className="mt-auto pt-8">
+          <div className="mt-auto space-y-2 pt-8">
             <Button
               size="lg"
               className="h-16 w-full rounded-3xl text-lg"
               disabled={mode === "online" && (!room.room || !room.room.guest_id)}
               onClick={() => setStarted(true)}
             >
-              {mode === "online" && waiting ? "Waiting for partner…" : "Start game"}
+              {mode === "online" && waiting
+                ? "Waiting for partner…"
+                : saved && mode === "local"
+                  ? "Resume game"
+                  : "Start game"}
             </Button>
+            {saved && mode === "local" ? (
+              <Button
+                variant="ghost"
+                className="h-12 w-full rounded-2xl font-bold"
+                onClick={() => {
+                  clearSavedGame(game.id);
+                  setSaved(false);
+                  setSeed(Math.random());
+                  setStarted(true);
+                }}
+              >
+                Start fresh instead
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>

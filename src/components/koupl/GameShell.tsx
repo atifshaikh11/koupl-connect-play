@@ -11,6 +11,7 @@ export function GameFrame({
   onExit,
   step,
   total,
+  stepNoun = "Round",
   children,
   header,
 }: {
@@ -18,6 +19,7 @@ export function GameFrame({
   onExit: () => void;
   step?: number;
   total?: number;
+  stepNoun?: string;
   children: ReactNode;
   header?: ReactNode;
 }) {
@@ -39,7 +41,7 @@ export function GameFrame({
             </p>
             {typeof step === "number" && total ? (
               <p className="text-[11px] text-muted-foreground">
-                Round {Math.min(step + 1, total)} of {total}
+                {stepNoun} {Math.min(step + 1, total)} of {total}
               </p>
             ) : null}
           </div>

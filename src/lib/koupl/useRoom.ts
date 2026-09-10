@@ -117,9 +117,39 @@ export function randomRoomCode(len = 5) {
 export function useSharedState<T extends Record<string, unknown>>(
   initial: T,
   room: RoomApi | null,
+  /** When set, a one-device game survives a refresh. */
+  persistKey?: string,
 ): SharedState<T> {
+  const storageKey = persistKey ? `koupl.game.${persistKey}` : null;
   const [local, setLocal] = useState<T>(initial);
+  const [ready, setReady] = useState(!storageKey);
   const online = !!room?.room;
+
+  // Restore a saved one-device game after hydration.
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (raw) setLocal({ ...initial, ...(JSON.parse(raw) as Partial<T>) });
+    } catch {
+      /* ignore unreadable state */
+    }
+    setReady(true);
+    // Only on mount: the saved game belongs to this screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  const save = useCallback(
+    (next: T) => {
+      if (!storageKey || typeof window === "undefined") return;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    },
+    [storageKey],
+  );
 
   const remote = (room?.room?.state ?? {}) as Partial<T>;
   const value = online ? ({ ...initial, ...remote } as T) : local;
@@ -130,19 +160,36 @@ export function useSharedState<T extends Record<string, unknown>>(
         const resolved = typeof next === "function" ? next(value) : next;
         void room.patchState(resolved as Record<string, unknown>);
       } else {
-        setLocal((prev) => ({ ...prev, ...(typeof next === "function" ? next(prev) : next) }));
+        setLocal((prev) => {
+          const merged = { ...prev, ...(typeof next === "function" ? next(prev) : next) };
+          save(merged);
+          return merged;
+        });
       }
     },
-    [online, room, value],
+    [online, room, value, save],
   );
 
   const reset = useCallback(
     (next: T) => {
       if (online && room) void room.patchState(next as Record<string, unknown>);
-      else setLocal(next);
+      else {
+        setLocal(next);
+        save(next);
+      }
     },
-    [online, room],
+    [online, room, save],
   );
 
-  return { value, patch, reset, ready: true };
+  return { value, patch, reset, ready: online || ready };
+}
+
+/** Forget a saved one-device game (used when a game is finished or abandoned). */
+export function clearSavedGame(persistKey: string) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(`koupl.game.${persistKey}`);
+  } catch {
+    /* ignore */
+  }
 }

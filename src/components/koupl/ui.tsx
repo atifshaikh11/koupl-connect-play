@@ -249,8 +249,13 @@ export function ScoreBar({
           <AvatarBubble emoji={p.avatar} size="sm" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold">{p.name}</p>
-            <p className="text-[10px] text-muted-foreground">
-              {activeSlot === i ? "Their turn" : "Waiting"}
+            <p
+              className={cn(
+                "text-[10px]",
+                activeSlot === i ? "font-bold text-primary" : "text-muted-foreground",
+              )}
+            >
+              {activeSlot === i ? "Playing now" : "Waiting"}
             </p>
           </div>
           <span className="font-display text-xl font-bold tabular-nums">{scores[i]}</span>
