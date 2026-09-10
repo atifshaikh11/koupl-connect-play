@@ -32,3 +32,13 @@ Blocked (needs the app owner):
 - [x] Realtime lobby chat (room_messages table + RLS + realtime; lobby panel + in-game chat dock)
   Note: end-to-end two-account chat not verified in sandbox — backend has no signed-up users yet.
 - [x] One-phone chat fallback (device-local notes thread with sender switch, persisted per game)
+
+## Production polish phase
+
+- [ ] Unify mobile visual system, navigation, states, and accessibility across every route
+- [ ] Add original game artwork treatment, experience categories, favorites, and recents
+- [ ] Rework Home around continue, favorites, recents, quick play, prompt, and partner status
+- [ ] Complete room create/join, presence, ready state, sharing, and synchronized start flow
+- [ ] Standardize gameplay feedback, safe exit, results, rematch, haptics, and sound cues
+- [ ] Verify all eight games and the full requested Android-phone journey
+- [ ] Run final typecheck, production build, responsive browser checks, and console audit
