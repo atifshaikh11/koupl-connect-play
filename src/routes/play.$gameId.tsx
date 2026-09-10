@@ -64,7 +64,12 @@ function Play() {
   const [started, setStarted] = useState(false);
   const [mode, setMode] = useState<"local" | "online">("local");
   const [joinCode, setJoinCode] = useState("");
-  const [seed] = useState(() => Math.random());
+  const [seed, setSeed] = useState(() => Math.random());
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
+  }, [game.id]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
