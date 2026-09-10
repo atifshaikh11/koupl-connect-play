@@ -249,15 +249,33 @@ function Play() {
             </div>
           ) : null}
 
-          <div className="mt-auto pt-8">
+          <div className="mt-auto space-y-2 pt-8">
             <Button
               size="lg"
               className="h-16 w-full rounded-3xl text-lg"
               disabled={mode === "online" && (!room.room || !room.room.guest_id)}
               onClick={() => setStarted(true)}
             >
-              {mode === "online" && waiting ? "Waiting for partner…" : "Start game"}
+              {mode === "online" && waiting
+                ? "Waiting for partner…"
+                : saved && mode === "local"
+                  ? "Resume game"
+                  : "Start game"}
             </Button>
+            {saved && mode === "local" ? (
+              <Button
+                variant="ghost"
+                className="h-12 w-full rounded-2xl font-bold"
+                onClick={() => {
+                  clearSavedGame(game.id);
+                  setSaved(false);
+                  setSeed(Math.random());
+                  setStarted(true);
+                }}
+              >
+                Start fresh instead
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>
