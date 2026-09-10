@@ -115,6 +115,16 @@ export function ChatPanel({
         </div>
       ) : null}
 
+      {chat.localSender && chat.switchLocalSender ? (
+        <button
+          type="button"
+          onClick={chat.switchLocalSender}
+          className="press mt-3 self-start rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-bold"
+        >
+          Typing as {chat.localSender.avatar} {chat.localSender.name} — tap to switch
+        </button>
+      ) : null}
+
       <form
         className="mt-3 flex items-center gap-2"
         onSubmit={(e) => {
@@ -140,6 +150,7 @@ export function ChatPanel({
           <Send className="h-5 w-5" aria-hidden />
         </Button>
       </form>
+
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AvatarBubble, LoadingScreen, Wordmark } from "@/components/koupl/ui";
 import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
-import { useRoomChat } from "@/lib/koupl/useRoomChat";
+import { useLocalChat, useRoomChat } from "@/lib/koupl/useRoomChat";
 import { DualChoiceGame, type DualRound } from "@/components/games/DualChoiceGame";
 import { FourInARow } from "@/components/games/FourInARow";
 import { BasketballRivalry } from "@/components/games/BasketballRivalry";
