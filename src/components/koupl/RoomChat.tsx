@@ -148,9 +148,11 @@ export function ChatPanel({
 export function ChatDock({ chat, myId }: { chat: ChatApi; myId: string | null }) {
   const [open, setOpen] = useState(false);
 
+  const markRead = chat.markRead;
+  const unread = chat.unread;
   useEffect(() => {
-    if (open) chat.markRead();
-  }, [open, chat]);
+    if (open && unread > 0) markRead();
+  }, [open, unread, markRead]);
 
   return (
     <>
