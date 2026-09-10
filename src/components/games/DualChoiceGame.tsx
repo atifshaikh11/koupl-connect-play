@@ -87,11 +87,21 @@ export function DualChoiceGame({
 
   function next() {
     const gained = matched ? 1 : 0;
+    const streak = matched ? s.streak + 1 : 0;
+    const best = Math.max(s.best, streak);
     if (s.i + 1 >= rounds.length) {
-      patch({ score: s.score + gained, done: true });
+      patch({ score: s.score + gained, streak, best, done: true });
       return;
     }
-    patch({ i: s.i + 1, a0: null, a1: null, score: s.score + gained, reaction: null });
+    patch({
+      i: s.i + 1,
+      a0: null,
+      a1: null,
+      score: s.score + gained,
+      streak,
+      best,
+      reaction: null,
+    });
   }
 
   if (s.done) {
@@ -110,6 +120,10 @@ export function DualChoiceGame({
                 : "Opposites, confirmed. That's what makes it fun."
           }
           scored
+          stats={[
+            { label: "Best run", value: s.best },
+            { label: "Rounds", value: total },
+          ]}
           onRematch={() => {
             reset(initial);
             setPassed(false);
