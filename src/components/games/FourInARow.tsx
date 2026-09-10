@@ -154,7 +154,7 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
               className="animate-pop-in truncate rounded-full bg-success/15 px-4 py-2 text-center text-sm font-bold text-success"
               aria-live="polite"
             >
-              {s.draw ? "Board full — draw" : `${players[s.winner!]!.name} connects four!`}
+              {s.draw ? "Board full — draw" : `Four in a row for ${players[s.winner!]!.name}!`}
             </div>
           ) : (
             <TurnBanner
