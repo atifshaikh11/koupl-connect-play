@@ -256,6 +256,15 @@ function Play() {
             </div>
           ) : null}
 
+          {mode === "online" && room.room ? (
+            <div className="surface mt-4 flex flex-col p-4">
+              <p className="mb-2 text-xs font-bold text-muted-foreground">
+                Chat — talk before you start
+              </p>
+              <ChatPanel chat={chat} myId={app.session?.user.id ?? null} />
+            </div>
+          ) : null}
+
           <div className="mt-auto space-y-2 pt-8">
             <Button
               size="lg"
