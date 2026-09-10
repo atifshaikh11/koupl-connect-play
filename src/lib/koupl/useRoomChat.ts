@@ -121,3 +121,95 @@ export function useRoomChat(
     markRead,
   };
 }
+
+/* --------------------------------------------------------------------------
+ * One-phone fallback: a shared notes thread saved on this device so the chat
+ * UI still works for guests and pass-and-play sessions.
+ * ------------------------------------------------------------------------ */
+
+function localKey(gameId: string) {
+  return `koupl.chat.${gameId}`;
+}
+
+/** Device-local chat between the two players sharing one phone. */
+export function useLocalChat(
+  gameId: string,
+  players: [
+    { name: string; avatar: string },
+    { name: string; avatar: string },
+  ],
+): ChatApi {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [seen, setSeen] = useState(0);
+  const [slot, setSlot] = useState<0 | 1>(0);
+  const playersRef = useRef(players);
+  playersRef.current = players;
+
+  useEffect(() => {
+    let rows: ChatMessage[] = [];
+    try {
+      const raw = window.localStorage.getItem(localKey(gameId));
+      const parsed: unknown = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) rows = parsed as ChatMessage[];
+    } catch {
+      rows = [];
+    }
+    setMessages(rows);
+    setSeen(rows.length);
+    setLoading(false);
+  }, [gameId]);
+
+  const persist = useCallback(
+    (rows: ChatMessage[]) => {
+      try {
+        window.localStorage.setItem(localKey(gameId), JSON.stringify(rows.slice(-200)));
+      } catch {
+        /* storage full or unavailable — chat stays in memory */
+      }
+    },
+    [gameId],
+  );
+
+  const send = useCallback(
+    async (raw: string) => {
+      const body = raw.trim().slice(0, MAX_LEN);
+      if (!body) return;
+      const who = playersRef.current[slot];
+      const row: ChatMessage = {
+        id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        room_id: gameId,
+        sender_id: slot === 0 ? "p0" : "p1",
+        sender_name: who.name,
+        sender_avatar: who.avatar,
+        body,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => {
+        const next = [...prev, row];
+        persist(next);
+        return next;
+      });
+      setSeen((s) => s + 1);
+    },
+    [gameId, persist, slot],
+  );
+
+  const markRead = useCallback(() => setSeen(messages.length), [messages.length]);
+  const switchLocalSender = useCallback(() => setSlot((s) => (s === 0 ? 1 : 0)), []);
+
+  return {
+    messages,
+    loading,
+    error: null,
+    send,
+    unread: Math.max(0, messages.length - seen),
+    markRead,
+    localSender: {
+      id: slot === 0 ? "p0" : "p1",
+      name: players[slot].name,
+      avatar: players[slot].avatar,
+    },
+    switchLocalSender,
+  };
+}
