@@ -47,6 +47,10 @@
   --color-mint-foreground: var(--mint-foreground);
   --color-sky: var(--sky);
   --color-sky-foreground: var(--sky-foreground);
+  --color-night: var(--night);
+  --color-night-soft: var(--night-soft);
+  --color-night-foreground: var(--night-foreground);
+  --color-night-muted: var(--night-muted);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
