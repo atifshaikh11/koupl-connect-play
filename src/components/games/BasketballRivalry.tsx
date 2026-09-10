@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { GameFrame, GameSummary } from "@/components/koupl/GameShell";
+import { GameFrame, GameSummary, StatPill } from "@/components/koupl/GameShell";
 import { ScoreBar, TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import type { GameProps } from "./shared";
 
 const SHOTS_EACH = 10;
 const TARGET_HALF = 9; // percentage points either side of centre
+const PERFECT_HALF = 3; // dead-centre bonus zone
 
 type State = {
   turn: 0 | 1;
@@ -16,8 +17,16 @@ type State = {
   shots1: number;
   s0: number;
   s1: number;
+  streak0: number;
+  streak1: number;
+  best0: number;
+  best1: number;
+  /** "2" perfect, "1" swish, "0" miss — one char per shot. */
+  log0: string;
+  log1: string;
   done: boolean;
-  lastResult: "" | "swish" | "miss";
+  lastResult: "" | "perfect" | "swish" | "miss";
+  shotSeq: number;
 };
 
 const initial: State = {
@@ -26,8 +35,15 @@ const initial: State = {
   shots1: 0,
   s0: 0,
   s1: 0,
+  streak0: 0,
+  streak1: 0,
+  best0: 0,
+  best1: 0,
+  log0: "",
+  log1: "",
   done: false,
   lastResult: "",
+  shotSeq: 0,
 };
 
 export function BasketballRivalry({
@@ -45,6 +61,7 @@ export function BasketballRivalry({
 
   const myTurn = mySlot === null || mySlot === s.turn;
   const shotsTaken = s.turn === 0 ? s.shots0 : s.shots1;
+  const streak = s.turn === 0 ? s.streak0 : s.streak1;
   const speed = 0.9 + Math.min(shotsTaken, 8) * 0.14;
 
   useEffect(() => {
@@ -63,26 +80,42 @@ export function BasketballRivalry({
 
   function shoot() {
     if (!myTurn || locked || s.done) return;
-    const hit = Math.abs(pos - 50) <= TARGET_HALF;
+    const off = Math.abs(pos - 50);
+    const perfect = off <= PERFECT_HALF;
+    const hit = off <= TARGET_HALF;
     setLocked(true);
     window.setTimeout(() => {
-      const nextShots0 = s.turn === 0 ? s.shots0 + 1 : s.shots0;
-      const nextShots1 = s.turn === 1 ? s.shots1 + 1 : s.shots1;
-      const done = nextShots0 >= SHOTS_EACH && nextShots1 >= SHOTS_EACH;
+      const base = perfect ? 2 : hit ? 1 : 0;
+      const nextStreak = hit ? streak + 1 : 0;
+      // Every third consecutive make adds a bonus point.
+      const bonus = hit && nextStreak > 0 && nextStreak % 3 === 0 ? 1 : 0;
+      const gained = base + bonus;
+      const mark = perfect ? "2" : hit ? "1" : "0";
+      const isP0 = s.turn === 0;
+      const nextShots0 = isP0 ? s.shots0 + 1 : s.shots0;
+      const nextShots1 = isP0 ? s.shots1 : s.shots1 + 1;
       patch({
         shots0: nextShots0,
         shots1: nextShots1,
-        s0: s.s0 + (hit && s.turn === 0 ? 1 : 0),
-        s1: s.s1 + (hit && s.turn === 1 ? 1 : 0),
-        turn: (s.turn === 0 ? 1 : 0) as 0 | 1,
-        lastResult: hit ? "swish" : "miss",
-        done,
+        s0: s.s0 + (isP0 ? gained : 0),
+        s1: s.s1 + (isP0 ? 0 : gained),
+        streak0: isP0 ? nextStreak : s.streak0,
+        streak1: isP0 ? s.streak1 : nextStreak,
+        best0: isP0 ? Math.max(s.best0, nextStreak) : s.best0,
+        best1: isP0 ? s.best1 : Math.max(s.best1, nextStreak),
+        log0: isP0 ? s.log0 + mark : s.log0,
+        log1: isP0 ? s.log1 : s.log1 + mark,
+        turn: (isP0 ? 1 : 0) as 0 | 1,
+        lastResult: perfect ? "perfect" : hit ? "swish" : "miss",
+        shotSeq: s.shotSeq + 1,
+        done: nextShots0 >= SHOTS_EACH && nextShots1 >= SHOTS_EACH,
       });
       setLocked(false);
-    }, 620);
+    }, 560);
   }
 
   if (s.done) {
+    const made = (log: string) => [...log].filter((c) => c !== "0").length;
     return (
       <GameFrame game={game} onExit={onExit}>
         <GameSummary
@@ -91,8 +124,13 @@ export function BasketballRivalry({
           headline={
             s.s0 === s.s1 ? "Tied on the buzzer" : `${players[s.s0 > s.s1 ? 0 : 1].name} wins`
           }
-          detail={`${SHOTS_EACH} shots each. Bragging rights last until the rematch.`}
+          detail={`${SHOTS_EACH} shots each. Dead-centre shots score double, every third make in a row adds a bonus.`}
           scored
+          stats={[
+            { label: `${players[0].name} made`, value: `${made(s.log0)}/${SHOTS_EACH}` },
+            { label: `${players[1].name} made`, value: `${made(s.log1)}/${SHOTS_EACH}` },
+            { label: "Best streak", value: Math.max(s.best0, s.best1) },
+          ]}
           onRematch={() => reset(initial)}
           onExit={() =>
             onFinish({
@@ -105,6 +143,8 @@ export function BasketballRivalry({
       </GameFrame>
     );
   }
+
+  const log = s.turn === 0 ? s.log0 : s.log1;
 
   return (
     <GameFrame
@@ -122,34 +162,76 @@ export function BasketballRivalry({
         />
       </div>
 
-      <div className="mt-6 flex flex-col items-center gap-6">
-        <div
-          className={cn(
-            "flex h-36 w-36 items-center justify-center rounded-full bg-sunny/30 text-7xl",
-            s.lastResult === "swish" && "animate-pop-in",
-            s.lastResult === "miss" && "animate-wiggle",
-          )}
-          aria-hidden
-        >
-          🏀
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <StatPill label="Streak" value={streak} tone={streak >= 2 ? "success" : "muted"} />
+        <div className="flex gap-1" aria-hidden>
+          {Array.from({ length: SHOTS_EACH }).map((_, i) => (
+            <span
+              key={i}
+              className={cn(
+                "h-2 w-2 rounded-full",
+                log[i] === "2"
+                  ? "bg-success"
+                  : log[i] === "1"
+                    ? "bg-primary"
+                    : log[i] === "0"
+                      ? "bg-muted-foreground/40"
+                      : "bg-muted",
+              )}
+            />
+          ))}
         </div>
-        <p className="h-6 text-sm font-bold" aria-live="polite">
-          {s.lastResult === "swish" ? (
+      </div>
+
+      {/* Court */}
+      <div className="relative mt-5 overflow-hidden rounded-[1.75rem] bg-night px-5 pb-6 pt-8 text-night-foreground shadow-float">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-16 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl"
+        />
+        {/* backboard + hoop */}
+        <div className="relative mx-auto w-40">
+          <div className="h-14 w-full rounded-xl border-2 border-night-foreground/25 bg-night-soft" />
+          <div className="mx-auto -mt-2 h-2 w-20 rounded-full bg-primary" />
+          <div className="mx-auto h-6 w-20 [clip-path:polygon(0_0,100%_0,72%_100%,28%_100%)] bg-[repeating-linear-gradient(135deg,transparent_0_5px,var(--night-foreground)_5px_6px)] opacity-40" />
+        </div>
+
+        <div className="relative mt-6 flex justify-center">
+          <span
+            key={s.shotSeq}
+            className={cn(
+              "grid h-24 w-24 place-items-center rounded-full bg-sunny/25 text-6xl",
+              s.lastResult === "miss" ? "animate-wiggle" : "animate-pop-in",
+            )}
+            aria-hidden
+          >
+            🏀
+          </span>
+        </div>
+
+        <p className="relative mt-4 h-6 text-center text-sm font-bold" aria-live="polite">
+          {s.lastResult === "perfect" ? (
+            <span className="text-success">Nothing but net! +2</span>
+          ) : s.lastResult === "swish" ? (
             <span className="text-success">Swish! +1</span>
           ) : s.lastResult === "miss" ? (
-            <span className="text-muted-foreground">Rimmed out.</span>
+            <span className="text-night-muted">Rimmed out.</span>
           ) : (
-            <span className="text-muted-foreground">Tap when the marker hits the middle.</span>
+            <span className="text-night-muted">Tap when the marker hits the middle.</span>
           )}
         </p>
 
-        <div className="relative h-12 w-full overflow-hidden rounded-full border border-border bg-muted">
+        <div className="relative mt-4 h-12 w-full overflow-hidden rounded-full border border-night-foreground/15 bg-night-soft">
           <div
             className="absolute inset-y-0 bg-success/25"
             style={{ left: `${50 - TARGET_HALF}%`, width: `${TARGET_HALF * 2}%` }}
           />
           <div
-            className="absolute inset-y-1.5 w-2 -translate-x-1/2 rounded-full bg-primary"
+            className="absolute inset-y-0 bg-success/45"
+            style={{ left: `${50 - PERFECT_HALF}%`, width: `${PERFECT_HALF * 2}%` }}
+          />
+          <div
+            className="absolute inset-y-1.5 w-2 -translate-x-1/2 rounded-full bg-primary shadow-float"
             style={{ left: `${pos}%` }}
           />
         </div>

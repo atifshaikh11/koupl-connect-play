@@ -1,4 +1,4 @@
-import { RotateCcw, X } from "lucide-react";
+import { Crown, RotateCcw, Sparkles, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AvatarBubble, ProgressDots } from "@/components/koupl/ui";
+import { AvatarBubble, GameArtwork, ProgressDots } from "@/components/koupl/ui";
 import { cn } from "@/lib/utils";
 import type { GameDef, Player } from "@/lib/koupl/types";
 
@@ -34,45 +34,49 @@ export function GameFrame({
   children: ReactNode;
   header?: ReactNode;
 }) {
+  const hasProgress = typeof step === "number" && !!total;
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-8 pt-5">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-5">
         <div className="mb-3 flex items-center gap-3">
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <button
                 type="button"
                 aria-label="Leave game"
-                className="press flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
+                className="press flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-card"
               >
                 <X className="h-5 w-5" aria-hidden />
               </button>
             </AlertDialogTrigger>
-            <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-2xl">
+            <AlertDialogContent className="max-w-[calc(100%-2rem)] rounded-3xl">
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-display">Leave this game?</AlertDialogTitle>
-                <AlertDialogDescription>Your progress stays saved for one-phone games, so you can resume later.</AlertDialogDescription>
+                <AlertDialogDescription>
+                  Your progress stays saved for one-phone games, so you can pick it back up.
+                </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel className="min-h-11 rounded-xl">Keep playing</AlertDialogCancel>
-                <AlertDialogAction className="min-h-11 rounded-xl" onClick={onExit}>Leave game</AlertDialogAction>
+                <AlertDialogCancel className="min-h-11 rounded-2xl">Keep playing</AlertDialogCancel>
+                <AlertDialogAction className="min-h-11 rounded-2xl" onClick={onExit}>
+                  Leave game
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          <GameArtwork game={game} className="h-11 w-11 shrink-0 rounded-xl" />
           <div className="min-w-0 flex-1">
-            <h1 className="font-display truncate text-base font-bold">
-              <span aria-hidden>{game.emoji}</span> {game.title}
+            <h1 className="font-display truncate text-base font-bold leading-tight">
+              {game.title}
             </h1>
-            {typeof step === "number" && total ? (
-              <p className="text-xs text-muted-foreground">
-                {stepNoun} {Math.min(step + 1, total)} of {total}
-              </p>
-            ) : null}
+            <p className="truncate text-xs text-muted-foreground">
+              {hasProgress
+                ? `${stepNoun} ${Math.min(step! + 1, total!)} of ${total}`
+                : game.tagline}
+            </p>
           </div>
         </div>
-        {typeof step === "number" && total ? (
-          <ProgressDots total={total} index={step} />
-        ) : null}
+        {hasProgress ? <ProgressDots total={total!} index={step!} /> : null}
         {header ? <div className="mt-3">{header}</div> : null}
         <div className="mt-4 flex flex-1 flex-col">{children}</div>
       </div>
@@ -104,12 +108,20 @@ export function PromptCard({
     <div
       key={animateKey}
       className={cn(
-        "animate-pop-in flex min-h-52 flex-col items-center justify-center rounded-3xl px-6 py-10 text-center shadow-float",
+        "animate-pop-in relative flex min-h-52 flex-col items-center justify-center overflow-hidden rounded-[1.75rem] px-6 py-10 text-center shadow-float",
         tones[tone],
         className,
       )}
     >
-      {children}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-current opacity-[0.08]"
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -bottom-14 -left-10 h-32 w-32 rounded-full bg-current opacity-[0.06]"
+      />
+      <div className="relative flex flex-col items-center">{children}</div>
     </div>
   );
 }
@@ -134,7 +146,7 @@ export function ChoiceButton({
       disabled={disabled}
       aria-pressed={selected}
       className={cn(
-        "press min-h-14 w-full rounded-2xl border-2 px-4 py-3 text-base font-bold transition-colors disabled:opacity-55",
+        "press min-h-14 w-full rounded-2xl border-2 px-4 py-3 text-base font-bold shadow-soft transition-all active:translate-y-px disabled:opacity-55 disabled:shadow-none",
         selected
           ? "border-primary bg-primary text-primary-foreground"
           : tone === "success"
@@ -147,6 +159,34 @@ export function ChoiceButton({
   );
 }
 
+/** Small inline stat used above boards and prompts. */
+export function StatPill({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value: ReactNode;
+  tone?: "muted" | "primary" | "success";
+}) {
+  const tones = {
+    muted: "bg-muted text-muted-foreground",
+    primary: "bg-primary/12 text-primary",
+    success: "bg-success/15 text-success",
+  } as const;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
+        tones[tone],
+      )}
+    >
+      <span className="opacity-70">{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </span>
+  );
+}
+
 export function GameSummary({
   players,
   scores,
@@ -155,6 +195,7 @@ export function GameSummary({
   scored,
   onRematch,
   onExit,
+  stats,
 }: {
   players: [Player, Player];
   scores: [number, number];
@@ -163,31 +204,59 @@ export function GameSummary({
   scored: boolean;
   onRematch: () => void;
   onExit: () => void;
+  stats?: { label: string; value: ReactNode }[];
 }) {
+  const max = Math.max(scores[0], scores[1], 1);
   return (
-    <div className="animate-rise flex flex-1 flex-col justify-center gap-6 text-center">
-      <div>
-        <span className="animate-float inline-block text-6xl" aria-hidden>
-          🎉
+    <div className="animate-rise flex flex-1 flex-col justify-center gap-6">
+      <div className="relative overflow-hidden rounded-[1.75rem] bg-night px-6 py-8 text-center text-night-foreground shadow-float">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-primary opacity-30 blur-2xl"
+        />
+        <span className="relative mx-auto grid h-16 w-16 place-items-center rounded-full bg-primary text-primary-foreground">
+          {scored ? (
+            <Crown className="h-8 w-8" aria-hidden />
+          ) : (
+            <Sparkles className="h-8 w-8" aria-hidden />
+          )}
         </span>
-        <h2 className="font-display mt-3 text-2xl font-bold text-balance-tight">{headline}</h2>
-        {detail ? <p className="mt-2 text-sm text-muted-foreground">{detail}</p> : null}
+        <h2 className="font-display relative mt-4 text-2xl font-bold text-balance-tight">
+          {headline}
+        </h2>
+        {detail ? <p className="relative mt-2 text-sm text-night-muted">{detail}</p> : null}
       </div>
 
       {scored ? (
-        <div className="flex items-stretch gap-3">
-          {players.map((p, i) => (
-            <div
-              key={i}
-              className={cn(
-                "surface flex flex-1 flex-col items-center gap-1 p-4",
-                scores[i]! >= scores[1 - i]! && "ring-2 ring-primary",
-              )}
-            >
-              <AvatarBubble emoji={p.avatar} size="md" />
-              <p className="truncate text-xs font-bold">{p.name}</p>
-              <p className="font-display text-3xl font-bold tabular-nums">{scores[i]}</p>
-            </div>
+        <div className="space-y-2">
+          {players.map((p, i) => {
+            const leading = scores[i]! >= scores[1 - i]!;
+            return (
+              <div key={i} className="surface flex items-center gap-3 p-3">
+                <AvatarBubble emoji={p.avatar} size="sm" ring={leading} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-bold">{p.name}</p>
+                  <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-[width] duration-500",
+                        leading ? "bg-primary" : "bg-muted-foreground/40",
+                      )}
+                      style={{ width: `${(scores[i]! / max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="font-display text-2xl font-bold tabular-nums">{scores[i]}</span>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
+      {stats?.length ? (
+        <div className="flex flex-wrap justify-center gap-2">
+          {stats.map((s) => (
+            <StatPill key={s.label} label={s.label} value={s.value} />
           ))}
         </div>
       ) : null}
@@ -196,12 +265,7 @@ export function GameSummary({
         <Button size="lg" className="h-14 rounded-2xl text-base" onClick={onRematch}>
           <RotateCcw className="mr-1 h-5 w-5" aria-hidden /> Play again
         </Button>
-        <Button
-          size="lg"
-          variant="ghost"
-          className="h-12 rounded-2xl text-base"
-          onClick={onExit}
-        >
+        <Button size="lg" variant="ghost" className="h-12 rounded-2xl text-base" onClick={onExit}>
           Back to games
         </Button>
       </div>
