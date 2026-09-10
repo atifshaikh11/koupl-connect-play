@@ -221,9 +221,7 @@ export function DualChoiceGame({
           </div>
         ) : waitingForPartner ? (
           <div className="surface animate-pop-in p-6 text-center" aria-live="polite">
-            <span className="animate-float inline-block text-4xl" aria-hidden>
-              ⏳
-            </span>
+            <Hourglass className="animate-float mx-auto h-9 w-9 text-primary" aria-hidden />
             <p className="mt-2 text-sm font-bold">Locked in.</p>
             <p className="text-sm text-muted-foreground">
               Waiting for {players[mySlot === 0 ? 1 : 0].name} to choose…
