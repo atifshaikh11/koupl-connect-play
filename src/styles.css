@@ -172,6 +172,11 @@
   --sky: oklch(0.72 0.11 236);
   --sky-foreground: oklch(0.16 0.03 250);
 
+  --night: oklch(0.145 0.02 26);
+  --night-soft: oklch(0.225 0.028 26);
+  --night-foreground: oklch(0.98 0.008 80);
+  --night-muted: oklch(0.74 0.022 62);
+
   --border: oklch(0.36 0.04 30);
   --input: oklch(0.36 0.04 30);
   --ring: oklch(0.7 0.185 24);
