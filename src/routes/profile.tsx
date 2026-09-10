@@ -8,6 +8,7 @@ import {
   LogOut,
   Moon,
   Shield,
+  Store,
   Unlink,
   Volume2,
   Vibrate,
@@ -338,6 +339,15 @@ function Profile() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <Link
+          to="/store"
+          className="press flex min-h-14 w-full items-center gap-3 px-4"
+        >
+          <Store className="h-5 w-5 text-muted-foreground" aria-hidden />
+          <span className="flex-1 text-left text-sm font-bold">Koupl on the app store</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        </Link>
 
         <Dialog>
           <DialogTrigger asChild>
