@@ -73,6 +73,11 @@
   --animate-float: float 4s ease-in-out infinite;
   --animate-wiggle: wiggle 0.5s ease-in-out;
   --animate-drop: drop 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  --animate-flip-in: flip-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shot: shot 0.5s cubic-bezier(0.3, 0.8, 0.4, 1) both;
+  --animate-brick: brick 0.5s cubic-bezier(0.3, 0.8, 0.4, 1) both;
+  --animate-shake: shake 0.4s ease-in-out;
+  --animate-halo: halo 1.6s ease-out infinite;
 }
 
 :root {
@@ -247,6 +252,67 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@keyframes flip-in {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateX(-55deg) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shot {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  70% {
+    transform: translate(0, -132px) scale(0.58);
+  }
+  100% {
+    transform: translate(0, -104px) scale(0.5);
+    opacity: 0.15;
+  }
+}
+
+@keyframes brick {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  55% {
+    transform: translate(26px, -104px) scale(0.62) rotate(18deg);
+  }
+  100% {
+    transform: translate(74px, 18px) scale(0.7) rotate(60deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px);
+  }
+  60% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes halo {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
   }
 }
 
