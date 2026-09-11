@@ -30,7 +30,19 @@ export const Route = createFileRoute("/games")({
   component: GamesLibrary,
 });
 
-const FILTERS = ["all", "competitive", "cooperative", "conversation", "quick", "favorites"] as const;
+const FILTERS = [
+  "all",
+  "favorites",
+  "arcade",
+  "reflex",
+  "board",
+  "sports",
+  "puzzle",
+  "competitive",
+  "cooperative",
+  "conversation",
+  "quick",
+] as const;
 
 function GamesLibrary() {
   const { c } = Route.useSearch();
@@ -53,6 +65,7 @@ function GamesLibrary() {
 
   const featured = list.filter((g) => g.featured);
   const rest = list.filter((g) => !g.featured);
+  const battles = GAMES.filter((g) => g.battle);
 
   return (
     <Screen className="px-0 pt-0">
@@ -95,6 +108,19 @@ function GamesLibrary() {
       </header>
 
       <div className="px-4 pt-6">
+        {battles.length && filter === "all" && q.trim() === "" ? (
+          <section className="mb-6">
+            <SectionHeading title="Quick Battle" action={<span className="text-xs font-bold text-muted-foreground">Under 90 seconds</span>} />
+            <div className="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+              {battles.map((g) => (
+                <div key={g.id} className="w-40 shrink-0 snap-start">
+                  <PosterTile game={g} />
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {list.length ? (
           <>
             {featured.length ? (

@@ -1,18 +1,23 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  Brain,
   CircleDot,
   ChevronLeft,
+  Disc3,
+  Flag,
   Gamepad2,
   Heart,
   History,
   Home,
   MessageCircleHeart,
   Scale,
+  Ship,
   Sparkles,
   Target,
   Trophy,
   User,
   UsersRound,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -179,6 +184,11 @@ const GAME_ICONS: Record<string, LucideIcon> = {
   "this-or-that": Scale,
   "truth-or-dare": Trophy,
   "couple-quiz": Gamepad2,
+  "air-hockey-duel": Disc3,
+  "reaction-clash": Zap,
+  "memory-match-duel": Brain,
+  "mini-golf-duel": Flag,
+  "battleship-blitz": Ship,
 };
 
 export function GameArtwork({ game, className }: { game: GameDef; className?: string }) {
