@@ -37,7 +37,7 @@ export function GameFrame({
   const hasProgress = typeof step === "number" && !!total;
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-5">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-5">
         <div className="mb-3 flex items-center gap-3">
           <AlertDialog>
             <AlertDialogTrigger asChild>
