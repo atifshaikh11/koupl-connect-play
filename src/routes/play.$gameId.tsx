@@ -14,6 +14,11 @@ import { BasketballRivalry } from "@/components/games/BasketballRivalry";
 import { PillowTalk } from "@/components/games/PillowTalk";
 import { TruthOrDare } from "@/components/games/TruthOrDare";
 import { CoupleQuiz } from "@/components/games/CoupleQuiz";
+import { AirHockeyDuel } from "@/components/games/AirHockeyDuel";
+import { ReactionClash } from "@/components/games/ReactionClash";
+import { MemoryMatchDuel } from "@/components/games/MemoryMatchDuel";
+import { MiniGolfDuel } from "@/components/games/MiniGolfDuel";
+import { BattleshipBlitz } from "@/components/games/BattleshipBlitz";
 import type { GameProps } from "@/components/games/shared";
 import {
   COUPLE_QUIZ,
@@ -206,20 +211,24 @@ function Play() {
             <button
               type="button"
               aria-pressed={mode === "online"}
+              disabled={game.online === "local"}
               onClick={() => {
+                if (game.online === "local") return;
                 if (!app.session) {
                   toast.error("Create an account to play from two phones");
                   return;
                 }
                 setMode("online");
               }}
-               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
+               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 disabled:opacity-55 ${
                 mode === "online" ? "border-primary bg-primary/10" : "border-border"
               }`}
             >
               <Users className="h-6 w-6" aria-hidden />
               <span className="text-sm font-bold">Two phones</span>
-              <span className="text-xs text-muted-foreground">Live room</span>
+              <span className="text-xs text-muted-foreground">
+                {game.online === "local" ? "Needs one shared screen" : "Live room"}
+              </span>
             </button>
           </div>
 
@@ -474,6 +483,16 @@ function Play() {
       );
     case "couple-quiz":
       return <CoupleQuiz {...base} questions={shuffle(COUPLE_QUIZ, seed).slice(0, 10)} />;
+    case "air-hockey-duel":
+      return <AirHockeyDuel {...base} />;
+    case "reaction-clash":
+      return <ReactionClash {...base} />;
+    case "memory-match-duel":
+      return <MemoryMatchDuel {...base} />;
+    case "mini-golf-duel":
+      return <MiniGolfDuel {...base} />;
+    case "battleship-blitz":
+      return <BattleshipBlitz {...base} />;
     default:
       return null;
     }

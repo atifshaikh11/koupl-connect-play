@@ -12,6 +12,7 @@ export const GAMES: GameDef[] = [
     minutes: "5–10 min",
     featured: true,
     quick: true,
+    online: "turns",
     scored: true,
     description:
       "A card flips, you both tap whether you've done it. Matching confessions score points for the two of you.",
@@ -27,6 +28,7 @@ export const GAMES: GameDef[] = [
     minutes: "5–10 min",
     featured: true,
     quick: true,
+    online: "turns",
     scored: true,
     description:
       "Each round asks who's more likely to do something. Agree and you both score. Disagree and you argue about it.",
@@ -42,6 +44,7 @@ export const GAMES: GameDef[] = [
     minutes: "3–6 min",
     featured: true,
     quick: true,
+    online: "turns",
     scored: true,
     description:
       "Classic drop-and-connect strategy with a couples twist: loser owes a favour.",
@@ -56,6 +59,7 @@ export const GAMES: GameDef[] = [
     players: "2 players",
     minutes: "3–5 min",
     quick: true,
+    online: "turns",
     scored: true,
     description:
       "Time your tap, sink the shot. Ten attempts each and the higher score takes the trophy.",
@@ -69,6 +73,7 @@ export const GAMES: GameDef[] = [
     accent: "berry",
     players: "2 players",
     minutes: "10–20 min",
+    online: "turns",
     scored: false,
     description:
       "Unhurried questions for late evenings. No points, no timer — just take turns and actually listen.",
@@ -82,6 +87,7 @@ export const GAMES: GameDef[] = [
     accent: "mint",
     players: "2 players",
     minutes: "4–8 min",
+    online: "turns",
     scored: true,
     description:
       "Two options, one tap each. Reveal together and see how aligned your tastes really are.",
@@ -95,6 +101,7 @@ export const GAMES: GameDef[] = [
     accent: "primary",
     players: "2 players",
     minutes: "10–15 min",
+    online: "turns",
     scored: true,
     description:
       "Spin between honest answers and playful dares. Complete it for a point, chicken out for none.",
@@ -108,9 +115,86 @@ export const GAMES: GameDef[] = [
     accent: "sky",
     players: "2 players",
     minutes: "6–12 min",
+    online: "turns",
     scored: true,
     description:
       "One of you answers about yourself, the other guesses. Swap every round and count the hits.",
+  },
+  {
+    id: "air-hockey-duel",
+    title: "Air Hockey Duel",
+    tagline: "Flat phone, fast puck",
+    emoji: "🏒",
+    category: "arcade",
+    accent: "sky",
+    players: "2 players",
+    minutes: "1–2 min",
+    featured: true,
+    quick: true,
+    battle: true,
+    online: "local",
+    scored: true,
+    description:
+      "Lay the phone flat between you, grab a half each and slide your paddle. First to five goals wins.",
+  },
+  {
+    id: "reaction-clash",
+    title: "Reaction Clash",
+    tagline: "Fastest thumb wins",
+    emoji: "⚡",
+    category: "reflex",
+    accent: "sunny",
+    players: "2 players",
+    minutes: "1 min",
+    quick: true,
+    battle: true,
+    online: "local",
+    scored: true,
+    description:
+      "Both halves flash at a random moment. Tap first to take the round — jump early and you hand it over.",
+  },
+  {
+    id: "memory-match-duel",
+    title: "Memory Match Duel",
+    tagline: "Pairs, turns, bragging",
+    emoji: "🧠",
+    category: "puzzle",
+    accent: "berry",
+    players: "2 players",
+    minutes: "2–4 min",
+    quick: true,
+    online: "turns",
+    scored: true,
+    description:
+      "Sixteen cards, eight pairs. Match to score and go again — two in a row earns a bonus point.",
+  },
+  {
+    id: "mini-golf-duel",
+    title: "Mini Golf Duel",
+    tagline: "Drag, putt, sink",
+    emoji: "⛳",
+    category: "sports",
+    accent: "mint",
+    players: "2 players",
+    minutes: "3–5 min",
+    online: "local",
+    scored: true,
+    description:
+      "Five short holes with bouncing walls. Drag back to aim and putt — the lowest stroke total wins.",
+  },
+  {
+    id: "battleship-blitz",
+    title: "Battleship Blitz",
+    tagline: "Hidden fleets, 6×6 sea",
+    emoji: "🚢",
+    category: "board",
+    accent: "sky",
+    players: "2 players",
+    minutes: "3–6 min",
+    online: "turns",
+    scored: true,
+    description:
+      "Three hidden ships each. Fire a shot, keep your turn on a hit, and sink their fleet first.",
   },
 ];
 
@@ -158,13 +242,48 @@ export const HOW_TO: Record<string, string[]> = {
     "The other guesses what they picked.",
     "Roles swap each round. Correct guesses score.",
   ],
+  "air-hockey-duel": [
+    "Put the phone flat on a table between you.",
+    "Each of you drags a paddle inside your own half — you can both move at once.",
+    "Knock the puck through their goal mouth. First to five.",
+  ],
+  "reaction-clash": [
+    "Thumb on your own half, eyes on the screen.",
+    "When both halves flash green, tap immediately.",
+    "Tapping before the flash gives the point away. Seven flashes decide it.",
+  ],
+  "memory-match-duel": [
+    "Flip two cards on your turn.",
+    "A pair scores and you keep the turn; a miss passes the phone.",
+    "Back-to-back pairs earn a bonus point.",
+  ],
+  "mini-golf-duel": [
+    "Drag backwards from the ball to set aim and power.",
+    "Release to putt — walls bounce and the cup only takes a slow ball.",
+    "Both of you play all five holes; fewest strokes wins.",
+  ],
+  "battleship-blitz": [
+    "Three ships each are hidden on a 6×6 sea.",
+    "Tap a square to fire. Hits let you fire again.",
+    "Sink all of their ships before they sink yours.",
+  ],
 };
 
 export const CATEGORY_LABEL: Record<string, string> = {
+  arcade: "Arcade",
+  reflex: "Reflex",
+  board: "Board & Strategy",
+  sports: "Sports",
+  puzzle: "Puzzle & Word",
   competitive: "Competitive",
-  cooperative: "Cooperative",
-  conversation: "Conversation",
+  cooperative: "Co-op",
+  conversation: "Couples",
   quick: "Quick Play",
+};
+
+export const ONLINE_LABEL: Record<string, string> = {
+  turns: "One phone or two",
+  local: "One shared phone",
 };
 
 /* ------------------------------------------------------------------ */

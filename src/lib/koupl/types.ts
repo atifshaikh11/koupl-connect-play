@@ -39,7 +39,23 @@ export type ActivityItem = {
   created_at: string;
 };
 
-export type GameCategory = "competitive" | "cooperative" | "conversation" | "quick";
+export type GameCategory =
+  | "arcade"
+  | "reflex"
+  | "board"
+  | "sports"
+  | "puzzle"
+  | "competitive"
+  | "cooperative"
+  | "conversation"
+  | "quick";
+
+/**
+ * How a game behaves with two phones:
+ * - "turns": deterministic turn state syncs through the room row.
+ * - "local": needs one shared screen (live physics or simultaneous touch).
+ */
+export type OnlineSupport = "turns" | "local";
 
 export type GameDef = {
   id: string;
@@ -52,6 +68,9 @@ export type GameDef = {
   minutes: string;
   featured?: boolean;
   quick?: boolean;
+  /** Shows up in the Quick Battle rail — 30–90 second matches. */
+  battle?: boolean;
+  online: OnlineSupport;
   scored: boolean;
   description: string;
 };
