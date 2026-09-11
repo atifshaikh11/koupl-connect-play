@@ -19,6 +19,7 @@ const LINES = [
 ] as const;
 
 type Cell = 0 | 1 | null;
+
 type State = {
   board: Cell[];
   turn: 0 | 1;
@@ -44,7 +45,8 @@ function findWin(board: Cell[]): { slot: 0 | 1; line: number[] } | null {
   for (const line of LINES) {
     const [a, b, c] = line;
     const v = board[a];
-    if (v !== null && v === board[b] && v === board[c]) return { slot: v, line: [...line] };
+    if (v !== null && v !== undefined && v === board[b] && v === board[c])
+      return { slot: v, line: [...line] };
   }
   return null;
 }
@@ -52,16 +54,16 @@ function findWin(board: Cell[]): { slot: 0 | 1; line: number[] } | null {
 /** Three in a row, played as a five-round series. */
 export function GridClash({ game, players, mySlot, room, onFinish, onExit }: GameProps) {
   const fx = useGameFx();
-  const [s, patch] = useSharedState<State>(game.id, room, initial);
-  const { showIntro, startPlaying } = useIntro(s.round === 1 && s.board.every((c) => c === null));
+  const { value: s, patch } = useSharedState<State>(initial, room, game.id);
+  const { showIntro, startPlaying } = useIntro(s.round === 1 && (s.board as Cell[]).every((c) => c === null));
   const [note, setNote] = useState<string | null>(null);
 
   const myTurn = mySlot === null || mySlot === s.turn;
-  const roundOver = s.winLine !== null || s.board.every((c) => c !== null);
+  const roundOver = s.winLine !== null || (s.board as Cell[]).every((c) => c !== null);
 
   function place(i: number) {
     if (roundOver || s.board[i] !== null || !myTurn) return;
-    const board = [...s.board];
+    const board: Cell[] = [...(s.board as Cell[])];
     board[i] = s.turn;
     const win = findWin(board);
     if (win) {
@@ -150,12 +152,12 @@ export function GridClash({ game, players, mySlot, room, onFinish, onExit }: Gam
     >
       <TurnBanner
         player={players[s.turn]!}
-        label={roundOver ? "Round over" : myTurn ? "your square" : "waiting for them"}
+        action={roundOver ? "round over" : myTurn ? "your square" : "waiting for them"}
       />
 
       <div className="mt-4 grid flex-1 place-content-center">
         <div className="grid grid-cols-3 gap-2">
-          {s.board.map((cell, i) => (
+          {(s.board as Cell[]).map((cell: Cell, i: number) => (
             <button
               key={i}
               type="button"
@@ -176,7 +178,9 @@ export function GridClash({ game, players, mySlot, room, onFinish, onExit }: Gam
       </div>
 
       <div className="mt-3 space-y-2">
-        {note ? <FeedbackBanner tone={s.winLine ? "good" : "neutral"} message={note} /> : null}
+        {note ? (
+          <FeedbackBanner tone={s.winLine ? "success" : "muted"}>{note}</FeedbackBanner>
+        ) : null}
         {roundOver ? (
           <button
             type="button"
