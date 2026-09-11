@@ -392,8 +392,8 @@ function Play() {
           key: `nhie-${i}`,
           prompt: p,
           options: [
-            { label: "I have 🙋", value: "have" },
-            { label: "Never 🙅", value: "never" },
+            { label: "I have", value: "have" },
+            { label: "Never", value: "never" },
           ],
         }));
       return (
@@ -401,6 +401,8 @@ function Play() {
           {...base}
           rounds={rounds}
           tone="primary"
+          layout="confess"
+          objective="Ten confessions. Answer honestly at the same time — every matching answer scores a point for the two of you."
           matchCopy={{
             hit: "Same answer — point for the pair.",
             miss: "Different answers. Story time.",
@@ -415,8 +417,8 @@ function Play() {
           key: `wml-${i}`,
           prompt: p,
           options: [
-            { label: `${players[0].avatar}  ${players[0].name}`, value: "p0" },
-            { label: `${players[1].avatar}  ${players[1].name}`, value: "p1" },
+            { label: players[0].name, value: "p0" },
+            { label: players[1].name, value: "p1" },
           ],
         }));
       return (
@@ -424,6 +426,8 @@ function Play() {
           {...base}
           rounds={rounds}
           tone="berry"
+          layout="point"
+          objective="Ten rounds of finger-pointing. Point at the same person and you both score."
           matchCopy={{
             hit: "You both pointed the same way.",
             miss: "You each pointed at the other. Bold.",
@@ -448,6 +452,8 @@ function Play() {
           {...base}
           rounds={rounds}
           tone="mint"
+          layout="split"
+          objective="Ten split-second choices. Pick your side in secret, reveal together, and see how aligned your tastes really are."
           matchCopy={{ hit: "Same pick. Frighteningly aligned.", miss: "Split decision." }}
         />
       );

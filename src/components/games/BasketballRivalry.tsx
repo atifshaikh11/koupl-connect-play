@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { GameFrame, GameSummary, StatPill } from "@/components/koupl/GameShell";
+import { GameFrame, GameIntro, GameSummary, StatPill } from "@/components/koupl/GameShell";
 import { ScoreBar, TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
+import { HOW_TO } from "@/lib/koupl/games";
 import { cn } from "@/lib/utils";
-import type { GameProps } from "./shared";
+import { useGameFx, useIntro, type GameProps } from "./shared";
 
 const SHOTS_EACH = 10;
 const TARGET_HALF = 9; // percentage points either side of centre
@@ -46,6 +47,24 @@ const initial: State = {
   shotSeq: 0,
 };
 
+/** Original CSS basketball — no emoji, scales with its container. */
+function Ball({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "relative block h-20 w-20 overflow-hidden rounded-full bg-[radial-gradient(circle_at_32%_28%,var(--color-sunny),var(--color-primary))] shadow-float",
+        className,
+      )}
+    >
+      <span className="absolute inset-y-0 left-1/2 w-[2px] -translate-x-1/2 bg-night/50" />
+      <span className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 bg-night/50" />
+      <span className="absolute -left-6 inset-y-0 w-12 rounded-full border-[2px] border-night/50" />
+      <span className="absolute -right-6 inset-y-0 w-12 rounded-full border-[2px] border-night/50" />
+    </span>
+  );
+}
+
 export function BasketballRivalry({
   game,
   players,
@@ -56,8 +75,11 @@ export function BasketballRivalry({
 }: GameProps) {
   const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [pos, setPos] = useState(50);
+  const [flight, setFlight] = useState<"" | "make" | "miss">("");
   const [locked, setLocked] = useState(false);
   const frame = useRef<number | null>(null);
+  const fx = useGameFx();
+  const { showIntro, startPlaying } = useIntro(s.shots0 === 0 && s.shots1 === 0);
 
   const myTurn = mySlot === null || mySlot === s.turn;
   const shotsTaken = s.turn === 0 ? s.shots0 : s.shots1;
@@ -65,7 +87,7 @@ export function BasketballRivalry({
   const speed = 0.9 + Math.min(shotsTaken, 8) * 0.14;
 
   useEffect(() => {
-    if (s.done || locked) return;
+    if (s.done || locked || showIntro) return;
     let t = 0;
     const tick = () => {
       t += speed;
@@ -76,7 +98,7 @@ export function BasketballRivalry({
     return () => {
       if (frame.current) cancelAnimationFrame(frame.current);
     };
-  }, [s.done, locked, speed]);
+  }, [s.done, locked, speed, showIntro]);
 
   function shoot() {
     if (!myTurn || locked || s.done) return;
@@ -84,6 +106,9 @@ export function BasketballRivalry({
     const perfect = off <= PERFECT_HALF;
     const hit = off <= TARGET_HALF;
     setLocked(true);
+    setFlight(hit ? "make" : "miss");
+    if (hit) fx.win();
+    else fx.fail();
     window.setTimeout(() => {
       const base = perfect ? 2 : hit ? 1 : 0;
       const nextStreak = hit ? streak + 1 : 0;
@@ -110,8 +135,23 @@ export function BasketballRivalry({
         shotSeq: s.shotSeq + 1,
         done: nextShots0 >= SHOTS_EACH && nextShots1 >= SHOTS_EACH,
       });
+      setFlight("");
       setLocked(false);
-    }, 560);
+    }, 620);
+  }
+
+  if (showIntro) {
+    return (
+      <GameFrame game={game} onExit={onExit}>
+        <GameIntro
+          game={game}
+          objective={`${SHOTS_EACH} shots each, taken in turns. Stop the marker dead centre for a double, and every third make in a row adds a bonus point.`}
+          steps={HOW_TO[game.id] ?? []}
+          onStart={startPlaying}
+          startLabel="Step to the line"
+        />
+      </GameFrame>
+    );
   }
 
   if (s.done) {
@@ -155,7 +195,7 @@ export function BasketballRivalry({
       stepNoun="Shot"
       header={<ScoreBar players={players} scores={[s.s0, s.s1]} activeSlot={s.turn} />}
     >
-      <div className="mt-1">
+      <div className="mt-2">
         <TurnBanner
           player={players[s.turn]}
           action={myTurn ? `shot ${shotsTaken + 1} of ${SHOTS_EACH}` : "is lining it up"}
@@ -169,7 +209,7 @@ export function BasketballRivalry({
             <span
               key={i}
               className={cn(
-                "h-2 w-2 rounded-full",
+                "h-2 w-2 rounded-full transition-colors",
                 log[i] === "2"
                   ? "bg-success"
                   : log[i] === "1"
@@ -184,29 +224,43 @@ export function BasketballRivalry({
       </div>
 
       {/* Court */}
-      <div className="relative mt-5 overflow-hidden rounded-[1.75rem] bg-night px-5 pb-6 pt-8 text-night-foreground shadow-float">
+      <div className="relative mt-4 flex flex-1 flex-col justify-center overflow-hidden rounded-[1.75rem] bg-night px-5 pb-6 pt-8 text-night-foreground shadow-float">
         <span
           aria-hidden
           className="pointer-events-none absolute -top-16 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-primary/25 blur-3xl"
         />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-6 bottom-24 h-24 rounded-[100%] border border-night-foreground/10"
+        />
         {/* backboard + hoop */}
         <div className="relative mx-auto w-40">
           <div className="h-14 w-full rounded-xl border-2 border-night-foreground/25 bg-night-soft" />
-          <div className="mx-auto -mt-2 h-2 w-20 rounded-full bg-primary" />
-          <div className="mx-auto h-6 w-20 [clip-path:polygon(0_0,100%_0,72%_100%,28%_100%)] bg-[repeating-linear-gradient(135deg,transparent_0_5px,var(--night-foreground)_5px_6px)] opacity-40" />
+          <div
+            className={cn(
+              "mx-auto -mt-2 h-2 w-20 rounded-full bg-primary transition-transform",
+              flight === "make" && "scale-x-110",
+            )}
+          />
+          <div
+            className={cn(
+              "mx-auto h-6 w-20 [clip-path:polygon(0_0,100%_0,72%_100%,28%_100%)] bg-[repeating-linear-gradient(135deg,transparent_0_5px,var(--night-foreground)_5px_6px)] opacity-40 transition-all",
+              flight === "make" && "h-8 opacity-70",
+            )}
+          />
         </div>
 
-        <div className="relative mt-6 flex justify-center">
-          <span
-            key={s.shotSeq}
+        <div className="relative mt-6 flex h-24 justify-center">
+          <Ball
+            key={`${s.shotSeq}-${flight}`}
             className={cn(
-              "grid h-24 w-24 place-items-center rounded-full bg-sunny/25 text-6xl",
-              s.lastResult === "miss" ? "animate-wiggle" : "animate-pop-in",
+              flight === "make"
+                ? "animate-shot"
+                : flight === "miss"
+                  ? "animate-brick"
+                  : "animate-float",
             )}
-            aria-hidden
-          >
-            🏀
-          </span>
+          />
         </div>
 
         <p className="relative mt-4 h-6 text-center text-sm font-bold" aria-live="polite">
@@ -221,7 +275,12 @@ export function BasketballRivalry({
           )}
         </p>
 
-        <div className="relative mt-4 h-12 w-full overflow-hidden rounded-full border border-night-foreground/15 bg-night-soft">
+        <div
+          className={cn(
+            "relative mt-4 h-12 w-full overflow-hidden rounded-full border border-night-foreground/15 bg-night-soft",
+            flight === "miss" && "animate-shake",
+          )}
+        >
           <div
             className="absolute inset-y-0 bg-success/25"
             style={{ left: `${50 - TARGET_HALF}%`, width: `${TARGET_HALF * 2}%` }}
@@ -237,7 +296,7 @@ export function BasketballRivalry({
         </div>
       </div>
 
-      <div className="mt-auto pt-6">
+      <div className="mt-auto pt-5">
         <Button
           size="lg"
           className="h-20 w-full rounded-3xl text-xl"

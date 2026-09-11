@@ -2,17 +2,19 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
-  ChoiceButton,
+  FeedbackBanner,
   GameFrame,
+  GameIntro,
   GameSummary,
   PromptCard,
   StatPill,
 } from "@/components/koupl/GameShell";
 import { AvatarBubble, ScoreBar, TurnBanner } from "@/components/koupl/ui";
 import { useSharedState } from "@/lib/koupl/useRoom";
+import { HOW_TO } from "@/lib/koupl/games";
 import { cn } from "@/lib/utils";
 import type { QuizQuestion } from "@/lib/koupl/games";
-import type { GameProps } from "./shared";
+import { useGameFx, useIntro, type GameProps } from "./shared";
 
 type State = {
   i: number;
@@ -40,6 +42,8 @@ const initial: State = {
   done: false,
 };
 
+const LETTERS = ["A", "B", "C", "D", "E"];
+
 export function CoupleQuiz({
   game,
   players,
@@ -51,6 +55,8 @@ export function CoupleQuiz({
 }: GameProps & { questions: QuizQuestion[] }) {
   const { value: s, patch, reset } = useSharedState<State>(initial, room, game.id);
   const [passed, setPassed] = useState(false);
+  const fx = useGameFx();
+  const { showIntro, startPlaying } = useIntro(s.i === 0 && s.truth === null && s.guess === null);
 
   const total = questions.length;
   const q = questions[Math.min(s.i, total - 1)]!;
@@ -64,10 +70,22 @@ export function CoupleQuiz({
   const correct = phase === "reveal" && s.truth === s.guess;
   const guesserStreak = guesser === 0 ? s.streak0 : s.streak1;
 
+  function answer(option: string) {
+    if (phase === "truth") {
+      fx.tap();
+      patch({ truth: option });
+      return;
+    }
+    if (option === s.truth) fx.win();
+    else fx.fail();
+    patch({ guess: option });
+  }
+
   function next() {
     const gained = s.truth === s.guess ? 1 : 0;
     const done = s.i + 1 >= total;
     const streak = gained ? guesserStreak + 1 : 0;
+    fx.tap();
     patch({
       i: s.i + 1,
       truth: null,
@@ -81,6 +99,20 @@ export function CoupleQuiz({
       done,
     });
     setPassed(false);
+  }
+
+  if (showIntro) {
+    return (
+      <GameFrame game={game} onExit={onExit}>
+        <GameIntro
+          game={game}
+          objective={`${total} questions, roles swapping every round. One of you answers about yourself, the other tries to guess it.`}
+          steps={HOW_TO[game.id] ?? []}
+          onStart={startPlaying}
+          startLabel="First question"
+        />
+      </GameFrame>
+    );
   }
 
   if (s.done) {
@@ -123,7 +155,7 @@ export function CoupleQuiz({
       total={total}
       header={<ScoreBar players={players} scores={[s.s0, s.s1]} activeSlot={activeSlot} />}
     >
-      <div className="mt-1">
+      <div className="mt-2">
         <TurnBanner
           player={players[activeSlot]}
           action={
@@ -136,14 +168,15 @@ export function CoupleQuiz({
         />
       </div>
 
-      {guesserStreak >= 2 && phase !== "reveal" ? (
-        <div className="mt-2 flex justify-center">
+      <div className="mt-2 flex justify-center gap-2">
+        <StatPill label="Phase" value={phase === "truth" ? "Answering" : phase === "guess" ? "Guessing" : "Reveal"} tone="primary" />
+        {guesserStreak >= 2 && phase !== "reveal" ? (
           <StatPill label="Streak" value={guesserStreak} tone="success" />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
-      <div className="mt-4">
-        <PromptCard tone="sky" animateKey={`${s.i}-${phase}`}>
+      <div className="mt-3 flex flex-1 flex-col">
+        <PromptCard tone="sky" animateKey={`${s.i}-${phase}`} className="min-h-40 flex-1 py-7">
           <p className="font-display text-xl font-bold leading-snug text-balance-tight">
             {phase === "truth"
               ? q.q
@@ -154,7 +187,7 @@ export function CoupleQuiz({
         </PromptCard>
       </div>
 
-      <div className="mt-5 flex flex-1 flex-col justify-end gap-3">
+      <div className="mt-4 flex flex-col justify-end gap-3">
         {needsPass ? (
           <div className="surface animate-pop-in p-6 text-center">
             <AvatarBubble emoji={players[guesser].avatar} size="lg" />
@@ -163,26 +196,21 @@ export function CoupleQuiz({
             <Button
               size="lg"
               className="mt-4 h-14 w-full rounded-2xl text-base"
-              onClick={() => setPassed(true)}
+              onClick={() => {
+                fx.tap();
+                setPassed(true);
+              }}
             >
               Ready to guess
             </Button>
           </div>
         ) : phase === "reveal" ? (
           <div className="animate-rise space-y-4">
-            <div
-              className={cn(
-                "rounded-2xl px-4 py-3 text-center text-sm font-bold",
-                correct ? "bg-success/15 text-success" : "bg-muted text-muted-foreground",
-              )}
-              aria-live="polite"
-            >
-              {correct
-                ? `Correct — point to ${players[guesser].name}`
-                : "Not quite."}
-            </div>
+            <FeedbackBanner tone={correct ? "success" : "muted"} animateKey={s.i}>
+              {correct ? `Correct — point to ${players[guesser].name}` : "Not quite."}
+            </FeedbackBanner>
             <div className="flex gap-3">
-              <div className="surface flex-1 p-3 text-center">
+              <div className="surface animate-flip-in flex-1 p-3 text-center">
                 <AvatarBubble emoji={players[subject].avatar} size="sm" />
                 <p className="mt-1 truncate text-[11px] font-bold text-muted-foreground">
                   Real answer
@@ -191,14 +219,13 @@ export function CoupleQuiz({
               </div>
               <div
                 className={cn(
-                  "surface flex-1 p-3 text-center",
+                  "surface animate-flip-in flex-1 p-3 text-center",
                   correct ? "ring-2 ring-success" : "ring-2 ring-transparent",
                 )}
+                style={{ animationDelay: "110ms" }}
               >
                 <AvatarBubble emoji={players[guesser].avatar} size="sm" />
-                <p className="mt-1 truncate text-[11px] font-bold text-muted-foreground">
-                  Guess
-                </p>
+                <p className="mt-1 truncate text-[11px] font-bold text-muted-foreground">Guess</p>
                 <p className="font-display mt-1 text-sm font-bold">{s.guess}</p>
               </div>
             </div>
@@ -207,15 +234,20 @@ export function CoupleQuiz({
             </Button>
           </div>
         ) : (
-          <div className="grid gap-3">
-            {q.options.map((o) => (
-              <ChoiceButton
+          <div className="grid gap-2.5">
+            {q.options.map((o, i) => (
+              <button
                 key={o}
+                type="button"
                 disabled={!myTurn}
-                onClick={() => patch(phase === "truth" ? { truth: o } : { guess: o })}
+                onClick={() => answer(o)}
+                className="press surface flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left text-base font-bold disabled:opacity-55"
               >
-                {o}
-              </ChoiceButton>
+                <span className="font-display grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/12 text-sm text-primary">
+                  {LETTERS[i]}
+                </span>
+                <span className="min-w-0 flex-1">{o}</span>
+              </button>
             ))}
             {!myTurn ? (
               <p className="text-center text-sm text-muted-foreground" aria-live="polite">

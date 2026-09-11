@@ -37,7 +37,7 @@ export function GameFrame({
   const hasProgress = typeof step === "number" && !!total;
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-5">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-5">
         <div className="mb-3 flex items-center gap-3">
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -156,6 +156,93 @@ export function ChoiceButton({
     >
       {children}
     </button>
+  );
+}
+
+/** Rules card shown before the first round of every game. */
+export function GameIntro({
+  game,
+  objective,
+  steps,
+  onStart,
+  startLabel = "Start playing",
+}: {
+  game: GameDef;
+  objective: string;
+  steps: string[];
+  onStart: () => void;
+  startLabel?: string;
+}) {
+  return (
+    <div className="animate-rise flex flex-1 flex-col">
+      <div className="relative overflow-hidden rounded-[1.75rem] bg-night px-6 py-8 text-center text-night-foreground shadow-float">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-12 -top-14 h-40 w-40 rounded-full bg-primary opacity-30 blur-3xl"
+        />
+        <GameArtwork
+          game={game}
+          className="relative mx-auto h-20 w-20 bg-night-soft text-night-foreground"
+        />
+        <h2 className="font-display relative mt-4 text-2xl font-bold text-balance-tight">
+          {game.title}
+        </h2>
+        <p className="relative mt-2 text-sm text-night-muted text-balance-tight">{objective}</p>
+        <div className="relative mt-4 flex flex-wrap justify-center gap-2 text-[11px] font-bold text-night-muted">
+          <span className="rounded-full bg-night-soft px-3 py-1">{game.minutes}</span>
+          <span className="rounded-full bg-night-soft px-3 py-1">{game.players}</span>
+          <span className="rounded-full bg-night-soft px-3 py-1">
+            {game.scored ? "Scored" : "No score"}
+          </span>
+        </div>
+      </div>
+
+      <ol className="mt-5 space-y-2.5">
+        {steps.map((s, i) => (
+          <li key={s} className="surface flex items-start gap-3 p-3.5">
+            <span className="font-display grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/12 text-sm font-bold text-primary">
+              {i + 1}
+            </span>
+            <span className="pt-1 text-sm leading-snug">{s}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-auto pt-6">
+        <Button size="lg" className="h-16 w-full rounded-3xl text-lg" onClick={onStart}>
+          {startLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** One-line result/feedback strip used after each action. */
+export function FeedbackBanner({
+  tone,
+  children,
+  animateKey,
+}: {
+  tone: "success" | "muted" | "primary";
+  children: ReactNode;
+  animateKey?: string | number;
+}) {
+  const tones = {
+    success: "bg-success/15 text-success",
+    primary: "bg-primary/12 text-primary",
+    muted: "bg-muted text-muted-foreground",
+  } as const;
+  return (
+    <p
+      key={animateKey}
+      aria-live="polite"
+      className={cn(
+        "animate-pop-in rounded-2xl px-4 py-3 text-center text-sm font-bold",
+        tones[tone],
+      )}
+    >
+      {children}
+    </p>
   );
 }
 
