@@ -31,8 +31,10 @@ build workflow — to that repository, and keeps them in sync automatically.
 4. Tap **Run workflow** → **Run workflow**.
 5. Wait about 5–15 minutes for the first run.
 
-The workflow installs dependencies, builds the web app, runs `npx cap sync
-android`, installs Java 21 and the Android SDK, and builds the debug APK.
+The workflow installs the Capacitor tooling from the public npm registry, runs
+`npx cap sync android`, installs Java 21 and the Android SDK, and builds the
+debug APK. It deliberately does **not** build the web app: the Android shell
+loads the already-published Koupl site, so there is nothing to bundle.
 
 ---
 
