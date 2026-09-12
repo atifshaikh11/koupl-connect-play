@@ -333,6 +333,21 @@ function Play() {
                       </div>
                     </div>
                   ) : null}
+                  <Button
+                    variant="ghost"
+                    className="mt-3 min-h-11 rounded-2xl text-xs font-bold text-muted-foreground"
+                    onClick={() => {
+                      void room.leave();
+                      toast.success("You left the room");
+                    }}
+                  >
+                    Leave room
+                  </Button>
+                  {!amHost && !waiting ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {bothReady ? "Waiting for the host to start…" : "The host starts the game."}
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 <div className="grid gap-3">
