@@ -145,7 +145,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
       return row;
     },
-    [gameId],
+    [gameId, userId],
   );
 
   /**
