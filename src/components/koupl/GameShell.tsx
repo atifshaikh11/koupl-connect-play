@@ -1,5 +1,5 @@
 import { Crown, RotateCcw, Sparkles, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,8 +14,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AvatarBubble, GameArtwork, ProgressDots } from "@/components/koupl/ui";
+import { AnimatedCounter, ParticleBurst, StreakBadge, WinCelebration, useGameFeel } from "@/components/koupl/GameFeel";
 import { cn } from "@/lib/utils";
 import type { GameDef, Player } from "@/lib/koupl/types";
+import { useApp } from "@/lib/koupl/store";
 
 export function GameFrame({
   game,
@@ -233,16 +235,17 @@ export function FeedbackBanner({
     muted: "bg-muted text-muted-foreground",
   } as const;
   return (
-    <p
+    <div
       key={animateKey}
       aria-live="polite"
       className={cn(
-        "animate-pop-in rounded-2xl px-4 py-3 text-center text-sm font-bold",
+        "animate-pop-in relative overflow-hidden rounded-2xl px-4 py-3 text-center text-sm font-bold",
         tones[tone],
       )}
     >
-      {children}
-    </p>
+      {tone === "success" ? <ParticleBurst /> : null}
+      <span className="relative">{children}</span>
+    </div>
   );
 }
 
@@ -265,6 +268,7 @@ export function StatPill({
     <span
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
+        tone === "success" && "animate-pop-in",
         tones[tone],
       )}
     >
@@ -294,9 +298,20 @@ export function GameSummary({
   stats?: { label: string; value: ReactNode }[];
 }) {
   const max = Math.max(scores[0], scores[1], 1);
+  const { result } = useGameFeel();
+  const { coupleStreak } = useApp();
+  const [celebrationStreak, setCelebrationStreak] = useState(coupleStreak.current);
+  const reported = useRef(false);
+  useEffect(() => {
+    if (reported.current) return;
+    reported.current = true;
+    setCelebrationStreak(result(scores, scored).streak);
+  }, [result, scored, scores]);
+  const close = scored && scores[0] !== scores[1] && Math.abs(scores[0] - scores[1]) === 1;
   return (
     <div className="animate-rise flex flex-1 flex-col justify-center gap-6">
       <div className="relative overflow-hidden rounded-[1.75rem] bg-night px-6 py-8 text-center text-night-foreground shadow-float">
+        <WinCelebration streak={celebrationStreak} />
         <span
           aria-hidden
           className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full bg-primary opacity-30 blur-2xl"
@@ -311,7 +326,7 @@ export function GameSummary({
         <h2 className="font-display relative mt-4 text-2xl font-bold text-balance-tight">
           {headline}
         </h2>
-        {detail ? <p className="relative mt-2 text-sm text-night-muted">{detail}</p> : null}
+        {detail ? <p className="relative mt-2 text-sm text-night-muted">{close ? `So close! ${detail}` : detail}</p> : null}
       </div>
 
       {scored ? (
@@ -333,7 +348,7 @@ export function GameSummary({
                     />
                   </div>
                 </div>
-                <span className="font-display text-2xl font-bold tabular-nums">{scores[i]}</span>
+                <AnimatedCounter value={scores[i]!} fromZero className="font-display text-2xl font-bold" />
               </div>
             );
           })}
@@ -347,6 +362,12 @@ export function GameSummary({
           ))}
         </div>
       ) : null}
+
+      <StreakBadge
+        current={coupleStreak.current}
+        best={coupleStreak.best}
+        name={coupleStreak.leaderName}
+      />
 
       <div className="flex flex-col gap-2">
         <Button size="lg" className="h-14 rounded-2xl text-base" onClick={onRematch}>

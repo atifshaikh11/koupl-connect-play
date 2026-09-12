@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { useApp } from "@/lib/koupl/store";
+import { useGameFeel } from "@/components/koupl/GameFeel";
 import type { GameDef, GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
 import type { RoomApi } from "@/lib/koupl/useRoom";
 
@@ -21,14 +21,11 @@ export const REACTIONS = ["😂", "😍", "😳", "🔥", "🙄"] as const;
  * Every call routes through the user's settings, so muting still works.
  */
 export function useGameFx() {
-  const { buzz } = useApp();
+  const { cue } = useGameFeel();
   return {
-    tap: useCallback(() => buzz(8), [buzz]),
-    win: useCallback(() => {
-      buzz(18);
-      window.setTimeout(() => buzz(26), 120);
-    }, [buzz]),
-    fail: useCallback(() => buzz(30), [buzz]),
+    tap: useCallback(() => cue("tap"), [cue]),
+    win: useCallback((streak = 1) => cue("win", streak), [cue]),
+    fail: useCallback(() => cue("fail"), [cue]),
   };
 }
 

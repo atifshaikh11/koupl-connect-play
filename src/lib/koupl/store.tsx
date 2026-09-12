@@ -3,12 +3,23 @@ import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { HapticManager, SoundManager } from "./feedback";
 import type { ActivityItem, GuestProfile, Player, Settings } from "./types";
 
 const GUEST_KEY = "koupl.guest.v1";
 const SETTINGS_KEY = "koupl.settings.v1";
 const ACTIVITY_KEY = "koupl.activity.v1";
 const FAVORITES_KEY = "koupl.favorites.v1";
+const STREAK_KEY = "koupl.couple-streak.v1";
+
+export type CoupleStreak = {
+  current: number;
+  best: number;
+  leaderId: string | null;
+  leaderName: string | null;
+};
+
+const EMPTY_STREAK: CoupleStreak = { current: 0, best: 0, leaderId: null, leaderName: null };
 
 export type ProfileRow = {
   id: string;
@@ -76,6 +87,7 @@ type Ctx = {
   activity: ActivityItem[];
   activityLoading: boolean;
   favorites: string[];
+  coupleStreak: CoupleStreak;
   setSettings: (patch: Partial<Settings>) => void;
   saveGuest: (patch: Partial<GuestProfile>) => void;
   clearGuest: () => void;
@@ -86,6 +98,7 @@ type Ctx = {
   logActivity: (item: Omit<ActivityItem, "id" | "created_at">) => Promise<void>;
   clearActivity: () => Promise<void>;
   toggleFavorite: (gameId: string) => void;
+  recordCoupleResult: (winner: Player | null) => CoupleStreak;
   refreshActivity: () => Promise<void>;
   signOut: () => Promise<void>;
   buzz: (ms?: number) => void;
@@ -106,6 +119,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [coupleStreak, setCoupleStreak] = useState<CoupleStreak>(EMPTY_STREAK);
 
   /* -------- hydration from localStorage -------- */
   useEffect(() => {
@@ -116,6 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettingsState(readLocal<Settings>(SETTINGS_KEY, DEFAULT_SETTINGS));
     setActivity(readLocal<ActivityItem[]>(ACTIVITY_KEY, [] as ActivityItem[]));
     setFavorites(readLocal<string[]>(FAVORITES_KEY, [] as string[]));
+    setCoupleStreak(readLocal<CoupleStreak>(STREAK_KEY, EMPTY_STREAK));
     setHydrated(true);
   }, []);
 
@@ -124,6 +139,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (typeof document === "undefined") return;
     document.documentElement.classList.toggle("dark", settings.theme === "dark");
   }, [settings.theme]);
+
+  useEffect(() => {
+    SoundManager.setEnabled(settings.sound);
+    HapticManager.setEnabled(settings.haptics);
+  }, [settings.haptics, settings.sound]);
 
   /* -------- auth session -------- */
   useEffect(() => {
@@ -197,6 +217,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   /* -------- actions -------- */
   const setSettings = useCallback(
     (patch: Partial<Settings>) => {
+      if (patch.sound !== undefined) SoundManager.setEnabled(patch.sound);
+      if (patch.haptics !== undefined) HapticManager.setEnabled(patch.haptics);
       setSettingsState((prev) => {
         const next = { ...prev, ...patch };
         writeLocal(SETTINGS_KEY, next);
@@ -356,6 +378,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const recordCoupleResult = useCallback((winner: Player | null) => {
+    let result = EMPTY_STREAK;
+    setCoupleStreak((previous) => {
+      const current = winner
+        ? previous.leaderId === winner.id
+          ? previous.current + 1
+          : 1
+        : 0;
+      result = {
+        current,
+        best: Math.max(previous.best, current),
+        leaderId: winner?.id ?? null,
+        leaderName: winner?.name ?? null,
+      };
+      writeLocal(STREAK_KEY, result);
+      return result;
+    });
+    return result;
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
@@ -364,34 +406,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const buzz = useCallback(
     (ms = 12) => {
-      if (settings.haptics && typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try {
-          navigator.vibrate(ms);
-        } catch {
-          /* ignore */
-        }
-      }
-      if (settings.sound && typeof window !== "undefined") {
-        try {
-          const AudioCtx = window.AudioContext ??
-            (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-          if (!AudioCtx) return;
-          const ctx = new AudioCtx();
-          const oscillator = ctx.createOscillator();
-          const gain = ctx.createGain();
-          oscillator.frequency.value = 520;
-          gain.gain.setValueAtTime(0.035, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.055);
-          oscillator.connect(gain).connect(ctx.destination);
-          oscillator.start();
-          oscillator.stop(ctx.currentTime + 0.06);
-          oscillator.addEventListener("ended", () => void ctx.close());
-        } catch {
-          /* audio may be unavailable until a user gesture */
-        }
-      }
+      SoundManager.play(ms >= 18 ? "win-round" : "tap");
+      void HapticManager.play(ms >= 18 ? "success" : "selection");
     },
-    [settings.haptics, settings.sound],
+    [],
   );
 
   const me: Player = useMemo(() => {
@@ -428,6 +446,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     activity,
     activityLoading,
     favorites,
+    coupleStreak,
     setSettings,
     saveGuest,
     clearGuest,
@@ -438,6 +457,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     logActivity,
     clearActivity,
     toggleFavorite,
+    recordCoupleResult,
     refreshActivity,
     signOut,
     buzz,

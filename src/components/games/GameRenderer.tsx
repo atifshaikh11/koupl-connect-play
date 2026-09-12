@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { GameFeelProvider } from "@/components/koupl/GameFeel";
 import { DualChoiceGame, type DualRound } from "@/components/games/DualChoiceGame";
 import { FourInARow } from "@/components/games/FourInARow";
 import { BasketballRivalry } from "@/components/games/BasketballRivalry";
@@ -44,7 +45,7 @@ const ROUNDS = 10;
  * Renders the screen for any of the games. Shared by one-phone play and the
  * persistent Couple Room, so both paths stay in sync.
  */
-export function GameRenderer({ base, seed }: { base: GameProps; seed: number }): ReactNode {
+function GameScreen({ base, seed }: { base: GameProps; seed: number }): ReactNode {
   const { game, players } = base;
 
   switch (game.id) {
@@ -174,4 +175,12 @@ export function GameRenderer({ base, seed }: { base: GameProps; seed: number }):
     default:
       return null;
   }
+}
+
+export function GameRenderer({ base, seed }: { base: GameProps; seed: number }): ReactNode {
+  return (
+    <GameFeelProvider gameId={base.game.id} players={base.players} mySlot={base.mySlot}>
+      <GameScreen base={base} seed={seed} />
+    </GameFeelProvider>
+  );
 }

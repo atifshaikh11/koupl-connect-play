@@ -16,6 +16,7 @@ import { GameThumb } from "@/components/koupl/GameThumb";
 import type { GameDef, Player } from "@/lib/koupl/types";
 import { moodLabelOf } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
+import { AnimatedCounter } from "@/components/koupl/GameFeel";
 
 /* ------------------------------------------------------------------ */
 /* Layout                                                              */
@@ -461,7 +462,7 @@ export function ScoreBar({
               {activeSlot === i ? "Playing now" : "Waiting"}
             </p>
           </div>
-          <span className="font-display text-xl font-bold tabular-nums">{scores[i]}</span>
+          <AnimatedCounter value={scores[i]!} className="font-display text-xl font-bold" />
         </div>
       ))}
     </div>

@@ -51,3 +51,8 @@ Blocked (needs the app owner):
 - [x] Verified 360x800 and 412x915: all routes, full play flow, no overflow, no console errors
 
 - [x] Final QA pass: 360x800 + 412x915 route sweep, per-game playthroughs to result/rematch, win-copy fix in Four in a Row, zero console errors, green build
+
+## Game feel pass
+
+- [x] Shared audio, native haptics, animated counters, celebrations, and streak rewards across all 28 games
+- [ ] Responsive and production verification at 360x800 and 412x915
