@@ -86,7 +86,9 @@ function CoupleRoom() {
   const activeGame = state.activeGame ? gameById(state.activeGame) : null;
   const inGame = !!activeGame && !!state.started && partnerIn;
   const myReady = amHost ? !!state.hostReady : !!state.guestReady;
+  const partnerReady = amHost ? !!state.guestReady : !!state.hostReady;
   const bothReady = !!state.hostReady && !!state.guestReady;
+  const reconnecting = room.connection === "connecting" || room.connection === "reconnecting";
 
   /* connection indicator */
   useEffect(() => {
@@ -328,12 +330,21 @@ function CoupleRoom() {
             aria-hidden
           />
           {partnerIn ? `${partnerName} is in the room` : "Waiting for your partner to join…"}
-          {onlineNow ? (
+          {onlineNow && !reconnecting ? (
             <Wifi className="ml-auto h-4 w-4 text-success" aria-hidden />
           ) : (
             <WifiOff className="ml-auto h-4 w-4 text-destructive" aria-hidden />
           )}
         </p>
+        {reconnecting ? (
+          <p className="mt-2 text-xs font-bold text-primary" role="status" aria-live="polite">
+            Reconnecting… Your Couple Room will restore automatically.
+          </p>
+        ) : !onlineNow || room.connection === "offline" ? (
+          <p className="mt-2 text-xs font-bold text-destructive" role="status">
+            You’re offline. We’ll reconnect when your connection returns.
+          </p>
+        ) : null}
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button
@@ -388,21 +399,38 @@ function CoupleRoom() {
               </div>
             </div>
             {partnerIn ? (
-              <Button
-                variant={myReady ? "secondary" : "outline"}
-                className="mt-3 h-12 w-full rounded-2xl"
-                onClick={() =>
-                  void room.patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })
-                }
-              >
-                {myReady ? <Check className="h-5 w-5" aria-hidden /> : null}
-                {myReady ? "You’re ready" : "Mark me ready"}
-              </Button>
+              <>
+                <div className="mt-3 grid grid-cols-2 gap-2" aria-live="polite">
+                  <div className={cn("rounded-2xl border p-3", myReady ? "border-success bg-success/10" : "border-border bg-muted/40")}>
+                    <p className="text-xs font-bold">You</p>
+                    <p className={cn("mt-1 text-xs font-bold", myReady ? "text-success" : "text-muted-foreground")}>
+                      {myReady ? "Ready ✓" : "Not ready"}
+                    </p>
+                  </div>
+                  <div className={cn("rounded-2xl border p-3", partnerReady ? "border-success bg-success/10" : "border-border bg-muted/40")}>
+                    <p className="truncate text-xs font-bold">Partner</p>
+                    <p className={cn("mt-1 text-xs font-bold", partnerReady ? "text-success" : "text-muted-foreground")}>
+                      {partnerReady ? "Ready ✓" : "Not ready"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={myReady ? "secondary" : "outline"}
+                  className="mt-2 h-12 w-full rounded-2xl"
+                  disabled={!onlineNow || reconnecting}
+                  onClick={() =>
+                    void room.patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })
+                  }
+                >
+                  {myReady ? <Check className="h-5 w-5" aria-hidden /> : null}
+                  {myReady ? "Set me not ready" : "Mark me ready"}
+                </Button>
+              </>
             ) : null}
             <Button
               size="lg"
               className="mt-2 h-14 w-full rounded-2xl text-base"
-              disabled={!partnerIn || !bothReady || !amHost || !onlineNow}
+              disabled={!partnerIn || !bothReady || !amHost || !onlineNow || reconnecting}
               onClick={() => {
                 if (starting.current) return;
                 starting.current = true;

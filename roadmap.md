@@ -55,4 +55,11 @@ Blocked (needs the app owner):
 ## Game feel pass
 
 - [x] Shared audio, native haptics, animated counters, celebrations, and streak rewards across all 28 games
-- [ ] Responsive and production verification at 360x800 and 412x915
+- [x] Responsive and production verification at 360x800 and 412x915
+
+## Release readiness phases
+
+- [ ] Phase 1: authoritative Couple Room readiness, reconnect recovery, and clean build
+- [ ] Phase 2: logic/lifecycle QA and fixes across all 28 games
+- [ ] Phase 3: room onboarding, shareable results, Our Story, and permission-aware notifications
+- [ ] Final mobile browser QA, security review, and physical-device validation notes
