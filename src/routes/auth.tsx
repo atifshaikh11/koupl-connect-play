@@ -78,15 +78,24 @@ function Auth() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) {
-      toast.error("Google sign-in failed");
-      return;
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        // Always a full, same-origin public URL: works in the browser and inside
+        // the Android WebView, which keeps the whole OAuth round-trip on one origin.
+        redirect_uri: `${window.location.origin}/auth/callback`,
+      });
+      if (result.error) {
+        toast.error(result.error.message || "Google sign-in failed. Try email instead.");
+        return;
+      }
+      if (result.redirected) return;
+      void navigate({ to: "/" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed. Try email instead.");
+    } finally {
+      setBusy(false);
     }
-    if (result.redirected) return;
-    void navigate({ to: "/" });
   }
 
   if (sent) {
