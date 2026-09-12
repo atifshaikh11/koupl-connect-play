@@ -145,6 +145,45 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     [gameId],
   );
 
+  /**
+   * Re-read the authoritative row. Realtime can miss updates while the tab is
+   * backgrounded or the connection drops, so we resync on focus/reconnect.
+   */
+  const refresh = useCallback(async () => {
+    const id = roomIdRef.current;
+    if (!id || !userId) return;
+    const { data } = await supabase.from("rooms").select("*").eq("id", id).maybeSingle();
+    const row = data as RoomRow | null;
+    if (!row || row.status === "closed") {
+      setRoom(null);
+      setError("The room was closed.");
+      if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
+      return;
+    }
+    if (row.host_id !== userId && row.guest_id !== userId) {
+      setRoom(null);
+      setError("You're no longer in that room.");
+      if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
+      return;
+    }
+    setRoom(row);
+  }, [gameId, userId]);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sync = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("online", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [refresh]);
+
   const leave = useCallback(async () => {
     const id = roomIdRef.current;
     setRoom(null);
