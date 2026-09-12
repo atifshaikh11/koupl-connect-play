@@ -87,7 +87,7 @@ jobs:
           ls -la android/capacitor-cordova-android-plugins
 
       - name: Sync Capacitor Android project
-        run: npx --no-install cap sync android --verbose
+        run: npx --no-install cap sync android
 
       - name: Restore app manifest
         if: always()
