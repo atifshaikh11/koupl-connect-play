@@ -1,5 +1,5 @@
 import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, Copy, Share2, Smartphone, Users, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,9 +91,10 @@ function Play() {
   const [started, setStarted] = useState(false);
   const [mode, setMode] = useState<"local" | "online">("local");
   const [joinCode, setJoinCode] = useState("");
-  const [seed, setSeed] = useState(() => Math.random());
+  const [localSeed, setLocalSeed] = useState(() => Math.random());
   const [saved, setSaved] = useState(false);
   const [onlineNow, setOnlineNow] = useState(true);
+  const starting = useRef(false);
 
   useEffect(() => {
     setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
@@ -114,14 +115,35 @@ function Play() {
     hostReady?: boolean;
     guestReady?: boolean;
     started?: boolean;
+    seed?: number;
   };
   const amHost = room.room?.host_id === app.session?.user.id;
   const myReady = amHost ? !!lobbyState.hostReady : !!lobbyState.guestReady;
   const bothReady = !!lobbyState.hostReady && !!lobbyState.guestReady;
+  const inRoom = mode === "online" && !!room.room;
+  // Both phones must shuffle the same deck, so the host's seed lives in the room.
+  const seed = inRoom && typeof lobbyState.seed === "number" ? lobbyState.seed : localSeed;
 
   useEffect(() => {
     if (mode === "online" && lobbyState.started) setStarted(true);
   }, [lobbyState.started, mode]);
+
+  // The room disappeared mid-game (partner left, or it was closed): fall back to
+  // the lobby instead of leaving a dead game on screen.
+  useEffect(() => {
+    if (mode !== "online" || !started || room.room) return;
+    setStarted(false);
+    starting.current = false;
+    toast.error(room.error ?? "The room closed.");
+  }, [mode, started, room.room, room.error]);
+
+  // Surface room problems once (the lobby also shows them inline).
+  const shownError = useRef<string | null>(null);
+  useEffect(() => {
+    if (!room.error || shownError.current === room.error) return;
+    shownError.current = room.error;
+    toast.error(room.error);
+  }, [room.error]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
@@ -214,7 +236,10 @@ function Play() {
             <button
               type="button"
               aria-pressed={mode === "local"}
-              onClick={() => setMode("local")}
+              onClick={() => {
+                if (room.room) void room.leave();
+                setMode("local");
+              }}
                className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
                 mode === "local" ? "border-primary bg-primary/10" : "border-border"
               }`}
@@ -363,8 +388,16 @@ function Play() {
               className="h-16 w-full rounded-3xl text-lg"
               disabled={mode === "online" && (!room.room || !room.room.guest_id || !bothReady || !amHost || !onlineNow)}
               onClick={() => {
-                if (mode === "online") void room.patchState({ started: true });
+                if (starting.current) return;
+                starting.current = true;
+                if (mode === "online") {
+                  // One synchronised start, with a deck seed both phones share.
+                  void room.patchState({ started: true, seed: localSeed });
+                }
                 setStarted(true);
+                window.setTimeout(() => {
+                  starting.current = false;
+                }, 1200);
               }}
             >
               {mode === "online" && waiting
@@ -384,7 +417,7 @@ function Play() {
                 onClick={() => {
                   clearSavedGame(game.id);
                   setSaved(false);
-                  setSeed(Math.random());
+                  setLocalSeed(Math.random());
                   setStarted(true);
                 }}
               >

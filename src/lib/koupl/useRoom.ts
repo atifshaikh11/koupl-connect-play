@@ -21,6 +21,9 @@ export type RoomApi = {
   join: (code: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
   patchState: (patch: Record<string, unknown>) => Promise<void>;
+  /** Pull the authoritative row again (reconnect / tab focus / refresh). */
+  refresh: () => Promise<void>;
+  clearError: () => void;
 };
 
 /** Live two-player room backed by the database with realtime updates. */
@@ -131,7 +134,10 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         return null;
       }
       if (row.game_id !== gameId) {
-        setError("That room is for a different game.");
+        // Don't stay attached to a room we can't play in.
+        if (userId && row.guest_id === userId)
+          await supabase.from("rooms").update({ guest_id: null }).eq("id", row.id);
+        setError("That code belongs to a different game.");
         return null;
       }
       setRoom(row);
@@ -139,8 +145,47 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
       return row;
     },
-    [gameId],
+    [gameId, userId],
   );
+
+  /**
+   * Re-read the authoritative row. Realtime can miss updates while the tab is
+   * backgrounded or the connection drops, so we resync on focus/reconnect.
+   */
+  const refresh = useCallback(async () => {
+    const id = roomIdRef.current;
+    if (!id || !userId) return;
+    const { data } = await supabase.from("rooms").select("*").eq("id", id).maybeSingle();
+    const row = data as RoomRow | null;
+    if (!row || row.status === "closed") {
+      setRoom(null);
+      setError("The room was closed.");
+      if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
+      return;
+    }
+    if (row.host_id !== userId && row.guest_id !== userId) {
+      setRoom(null);
+      setError("You're no longer in that room.");
+      if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
+      return;
+    }
+    setRoom(row);
+  }, [gameId, userId]);
+
+  const clearError = useCallback(() => setError(null), []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sync = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    window.addEventListener("online", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      window.removeEventListener("online", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [refresh]);
 
   const leave = useCallback(async () => {
     const id = roomIdRef.current;
@@ -163,7 +208,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     if (err) setError(err.message);
   }, []);
 
-  return { room, error, busy, create, join, leave, patchState };
+  return { room, error, busy, create, join, leave, patchState, refresh, clearError };
 }
 
 export function randomRoomCode(len = 5) {
