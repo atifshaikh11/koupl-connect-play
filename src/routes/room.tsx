@@ -115,15 +115,19 @@ function CoupleRoom() {
   }, [room.error]);
 
   /* android/browser back while playing returns to the room, not out of it */
+  const patchRef = useRef(room.patchState);
+  patchRef.current = room.patchState;
   useEffect(() => {
     if (!inGame) return;
+    // Only once per game session: `room` is a fresh object each render, so it
+    // must stay out of the dependency list or every render pushes history.
     window.history.pushState({ koupl: "game" }, "");
     const onPop = () => {
-      void room.patchState({ started: false });
+      void patchRef.current({ started: false });
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
-  }, [inGame, room]);
+  }, [inGame]);
 
   const partnerName = app.partner?.name ?? "Partner";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
