@@ -33,10 +33,13 @@ build workflow — to that repository, and keeps them in sync automatically.
 
 The workflow swaps in a minimal, public-npm-only manifest (so the project's
 private build-cache registry and web toolchain are never touched), installs the
-Capacitor CLI and plugins, runs `npx cap sync android`, installs Java 21 and the
-Android SDK, and builds the debug APK. It deliberately does **not** build the
-web app: the Android shell loads the already-published Koupl site, so there is
-nothing to bundle.
+Capacitor Android modules and plugins, validates the committed native metadata,
+installs Java 21 and the Android SDK, and builds the debug APK. It deliberately
+does **not** run `cap sync` or build the web app: the complete generated Android
+project is committed, and the Android shell loads the already-published Koupl
+site, so there is nothing to bundle.
+
+The workflow uses Node 22 because Capacitor 8.5.1 requires Node 22 or newer.
 
 
 ---

@@ -1,0 +1,33 @@
+{
+	"appId": "com.koupl.app",
+	"appName": "Koupl",
+	"webDir": "android-www",
+	"android": {
+		"allowMixedContent": false,
+		"captureInput": true,
+		"webContentsDebuggingEnabled": false
+	},
+	"server": {
+		"url": "https://koupl-connect-play.lovable.app",
+		"cleartext": false,
+		"androidScheme": "https",
+		"allowNavigation": [
+			"koupl-connect-play.lovable.app",
+			"*.supabase.co",
+			"*.lovable.app"
+		]
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 900,
+			"launchAutoHide": true,
+			"backgroundColor": "#1C0F0E",
+			"androidScaleType": "CENTER_CROP",
+			"showSpinner": false
+		},
+		"Keyboard": {
+			"resize": "native",
+			"resizeOnFullScreen": true
+		}
+	}
+}

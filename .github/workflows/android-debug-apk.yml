@@ -5,7 +5,8 @@ name: Android Debug APK
 #
 # The Android app is a Capacitor shell that loads the deployed production site
 # (see capacitor.config.ts -> server.url), so this workflow does NOT need to build
-# the web app. It only needs the Capacitor CLI + plugins to sync the native project.
+# the web app. Capacitor's generated Android metadata is committed; CI only installs
+# the native modules Gradle references and validates those committed files.
 on:
   workflow_dispatch:
   push:
@@ -31,12 +32,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Capacitor 8 requires Node >=22, including during npm dependency install.
+          node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
       # The app's own package.json pins a private build-cache registry through
       # bun.lock/bunfig.toml and pulls in the whole web toolchain, none of which CI
-      # needs. Swap in a minimal, public-registry-only manifest for the sync step.
+      # needs. Swap in a minimal, public-registry-only manifest for the native build.
       - name: Prepare Capacitor-only manifest
         run: |
           set -euxo pipefail
@@ -47,10 +49,6 @@ jobs:
             "name": "koupl-android-ci",
             "private": true,
             "version": "1.0.0",
-            "devDependencies": {
-              "typescript": "5.9.2",
-              "@capacitor/cli": "8.5.1"
-            },
             "dependencies": {
               "@capacitor/core": "8.5.1",
               "@capacitor/android": "8.5.1",
@@ -81,13 +79,31 @@ jobs:
           test -f android/settings.gradle
           test -f android/app/build.gradle
           test -f android/gradle/wrapper/gradle-wrapper.jar
+          test -f android/app/src/main/assets/capacitor.config.json
+          test -f android/app/src/main/assets/capacitor.plugins.json
+          test -f android/app/src/main/assets/public/index.html
+          test -f android/app/src/main/res/xml/config.xml
           # settings.gradle includes this module; scaffold it if the checkout lacks it.
           mkdir -p android/capacitor-cordova-android-plugins/src/main/java \
                    android/capacitor-cordova-android-plugins/src/main/res
           ls -la android/capacitor-cordova-android-plugins
 
-      - name: Sync Capacitor Android project
-        run: npx --no-install cap sync android
+      - name: Validate committed Capacitor Android project
+        run: |
+          set -euxo pipefail
+          node -e '
+            const fs = require("node:fs");
+            const config = JSON.parse(fs.readFileSync("android/app/src/main/assets/capacitor.config.json", "utf8"));
+            const plugins = JSON.parse(fs.readFileSync("android/app/src/main/assets/capacitor.plugins.json", "utf8"));
+            const expected = ["@capacitor/app", "@capacitor/keyboard", "@capacitor/splash-screen", "@capacitor/status-bar"];
+            if (config.appId !== "com.koupl.app") throw new Error("Unexpected appId: " + config.appId);
+            if (config.server?.url !== "https://koupl-connect-play.lovable.app") throw new Error("Unexpected server URL: " + config.server?.url);
+            const actual = plugins.map(({ pkg }) => pkg).sort();
+            if (JSON.stringify(actual) !== JSON.stringify(expected.sort())) throw new Error("Unexpected plugins: " + actual.join(", "));
+            for (const pkg of ["@capacitor/android", ...expected]) {
+              if (!fs.existsSync("node_modules/" + pkg)) throw new Error("Missing native module: " + pkg);
+            }
+          '
 
       - name: Restore app manifest
         if: always()
