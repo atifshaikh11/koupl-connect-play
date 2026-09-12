@@ -170,12 +170,12 @@ function Home() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-display truncate text-sm font-bold">
-              {app.partner ? `You & ${app.partner.name}` : "No partner yet"}
+              {app.partner ? `You & ${app.partner.name}` : "Your partner isn't connected yet"}
             </p>
             <p className="truncate text-xs text-night-muted">
               {app.partner
                 ? `${played} ${played === 1 ? "game" : "games"} played together`
-                : "Add them to start a streak"}
+                : "Invite them to play together ❤️"}
             </p>
           </div>
           <Dialog>
@@ -185,7 +185,7 @@ function Home() {
                 className="press min-h-11 shrink-0 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
               >
                 <Link2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                {app.partner ? "Manage" : "Connect"}
+                {app.partner ? "Manage" : "Connect Partner"}
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-sm rounded-3xl">
