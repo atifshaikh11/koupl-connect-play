@@ -102,6 +102,8 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     setBusy(true);
     setError(null);
     const code = randomRoomCode();
+    // Close anything this player left open for this game — no ghost rooms.
+    await supabase.rpc("close_stale_rooms", { p_game_id: gameId });
     const { data, error: err } = await supabase
       .from("rooms")
       .insert({ code, host_id: userId, game_id: gameId, status: "waiting", state: {} })
@@ -126,18 +128,15 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       }
       setBusy(true);
       setError(null);
-      const { data, error: err } = await supabase.rpc("join_room", { p_code: clean });
+      // The game id is checked in the database, so a wrong code never joins.
+      const { data, error: err } = await supabase.rpc("join_room", {
+        p_code: clean,
+        p_game_id: gameId,
+      });
       setBusy(false);
       const row = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
       if (err || !row) {
         setError(err?.message ?? "No open room with that code.");
-        return null;
-      }
-      if (row.game_id !== gameId) {
-        // Don't stay attached to a room we can't play in.
-        if (userId && row.guest_id === userId)
-          await supabase.from("rooms").update({ guest_id: null }).eq("id", row.id);
-        setError("That code belongs to a different game.");
         return null;
       }
       setRoom(row);
