@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "@/lib/koupl/store";
+import { initNative } from "@/lib/koupl/native";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
