@@ -251,7 +251,7 @@ function Home() {
               Play Together
             </span>
             <span className="mt-0.5 block truncate text-xs opacity-85">
-              One Couple Room · all {GAMES.length} games · two phones
+              All {GAMES.length} games, two phones
             </span>
           </span>
           <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-foreground/20">
