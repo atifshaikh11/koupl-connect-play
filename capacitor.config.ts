@@ -34,7 +34,6 @@ const config: CapacitorConfig = {
       backgroundColor: "#1C0F0E",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
-ام: undefined,
     },
     Keyboard: {
       resize: "native",
