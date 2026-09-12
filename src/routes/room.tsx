@@ -76,6 +76,7 @@ function CoupleRoom() {
   const [showGames, setShowGames] = useState(false);
   const [onlineNow, setOnlineNow] = useState(true);
   const starting = useRef(false);
+  const [readyBusy, setReadyBusy] = useState(false);
   const preselected = useRef(false);
   const joinedPending = useRef(false);
   const shownError = useRef<string | null>(null);
@@ -208,7 +209,7 @@ function CoupleRoom() {
     toast.success("Result saved — you're back in the Couple Room");
   }
 
-  if (!app.hydrated || app.loading) return <LoadingScreen />;
+  if (!app.hydrated || app.loading || room.restoring) return <LoadingScreen />;
 
   /* ---------------- signed-out ---------------- */
   if (!userId) {
@@ -329,7 +330,11 @@ function CoupleRoom() {
             className={cn("h-2.5 w-2.5 rounded-full", partnerIn ? "bg-success" : "bg-muted-foreground")}
             aria-hidden
           />
-          {partnerIn ? `${partnerName} is in the room` : "Waiting for your partner to join…"}
+          {partnerIn
+            ? room.partnerOnline
+              ? `${partnerName} is online`
+              : `${partnerName} joined · waiting for connection`
+            : "Waiting for your partner to join…"}
           {onlineNow && !reconnecting ? (
             <Wifi className="ml-auto h-4 w-4 text-success" aria-hidden />
           ) : (
@@ -417,10 +422,14 @@ function CoupleRoom() {
                 <Button
                   variant={myReady ? "secondary" : "outline"}
                   className="mt-2 h-12 w-full rounded-2xl"
-                  disabled={!onlineNow || reconnecting}
-                  onClick={() =>
-                    void room.patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })
-                  }
+                  disabled={!onlineNow || reconnecting || !room.partnerOnline || readyBusy}
+                  onClick={() => {
+                    if (readyBusy) return;
+                    setReadyBusy(true);
+                    void room
+                      .patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })
+                      .finally(() => setReadyBusy(false));
+                  }}
                 >
                   {myReady ? <Check className="h-5 w-5" aria-hidden /> : null}
                   {myReady ? "Set me not ready" : "Mark me ready"}
@@ -430,14 +439,13 @@ function CoupleRoom() {
             <Button
               size="lg"
               className="mt-2 h-14 w-full rounded-2xl text-base"
-              disabled={!partnerIn || !bothReady || !amHost || !onlineNow || reconnecting}
+              disabled={!partnerIn || !room.partnerOnline || !bothReady || !amHost || !onlineNow || reconnecting}
               onClick={() => {
                 if (starting.current) return;
                 starting.current = true;
-                void room.patchState({ started: true });
-                window.setTimeout(() => {
+                void room.patchState({ started: true }).finally(() => {
                   starting.current = false;
-                }, 1200);
+                });
               }}
             >
               <Play className="h-5 w-5 fill-current" aria-hidden />

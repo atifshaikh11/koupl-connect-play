@@ -20,7 +20,9 @@ export type RoomApi = {
   room: RoomRow | null;
   error: string | null;
   busy: boolean;
+  restoring: boolean;
   connection: RoomConnection;
+  partnerOnline: boolean;
   create: () => Promise<RoomRow | null>;
   join: (code: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
@@ -35,10 +37,13 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const [room, setRoom] = useState<RoomRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [connection, setConnection] = useState<RoomConnection>("idle");
+  const [partnerOnline, setPartnerOnline] = useState(false);
   const roomIdRef = useRef<string | null>(null);
   const newestRoomAtRef = useRef(0);
   const refreshRef = useRef<() => Promise<void>>(async () => undefined);
+  const patchSequenceRef = useRef(0);
 
   roomIdRef.current = room?.id ?? null;
 
@@ -55,6 +60,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     const savedCode = window.localStorage.getItem(`koupl.room.${gameId}`);
     if (!savedCode) return;
     let active = true;
+    setRestoring(true);
     void supabase
       .from("rooms")
       .select("*")
@@ -68,6 +74,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         const member = !!row && (row.host_id === userId || row.guest_id === userId);
         if (member) acceptAuthoritativeRoom(row);
         else window.localStorage.removeItem(`koupl.room.${gameId}`);
+        setRestoring(false);
       });
     return () => {
       active = false;
@@ -77,6 +84,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   useEffect(() => {
     if (!room?.id) {
       setConnection("idle");
+      setPartnerOnline(false);
       return;
     }
     const id = room.id;
@@ -109,9 +117,18 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
             window.localStorage.removeItem(`koupl.room.${gameId}`);
         },
       )
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const onlineIds = Object.values(state)
+          .flat()
+          .map((presence) => (presence as { userId?: string }).userId)
+          .filter((id): id is string => typeof id === "string");
+        setPartnerOnline(onlineIds.some((id) => id !== userId));
+      })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setConnection("connected");
+          void channel.track({ userId, onlineAt: new Date().toISOString() });
           void refreshRef.current();
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           setConnection(navigator.onLine ? "reconnecting" : "offline");
@@ -120,7 +137,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [acceptAuthoritativeRoom, room?.id, gameId]);
+  }, [acceptAuthoritativeRoom, room?.id, gameId, userId]);
 
   const create = useCallback(async () => {
     if (!userId) return null;
@@ -128,7 +145,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     setError(null);
     const code = randomRoomCode();
     // Close anything this player left open for this game — no ghost rooms.
-    await supabase.rpc("close_stale_rooms", { p_game_id: gameId });
+    if (gameId !== "couple") await supabase.rpc("close_stale_rooms", { p_game_id: gameId });
     const { data, error: err } = await supabase
       .from("rooms")
       .insert({ code, host_id: userId, game_id: gameId, status: "waiting", state: {} })
@@ -236,20 +253,34 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const patchState = useCallback(async (patch: Record<string, unknown>) => {
     const id = roomIdRef.current;
     if (!id) return;
+    const sequence = ++patchSequenceRef.current;
     setRoom((prev) => (prev ? { ...prev, state: { ...prev.state, ...patch } } : prev));
     const { data, error: err } = await supabase.rpc("patch_room_state", {
       p_room_id: id,
       p_patch: patch as never,
     });
     const updated = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
-    if (updated) acceptAuthoritativeRoom(updated);
+    if (updated && sequence === patchSequenceRef.current) acceptAuthoritativeRoom(updated);
     if (err) {
       setError(err.message);
       await refreshRef.current();
     }
   }, [acceptAuthoritativeRoom]);
 
-  return { room, error, busy, connection, create, join, leave, patchState, refresh, clearError };
+  return {
+    room,
+    error,
+    busy,
+    restoring,
+    connection,
+    partnerOnline,
+    create,
+    join,
+    leave,
+    patchState,
+    refresh,
+    clearError,
+  };
 }
 
 export function randomRoomCode(len = 5) {
