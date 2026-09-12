@@ -22,7 +22,7 @@ import {
   Screen,
   SectionHeading,
 } from "@/components/koupl/ui";
-import { CATEGORY_LABEL, DAILY_PROMPTS, GAMES, gameById } from "@/lib/koupl/games";
+import { CATEGORY_LABEL, DAILY_PROMPTS, GAMES, MOOD_LABEL, gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
 
 export const Route = createFileRoute("/")({
@@ -316,7 +316,7 @@ function Home() {
             Categories
           </h2>
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-            {Object.entries(CATEGORY_LABEL).map(([key, label]) => (
+            {Object.entries({ ...MOOD_LABEL, ...CATEGORY_LABEL }).map(([key, label]) => (
               <Link
                 key={key}
                 to="/games"

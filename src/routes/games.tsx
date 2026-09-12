@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { EmptyState, PosterTile, Screen, SectionHeading } from "@/components/koupl/ui";
-import { CATEGORY_LABEL, GAMES } from "@/lib/koupl/games";
+import { CATEGORY_LABEL, GAMES, MOOD_LABEL, matchesFilter } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/games")({
       {
         name: "description",
         content:
-          "Eight original two-player games for couples: Never Have I Ever, Couple Quiz, Four in a Row, Pillow Talk and more.",
+          "Browse 28 original two-player games for couples — competitive duels, co-op puzzles, conversation decks and 60-second quick plays.",
       },
       { property: "og:title", content: "Games library — Koupl" },
       {
@@ -33,35 +33,41 @@ export const Route = createFileRoute("/games")({
 const FILTERS = [
   "all",
   "favorites",
+  "m_competitive",
+  "m_cooperative",
+  "m_conversation",
+  "m_quick",
   "arcade",
   "reflex",
   "board",
   "sports",
   "puzzle",
-  "competitive",
-  "cooperative",
-  "conversation",
-  "quick",
 ] as const;
+
+const FILTER_LABEL: Record<string, string> = {
+  all: "All",
+  favorites: "Favorites",
+  ...MOOD_LABEL,
+  ...CATEGORY_LABEL,
+};
 
 function GamesLibrary() {
   const { c } = Route.useSearch();
   const app = useApp();
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>(() =>
-    FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all",
-  );
+  const [filter, setFilter] = useState<string>(() => (c && FILTER_LABEL[c] ? c : "all"));
   const [q, setQ] = useState("");
 
   useEffect(() => {
-    setFilter(FILTERS.includes(c as (typeof FILTERS)[number]) ? (c as (typeof FILTERS)[number]) : "all");
+    setFilter(c && FILTER_LABEL[c] ? c : "all");
   }, [c]);
 
   const list = GAMES.filter(
     (g) =>
-      (filter === "all" || (filter === "favorites" ? app.favorites.includes(g.id) : g.category === filter)) &&
+      (filter === "favorites" ? app.favorites.includes(g.id) : matchesFilter(g, filter)) &&
       (q.trim() === "" ||
         `${g.title} ${g.tagline} ${g.description}`.toLowerCase().includes(q.toLowerCase())),
   );
+
 
   const featured = list.filter((g) => g.featured);
   const rest = list.filter((g) => !g.featured);
@@ -101,7 +107,7 @@ function GamesLibrary() {
                   : "bg-white/10 text-night-muted",
               )}
             >
-              {f === "all" ? "All" : f === "favorites" ? "Favorites" : CATEGORY_LABEL[f]}
+              {FILTER_LABEL[f]}
             </button>
           ))}
         </div>

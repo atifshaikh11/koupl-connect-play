@@ -1,4 +1,4 @@
-import type { GameDef } from "./types";
+import type { GameCategory, GameDef } from "./types";
 
 export const GAMES: GameDef[] = [
   {
@@ -581,10 +581,38 @@ export const CATEGORY_LABEL: Record<string, string> = {
   quick: "Quick Play",
 };
 
+/**
+ * The four moods we surface on Home and in the library header. Each one rolls
+ * up several fine-grained categories so every game is reachable from a mood.
+ */
+export const MOOD_LABEL: Record<string, string> = {
+  m_competitive: "Competitive",
+  m_cooperative: "Cooperative",
+  m_conversation: "Conversation",
+  m_quick: "Quick Play",
+};
+
+const MOOD_CATEGORIES: Record<string, GameCategory[]> = {
+  m_competitive: ["competitive", "arcade", "reflex", "sports", "board"],
+  m_cooperative: ["cooperative", "puzzle"],
+  m_conversation: ["conversation"],
+  m_quick: ["quick"],
+};
+
+/** Does a game belong under a filter key (mood, category, or "all")? */
+export function matchesFilter(game: GameDef, key: string): boolean {
+  if (key === "all") return true;
+  if (key === "m_quick") return game.category === "quick" || game.quick === true;
+  const mood = MOOD_CATEGORIES[key];
+  if (mood) return mood.includes(game.category);
+  return game.category === key;
+}
+
 export const ONLINE_LABEL: Record<string, string> = {
   turns: "One phone or two",
   local: "One shared phone",
 };
+
 
 /* ------------------------------------------------------------------ */
 /* Original prompt banks                                               */
