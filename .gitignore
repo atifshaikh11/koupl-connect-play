@@ -30,3 +30,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Capacitor / Android
+android/keystore.properties
+*.keystore
+*.jks
+android/.gradle/
+android/app/build/
