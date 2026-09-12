@@ -31,6 +31,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
   const [locked, setLocked] = useState(false);
   const [message, setMessage] = useState("Both of you look — first correct tap scores.");
   const [round, setRound] = useState<Round>(() => makeRound(0));
+  const [tapper, setTapper] = useState<0 | 1>(0);
   const [done, setDone] = useState(false);
   const startedAt = useRef(performance.now());
   const [bestMs, setBestMs] = useState<[number | null, number | null]>([null, null]);
