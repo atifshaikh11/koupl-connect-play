@@ -599,6 +599,19 @@ const MOOD_CATEGORIES: Record<string, GameCategory[]> = {
   m_quick: ["quick"],
 };
 
+/**
+ * The single headline category shown on a game card. Every game rolls up into
+ * exactly one of the four moods, so the badge is never ambiguous.
+ */
+export function moodOf(game: GameDef): string {
+  if (game.category === "quick" || game.quick === true) return "m_quick";
+  if (game.category === "conversation") return "m_conversation";
+  if (MOOD_CATEGORIES['m_cooperative']!.includes(game.category)) return "m_cooperative";
+  return "m_competitive";
+}
+
+export const moodLabelOf = (game: GameDef): string => MOOD_LABEL[moodOf(game)] ?? "Play";
+
 /** Does a game belong under a filter key (mood, category, or "all")? */
 export function matchesFilter(game: GameDef, key: string): boolean {
   if (key === "all") return true;

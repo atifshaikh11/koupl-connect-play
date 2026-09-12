@@ -174,16 +174,17 @@ function GameDetail() {
           <Button
             size="lg"
             className="h-15 w-full rounded-3xl text-lg font-bold"
-            onClick={() => void navigate({ to: "/play/$gameId", params: { gameId: game.id } })}
+            onClick={() => void navigate({ to: "/room", search: { g: game.id } })}
           >
-            <Play className="mr-1 h-5 w-5 fill-current" aria-hidden /> Play on one phone
+            <Users className="mr-1 h-5 w-5" aria-hidden /> Play Together
           </Button>
-          <Link
-            to="/room"
-            className="press mt-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-bold"
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/play/$gameId", params: { gameId: game.id } })}
+            className="press mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border text-sm font-bold"
           >
-            <Users className="h-4 w-4" aria-hidden /> Play Together in Couple Room
-          </Link>
+            <Play className="h-4 w-4 fill-current" aria-hidden /> Play on one phone
+          </button>
         </div>
       </div>
     </div>

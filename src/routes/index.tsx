@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Heart, Link2, Play, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Copy, Heart, Link2, Play, Sparkles, UsersRound, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,9 @@ import {
   Screen,
   SectionHeading,
 } from "@/components/koupl/ui";
-import { CATEGORY_LABEL, DAILY_PROMPTS, GAMES, MOOD_LABEL, gameById } from "@/lib/koupl/games";
+import { DAILY_PROMPTS, GAMES, gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,6 +46,14 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
+
+/** The four ways into the library. Every game sits under exactly one. */
+const MOODS = [
+  { key: "m_competitive", label: "Competitive", blurb: "Duels and rivalries", tone: "bg-primary/8" },
+  { key: "m_cooperative", label: "Cooperative", blurb: "Win it together", tone: "bg-mint/15" },
+  { key: "m_conversation", label: "Conversation", blurb: "Talk and connect", tone: "bg-berry/10" },
+  { key: "m_quick", label: "Quick Play", blurb: "Under five minutes", tone: "bg-sunny/18" },
+] as const;
 
 function greeting() {
   const h = new Date().getHours();
@@ -225,28 +234,80 @@ function Home() {
           </Dialog>
         </div>
 
-        {/* continue / start */}
+        {/* the main entry point: one room, every game */}
+        <Link
+          to="/room"
+          className="press relative mt-3 flex items-center gap-3 overflow-hidden rounded-3xl bg-primary p-4 text-primary-foreground shadow-float"
+        >
+          <span
+            aria-hidden
+            className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary-foreground/15"
+          />
+          <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary-foreground/20">
+            <UsersRound className="h-6 w-6" aria-hidden />
+          </span>
+          <span className="relative min-w-0 flex-1">
+            <span className="font-display block truncate text-lg font-bold leading-tight">
+              Play Together
+            </span>
+            <span className="mt-0.5 block truncate text-xs opacity-85">
+              One Couple Room · all {GAMES.length} games · two phones
+            </span>
+          </span>
+          <span className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-primary-foreground/20">
+            <ArrowRight className="h-5 w-5" aria-hidden />
+          </span>
+        </Link>
+
+        {/* continue on this phone */}
         <Link
           to="/play/$gameId"
           params={{ gameId: lastPlayed?.id ?? featured[0]!.id }}
-          className="press relative mt-3 flex items-center gap-3 rounded-3xl bg-primary p-4 text-primary-foreground"
+          className="press relative mt-2.5 flex items-center gap-3 rounded-3xl bg-night-soft/80 p-3 backdrop-blur"
         >
-          <GameArtwork game={lastPlayed ?? featured[0]!} className="h-12 w-12 bg-primary-foreground/15 text-primary-foreground" />
+          <GameArtwork
+            game={lastPlayed ?? featured[0]!}
+            plain
+            className="h-12 w-12 bg-night/60 text-night-foreground"
+          />
           <span className="min-w-0 flex-1">
-            <span className="block text-xs font-bold uppercase opacity-80">
+            <span className="block text-[11px] font-bold uppercase tracking-wide text-night-muted">
               {resumeGame ? "Pick up where you left off" : lastPlayed ? "Play again" : "Start here"}
             </span>
-            <span className="font-display block truncate text-lg font-bold">
+            <span className="font-display block truncate text-base font-bold">
               {lastPlayed?.title ?? featured[0]!.title}
             </span>
           </span>
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-foreground/20">
-            <Play className="h-5 w-5 fill-current" aria-hidden />
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-night-foreground/12">
+            <Play className="h-4 w-4 fill-current" aria-hidden />
           </span>
         </Link>
       </section>
 
       <div className="px-4 pt-6">
+        {/* four ways in */}
+        <section aria-labelledby="cats-h" className="mb-7">
+          <h2 id="cats-h" className="sr-only">
+            Browse by mood
+          </h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {MOODS.map(({ key, label, blurb, tone }) => (
+              <Link
+                key={key}
+                to="/games"
+                search={{ c: key }}
+                className={cn(
+                  "press surface flex min-h-[4.5rem] flex-col justify-center gap-0.5 px-3.5 py-3",
+                  tone,
+                )}
+              >
+                <span className="font-display truncate text-sm font-bold">{label}</span>
+                <span className="truncate text-[11px] text-muted-foreground">{blurb}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
         {favorites.length ? (
           <section aria-labelledby="favorites-h" className="mb-7">
             <SectionHeading
@@ -310,24 +371,6 @@ function Home() {
           </div>
         </section>
 
-        {/* categories */}
-        <section aria-labelledby="cats-h" className="mb-7">
-          <h2 id="cats-h" className="sr-only">
-            Categories
-          </h2>
-          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-            {Object.entries({ ...MOOD_LABEL, ...CATEGORY_LABEL }).map(([key, label]) => (
-              <Link
-                key={key}
-                to="/games"
-                search={{ c: key }}
-                className="press shrink-0 rounded-full border border-border bg-card px-4 py-2 text-xs font-bold"
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </section>
 
         {/* discovery grid */}
         <section aria-labelledby="discover-h">
