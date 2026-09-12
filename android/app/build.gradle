@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Optional release signing. Create android/keystore.properties (git-ignored) with
+// storeFile / storePassword / keyAlias / keyPassword to enable signed release builds.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+def hasKeystore = keystorePropertiesFile.exists()
+if (hasKeystore) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.koupl.app"
     compileSdk = rootProject.ext.compileSdkVersion
