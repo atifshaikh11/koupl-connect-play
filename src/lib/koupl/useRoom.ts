@@ -205,7 +205,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     if (err) setError(err.message);
   }, []);
 
-  return { room, error, busy, create, join, leave, patchState };
+  return { room, error, busy, create, join, leave, patchState, refresh, clearError };
 }
 
 export function randomRoomCode(len = 5) {
