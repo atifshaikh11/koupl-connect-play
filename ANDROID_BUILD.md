@@ -72,8 +72,9 @@ keyPassword=YOUR_KEY_PASSWORD
    Bundle* for Play Store or *APK* for direct install, choose the keystore above,
    and select the `release` build variant.
 
-   Command line equivalent (after wiring the signing config in
-   `android/app/build.gradle` from `keystore.properties`):
+   The signing config is already wired in `android/app/build.gradle`: it reads
+   `android/keystore.properties` automatically when that file exists, so the
+   command line works too:
 
 ```bash
 cd android
@@ -90,5 +91,9 @@ cd android
   available in the Lovable environment. Steps above must be run locally with
   Android Studio / JDK 17 installed.
 - Debugging of the WebView is disabled for release (`webContentsDebuggingEnabled: false`).
-- No secrets live in the Android project; Supabase uses the same publishable key
-  as the web app, and all access stays behind existing RLS/auth rules.
+- No secrets live in the Android project; the backend uses the same publishable key
+  as the web app, and all access stays behind existing auth/row-level rules.
+- Only the production HTTPS origin and the backend domains are allowed inside the
+  WebView (`server.allowNavigation`). Any other link opens in the phone's browser.
+- No deep links / custom URL scheme are registered: sign-in and room invites all
+  happen in-app, so nothing external needs to call back into the app.
