@@ -137,12 +137,13 @@ function Play() {
     toast.error(room.error ?? "The room closed.");
   }, [mode, started, room.room, room.error]);
 
-  // Surface room problems once, wherever they happen.
+  // Surface room problems once (the lobby also shows them inline).
+  const shownError = useRef<string | null>(null);
   useEffect(() => {
-    if (!room.error) return;
+    if (!room.error || shownError.current === room.error) return;
+    shownError.current = room.error;
     toast.error(room.error);
-    room.clearError();
-  }, [room]);
+  }, [room.error]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
