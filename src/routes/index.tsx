@@ -69,7 +69,18 @@ function Home() {
     return DAILY_PROMPTS[day % DAILY_PROMPTS.length]!;
   }, []);
 
-  const lastPlayed = app.activity[0] ? gameById(app.activity[0].game_id) : null;
+  // A one-phone game that was left mid-way is the most useful thing to offer.
+  const [resumeId, setResumeId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const key = Object.keys(window.localStorage).find((k) => k.startsWith("koupl.game."));
+      setResumeId(key ? key.replace("koupl.game.", "") : null);
+    } catch {
+      setResumeId(null);
+    }
+  }, []);
+  const resumeGame = resumeId ? gameById(resumeId) : null;
+  const lastPlayed = resumeGame ?? (app.activity[0] ? gameById(app.activity[0].game_id) : null);
   const featured = GAMES.filter((g) => g.featured);
   const discover = GAMES.filter((g) => !g.featured);
   const favorites = GAMES.filter((g) => app.favorites.includes(g.id));
