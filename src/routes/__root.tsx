@@ -127,6 +127,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    return initNative(() => {
+      if (router.state.location.pathname === "/") return false;
+      router.history.back();
+      return true;
+    });
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
