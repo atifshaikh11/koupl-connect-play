@@ -26,24 +26,19 @@ export function SumoTug({ game, players, onFinish, onExit }: GameProps) {
   function pull(slot: 0 | 1) {
     if (between || done) return;
     fx.tap();
-    setPos((p) => {
-      const next = clamp(p + (slot === 0 ? PULL : -PULL) + (Math.random() - 0.5) * DRIFT, 0, 100);
-      if (next >= 100 || next <= 0) {
-        const winner: 0 | 1 = next >= 100 ? 0 : 1;
-        fx.win();
-        setBetween(true);
-        setMessage(`${players[winner]!.name} pulls it over the line!`);
-        setWins((w) => {
-          const updated: [number, number] = [
-            w[0] + (winner === 0 ? 1 : 0),
-            w[1] + (winner === 1 ? 1 : 0),
-          ];
-          if (updated[0] >= TARGET || updated[1] >= TARGET) setDone(true);
-          return updated;
-        });
-      }
-      return next;
-    });
+    const next = clamp(pos + (slot === 0 ? PULL : -PULL) + (Math.random() - 0.5) * DRIFT, 0, 100);
+    setPos(next);
+    if (next < 100 && next > 0) return;
+    const winner: 0 | 1 = next >= 100 ? 0 : 1;
+    fx.win();
+    setBetween(true);
+    setMessage(`${players[winner]!.name} pulls it over the line!`);
+    const updated: [number, number] = [
+      wins[0] + (winner === 0 ? 1 : 0),
+      wins[1] + (winner === 1 ? 1 : 0),
+    ];
+    setWins(updated);
+    if (updated[0] >= TARGET || updated[1] >= TARGET) setDone(true);
   }
 
   function nextRound() {
