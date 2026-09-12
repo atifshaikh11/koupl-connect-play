@@ -59,7 +59,9 @@ Blocked (needs the app owner):
 
 ## Release readiness phases
 
-- [ ] Phase 1: authoritative Couple Room readiness, reconnect recovery, and clean build
-- [ ] Phase 2: logic/lifecycle QA and fixes across all 28 games
-- [ ] Phase 3: room onboarding, shareable results, Our Story, and permission-aware notifications
-- [ ] Final mobile browser QA, security review, and physical-device validation notes
+- [x] Phase 1: authoritative Couple Room readiness, reconnect recovery, and clean build
+- [x] Phase 2: logic/lifecycle QA and fixes across all 28 games
+- [x] Phase 3: room onboarding, shareable results, and privacy-safe Our Story milestones
+- [ ] Phase 3: permission-aware push notifications and one daily prompt push (blocked until Firebase Cloud Messaging is connected)
+- [x] Final mobile browser QA and security review
+- [ ] Manual two-physical-device validation of realtime recovery and native push delivery
