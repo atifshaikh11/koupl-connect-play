@@ -1,4 +1,5 @@
-import { Crown, RotateCcw, Sparkles, X } from "lucide-react";
+import { Crown, RotateCcw, Share2, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ import { AnimatedCounter, ParticleBurst, StreakBadge, WinCelebration, useGameFee
 import { cn } from "@/lib/utils";
 import type { GameDef, Player } from "@/lib/koupl/types";
 import { useApp } from "@/lib/koupl/store";
+import { gameById } from "@/lib/koupl/games";
+import { shareResultCard } from "@/lib/koupl/resultShare";
 
 export function GameFrame({
   game,
@@ -298,7 +301,7 @@ export function GameSummary({
   stats?: { label: string; value: ReactNode }[];
 }) {
   const max = Math.max(scores[0], scores[1], 1);
-  const { result } = useGameFeel();
+  const { result, gameId } = useGameFeel();
   const { coupleStreak } = useApp();
   const [celebrationStreak, setCelebrationStreak] = useState(coupleStreak.current);
   const reported = useRef(false);
@@ -370,6 +373,16 @@ export function GameSummary({
       />
 
       <div className="flex flex-col gap-2">
+        <Button
+          size="lg"
+          variant="secondary"
+          className="h-14 rounded-2xl text-base"
+          onClick={() => void shareResultCard({ gameName: gameById(gameId)?.title ?? "Koupl game", players, scores, headline, scored })
+            .then((mode) => toast.success(mode === "shared" ? "Result shared" : "Result card saved"))
+            .catch((error) => { if ((error as DOMException)?.name !== "AbortError") toast.error(error instanceof Error ? error.message : "Couldn't share result"); })}
+        >
+          <Share2 className="mr-1 h-5 w-5" aria-hidden /> Share result
+        </Button>
         <Button size="lg" className="h-14 rounded-2xl text-base" onClick={onRematch}>
           <RotateCcw className="mr-1 h-5 w-5" aria-hidden /> Play again
         </Button>
