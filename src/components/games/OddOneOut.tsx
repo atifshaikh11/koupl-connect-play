@@ -29,7 +29,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
   const [index, setIndex] = useState(0);
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [locked, setLocked] = useState(false);
-  const [message, setMessage] = useState("Both of you look — first correct tap scores.");
+  const [message, setMessage] = useState("Pick who is tapping, then find the odd tile.");
   const [round, setRound] = useState<Round>(() => makeRound(0));
   const [tapper, setTapper] = useState<0 | 1>(0);
   const [done, setDone] = useState(false);
@@ -74,7 +74,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setIndex(i);
     setRound(makeRound(i));
     setLocked(false);
-    setMessage("Both of you look — first correct tap scores.");
+    setMessage("Pick who is tapping, then find the odd tile.");
   }
 
   function rematch() {
@@ -84,7 +84,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setRound(makeRound(0));
     setLocked(false);
     setDone(false);
-    setMessage("Both of you look — first correct tap scores.");
+    setMessage("Pick who is tapping, then find the odd tile.");
   }
 
   if (showIntro) {
