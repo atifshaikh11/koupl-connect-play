@@ -34,19 +34,34 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      # Installed explicitly from the public npm registry: the committed bun.lock
-      # pins an internal build-cache registry that CI cannot reach.
-      - name: Install Capacitor tooling
+      # The app's own package.json pins a private build-cache registry through
+      # bun.lock/bunfig.toml and pulls in the whole web toolchain, none of which CI
+      # needs. Swap in a minimal, public-registry-only manifest for the sync step.
+      - name: Prepare Capacitor-only manifest
         run: |
-          npm install --no-save --no-package-lock --registry=https://registry.npmjs.org \
-            typescript@5 \
-            @capacitor/cli@8 \
-            @capacitor/core@8 \
-            @capacitor/android@8 \
-            @capacitor/app@8 \
-            @capacitor/keyboard@8 \
-            @capacitor/splash-screen@8 \
-            @capacitor/status-bar@8
+          set -euxo pipefail
+          mv package.json package.json.app
+          rm -f bunfig.toml bun.lock bun.lockb package-lock.json
+          cat > package.json <<'JSON'
+          {
+            "name": "koupl-android-ci",
+            "private": true,
+            "version": "1.0.0",
+            "devDependencies": {
+              "typescript": "5.9.2",
+              "@capacitor/cli": "8.5.1"
+            },
+            "dependencies": {
+              "@capacitor/core": "8.5.1",
+              "@capacitor/android": "8.5.1",
+              "@capacitor/app": "8.1.1",
+              "@capacitor/keyboard": "8.0.5",
+              "@capacitor/splash-screen": "8.0.2",
+              "@capacitor/status-bar": "8.0.3"
+            }
+          }
+          JSON
+          npm install --no-audit --no-fund --registry=https://registry.npmjs.org
 
       # Capacitor's generated android/app/capacitor.build.gradle targets Java 21.
       - name: Setup Java 21
@@ -58,8 +73,25 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Check native project is present
+        run: |
+          set -eux
+          test -f capacitor.config.ts
+          test -f android-www/index.html
+          test -f android/settings.gradle
+          test -f android/app/build.gradle
+          test -f android/gradle/wrapper/gradle-wrapper.jar
+          # settings.gradle includes this module; scaffold it if the checkout lacks it.
+          mkdir -p android/capacitor-cordova-android-plugins/src/main/java \
+                   android/capacitor-cordova-android-plugins/src/main/res
+          ls -la android/capacitor-cordova-android-plugins
+
       - name: Sync Capacitor Android project
-        run: npx cap sync android
+        run: npx --no-install cap sync android
+
+      - name: Restore app manifest
+        if: always()
+        run: mv -f package.json.app package.json
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
