@@ -171,9 +171,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      close_stale_rooms: { Args: { p_game_id: string }; Returns: undefined }
       gen_code: { Args: { len?: number }; Returns: string }
       join_room: {
-        Args: { p_code: string }
+        Args: { p_code: string; p_game_id?: string }
         Returns: {
           code: string
           created_at: string

@@ -95,6 +95,7 @@ function Play() {
   const [saved, setSaved] = useState(false);
   const [onlineNow, setOnlineNow] = useState(true);
   const starting = useRef(false);
+  const choseLocal = useRef(false);
 
   useEffect(() => {
     setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
@@ -123,6 +124,12 @@ function Play() {
   const inRoom = mode === "online" && !!room.room;
   // Both phones must shuffle the same deck, so the host's seed lives in the room.
   const seed = inRoom && typeof lobbyState.seed === "number" ? lobbyState.seed : localSeed;
+
+  // After a refresh the saved room is restored: come back on the two-phone tab
+  // (unless this device deliberately switched to one-phone play).
+  useEffect(() => {
+    if (room.room && !choseLocal.current) setMode("online");
+  }, [room.room]);
 
   useEffect(() => {
     if (mode === "online" && lobbyState.started) setStarted(true);
@@ -237,6 +244,7 @@ function Play() {
               type="button"
               aria-pressed={mode === "local"}
               onClick={() => {
+                choseLocal.current = true;
                 if (room.room) void room.leave();
                 setMode("local");
               }}
@@ -258,6 +266,7 @@ function Play() {
                   toast.error("Create an account to play from two phones");
                   return;
                 }
+                choseLocal.current = false;
                 setMode("online");
               }}
                className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 disabled:opacity-55 ${
@@ -323,6 +332,21 @@ function Play() {
                         <span className={lobbyState.guestReady ? "text-success" : "text-muted-foreground"}>{lobbyState.guestReady ? "Ready" : "Not ready"}</span>
                       </div>
                     </div>
+                  ) : null}
+                  <Button
+                    variant="ghost"
+                    className="mt-3 min-h-11 rounded-2xl text-xs font-bold text-muted-foreground"
+                    onClick={() => {
+                      void room.leave();
+                      toast.success("You left the room");
+                    }}
+                  >
+                    Leave room
+                  </Button>
+                  {!amHost && !waiting ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {bothReady ? "Waiting for the host to start…" : "The host starts the game."}
+                    </p>
                   ) : null}
                 </div>
               ) : (
