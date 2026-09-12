@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Koupl</string>
+    <string name="title_activity_main">Koupl</string>
+    <string name="package_name">com.koupl.app</string>
+    <string name="custom_url_scheme">com.koupl.app</string>
+</resources>

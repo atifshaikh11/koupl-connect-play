@@ -1,0 +1,5 @@
+package com.koupl.app;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}
