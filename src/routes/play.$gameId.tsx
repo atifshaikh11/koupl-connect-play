@@ -417,7 +417,7 @@ function Play() {
                 onClick={() => {
                   clearSavedGame(game.id);
                   setSaved(false);
-                  setSeed(Math.random());
+                  setLocalSeed(Math.random());
                   setStarted(true);
                 }}
               >
