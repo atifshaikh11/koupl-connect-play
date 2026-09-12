@@ -83,6 +83,7 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function rematch() {
+    scoredRound.current = 0;
     setWins([0, 0]);
     setTaps([0, 0]);
     setBestBurst([0, 0]);
