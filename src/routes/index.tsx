@@ -4,6 +4,7 @@ import { ArrowRight, Copy, Heart, Link2, Play, Sparkles, UsersRound, Zap } from 
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { StreakBadge } from "@/components/koupl/GameFeel";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -232,6 +233,15 @@ function Home() {
               ) : null}
             </DialogContent>
           </Dialog>
+        </div>
+
+        <div className="relative mt-3">
+          <StreakBadge
+            current={app.coupleStreak.current}
+            best={app.coupleStreak.best}
+            name={app.coupleStreak.leaderName}
+            compact
+          />
         </div>
 
         {/* the main entry point: one room, every game */}
