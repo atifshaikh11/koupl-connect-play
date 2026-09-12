@@ -94,6 +94,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
         return copy;
       });
       setMessage(`Nailed ${seq.length} — passing over`);
+      setSlipped(false);
       setPhase("result");
       return;
     }
@@ -101,12 +102,12 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function next() {
-    const failed = message.includes("broke the chain");
-    if (failed) {
+    if (slipped) {
       if (scores[0] >= 3 || scores[1] >= 3) {
         setDone(true);
         return;
       }
+      setSlipped(false);
       setSeq([]);
       beginTurn(turn === 0 ? 1 : 0, []);
       return;
@@ -118,6 +119,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
     setScores([0, 0]);
     setBest([0, 0]);
     setSeq([]);
+    setSlipped(false);
     setDone(false);
     beginTurn(0, []);
   }
