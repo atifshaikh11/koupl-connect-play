@@ -34,6 +34,15 @@ export function AirHockeyDuel({ game, players, onFinish, onExit }: GameProps) {
   const puckEl = useRef<HTMLDivElement | null>(null);
   const padEls = useRef<[HTMLDivElement | null, HTMLDivElement | null]>([null, null]);
   const started = useRef(false);
+  const scoring = useRef(false);
+  const flashTimer = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (flashTimer.current !== null) window.clearTimeout(flashTimer.current);
+    },
+    [],
+  );
 
   const { w, h } = size;
 
@@ -172,18 +181,25 @@ export function AirHockeyDuel({ game, players, onFinish, onExit }: GameProps) {
   }, !done && !showIntro && w > 0);
 
   function score(slot: 0 | 1) {
+    if (scoring.current || done) return;
+    scoring.current = true;
     fx.win();
     setFlash(slot);
-    window.setTimeout(() => setFlash(null), 900);
+    if (flashTimer.current !== null) window.clearTimeout(flashTimer.current);
+    flashTimer.current = window.setTimeout(() => {
+      setFlash(null);
+      scoring.current = false;
+    }, 900);
     setScores((s) => {
       const next: [number, number] = [s[0] + (slot === 0 ? 1 : 0), s[1] + (slot === 1 ? 1 : 0)];
-      if (next[0] >= TARGET || next[1] >= TARGET) setDone(true);
+      window.queueMicrotask(() => setDone(next[0] >= TARGET || next[1] >= TARGET));
       return next;
     });
     serve(slot === 0 ? 1 : 0);
   }
 
   function rematch() {
+    scoring.current = false;
     setScores([0, 0]);
     setDone(false);
     serve(Math.random() < 0.5 ? 0 : 1);

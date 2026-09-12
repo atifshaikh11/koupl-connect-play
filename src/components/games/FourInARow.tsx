@@ -121,8 +121,8 @@ export function FourInARow({ game, players, mySlot, room, onFinish, onExit }: Ga
       line: "",
       lastMove: -1,
       round: s.round + 1,
-      // Loser of the last round starts the next one.
-      turn: (s.winner === 0 ? 1 : 0) as 0 | 1,
+      // Loser starts after a win; drawn rounds alternate the opening player.
+      turn: (s.winner === null ? s.round % 2 : s.winner === 0 ? 1 : 0) as 0 | 1,
     });
   }
 

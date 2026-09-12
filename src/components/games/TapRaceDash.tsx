@@ -23,6 +23,7 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   const [message, setMessage] = useState("Tap “Go” to start the round.");
   const [done, setDone] = useState(false);
   const tick = useRef<number | null>(null);
+  const runningRef = useRef(false);
 
   useEffect(() => {
     if (!running) return;
@@ -30,6 +31,7 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
       setLeft((l) => {
         if (l <= 1) {
           window.clearInterval(tick.current!);
+          runningRef.current = false;
           setRunning(false);
           return 0;
         }
@@ -59,6 +61,7 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   }, [running, left, players, fx, round, taps]);
 
   function start() {
+    runningRef.current = true;
     setTaps([0, 0]);
     setLeft(SECONDS);
     setMessage("Go!");
@@ -77,12 +80,13 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function hit(slot: 0 | 1) {
-    if (!running) return;
+    if (!runningRef.current) return;
     fx.tap();
     setTaps((t) => [t[0] + (slot === 0 ? 1 : 0), t[1] + (slot === 1 ? 1 : 0)]);
   }
 
   function rematch() {
+    runningRef.current = false;
     scoredRound.current = 0;
     setWins([0, 0]);
     setTaps([0, 0]);

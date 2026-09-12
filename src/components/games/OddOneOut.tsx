@@ -34,6 +34,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
   const [tapper, setTapper] = useState<0 | 1>(0);
   const [done, setDone] = useState(false);
   const startedAt = useRef(performance.now());
+  const lockedRef = useRef(false);
   const [bestMs, setBestMs] = useState<[number | null, number | null]>([null, null]);
 
   useEffect(() => {
@@ -43,7 +44,8 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
   const tiles = useMemo(() => Array.from({ length: round.size * round.size }), [round]);
 
   function tap(i: number, slot: 0 | 1) {
-    if (locked) return;
+    if (lockedRef.current) return;
+    lockedRef.current = true;
     if (i !== round.odd) {
       fx.fail();
       const other: 0 | 1 = slot === 0 ? 1 : 0;
@@ -74,6 +76,8 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setIndex(i);
     setRound(makeRound(i));
     setLocked(false);
+    lockedRef.current = false;
+    startedAt.current = performance.now();
     setMessage("Pick who is tapping, then find the odd tile.");
   }
 
@@ -83,6 +87,8 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setBestMs([null, null]);
     setRound(makeRound(0));
     setLocked(false);
+    lockedRef.current = false;
+    startedAt.current = performance.now();
     setDone(false);
     setMessage("Pick who is tapping, then find the odd tile.");
   }

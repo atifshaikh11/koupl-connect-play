@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { GameFrame, GameIntro, GameSummary } from "@/components/koupl/GameShell";
 import { ScoreBar } from "@/components/koupl/ui";
@@ -22,13 +22,15 @@ export function SumoTug({ game, players, onFinish, onExit }: GameProps) {
   const [message, setMessage] = useState("Tap your side to pull.");
   const [between, setBetween] = useState(false);
   const [done, setDone] = useState(false);
+  const roundLocked = useRef(false);
 
   function pull(slot: 0 | 1) {
-    if (between || done) return;
+    if (between || done || roundLocked.current) return;
     fx.tap();
     const next = clamp(pos + (slot === 0 ? PULL : -PULL) + (Math.random() - 0.5) * DRIFT, 0, 100);
     setPos(next);
     if (next < 100 && next > 0) return;
+    roundLocked.current = true;
     const winner: 0 | 1 = next >= 100 ? 0 : 1;
     fx.win();
     setBetween(true);
@@ -44,6 +46,7 @@ export function SumoTug({ game, players, onFinish, onExit }: GameProps) {
   function nextRound() {
     setPos(50);
     setBetween(false);
+    roundLocked.current = false;
     setMessage("Tap your side to pull.");
   }
 
