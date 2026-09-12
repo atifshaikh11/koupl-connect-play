@@ -72,6 +72,7 @@ export function Screen({
 const NAV = [
   { to: "/", label: "Home", icon: Home },
   { to: "/games", label: "Games", icon: Gamepad2 },
+  { to: "/room", label: "Room", icon: UsersRound },
   { to: "/activity", label: "Activity", icon: History },
   { to: "/profile", label: "Profile", icon: User },
 ] as const;

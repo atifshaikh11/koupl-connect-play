@@ -1,54 +1,17 @@
-import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Check, Copy, Share2, Smartphone, Users, Wifi, WifiOff } from "lucide-react";
-import { toast } from "sonner";
+import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Smartphone, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AvatarBubble, LoadingScreen, Wordmark } from "@/components/koupl/ui";
 import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
-import { useLocalChat, useRoomChat } from "@/lib/koupl/useRoomChat";
-import { DualChoiceGame, type DualRound } from "@/components/games/DualChoiceGame";
-import { FourInARow } from "@/components/games/FourInARow";
-import { BasketballRivalry } from "@/components/games/BasketballRivalry";
-import { PillowTalk } from "@/components/games/PillowTalk";
-import { TruthOrDare } from "@/components/games/TruthOrDare";
-import { CoupleQuiz } from "@/components/games/CoupleQuiz";
-import { AirHockeyDuel } from "@/components/games/AirHockeyDuel";
-import { ReactionClash } from "@/components/games/ReactionClash";
-import { MemoryMatchDuel } from "@/components/games/MemoryMatchDuel";
-import { MiniGolfDuel } from "@/components/games/MiniGolfDuel";
-import { BattleshipBlitz } from "@/components/games/BattleshipBlitz";
-import { TapRaceDash } from "@/components/games/TapRaceDash";
-import { SumoTug } from "@/components/games/SumoTug";
-import { GridClash } from "@/components/games/GridClash";
-import { BoxWars } from "@/components/games/BoxWars";
-import { PenaltyShootout } from "@/components/games/PenaltyShootout";
-import { EchoSequence } from "@/components/games/EchoSequence";
-import { OddOneOut } from "@/components/games/OddOneOut";
-import { NumberHunt } from "@/components/games/NumberHunt";
-import { BowlingRoll } from "@/components/games/BowlingRoll";
-import { LastStick } from "@/components/games/LastStick";
-import { BubblePopPanic } from "@/components/games/BubblePopPanic";
-import { GuessTheWord } from "@/components/games/GuessTheWord";
-import { EmojiDecode } from "@/components/games/EmojiDecode";
-import { TwoTruthsAndALie } from "@/components/games/TwoTruthsAndALie";
-import { RateMyGuess } from "@/components/games/RateMyGuess";
+import { useLocalChat } from "@/lib/koupl/useRoomChat";
+import { GameRenderer } from "@/components/games/GameRenderer";
 import type { GameProps } from "@/components/games/shared";
-import {
-  COUPLE_QUIZ,
-  DARES,
-  NEVER_HAVE_I_EVER,
-  PILLOW_TALK,
-  THIS_OR_THAT,
-  TRUTHS,
-  WHOS_MORE_LIKELY,
-  gameById,
-  shuffle,
-} from "@/lib/koupl/games";
+import { gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
-import { clearSavedGame, useRoom } from "@/lib/koupl/useRoom";
-import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
+import { clearSavedGame } from "@/lib/koupl/useRoom";
+import type { GameResult, Player } from "@/lib/koupl/types";
 
 export const Route = createFileRoute("/play/$gameId")({
   loader: ({ params }) => {
@@ -75,129 +38,49 @@ export const Route = createFileRoute("/play/$gameId")({
   component: Play,
 });
 
-const ROUNDS = 10;
-
+/** One-phone (pass-and-play) session. Two-phone play lives in the Couple Room. */
 function Play() {
   const { game } = Route.useLoaderData();
   const navigate = useNavigate();
   const app = useApp();
-  const room = useRoom(game.id, app.session?.user.id ?? null);
-  const roomChat = useRoomChat(room.room?.id ?? null, {
-    id: app.session?.user.id ?? null,
-    name: app.me.name,
-    avatar: app.me.avatar,
-  });
 
   const [started, setStarted] = useState(false);
-  const [mode, setMode] = useState<"local" | "online">("local");
-  const [joinCode, setJoinCode] = useState("");
   const [localSeed, setLocalSeed] = useState(() => Math.random());
   const [saved, setSaved] = useState(false);
-  const [onlineNow, setOnlineNow] = useState(true);
-  const starting = useRef(false);
-  const choseLocal = useRef(false);
 
   useEffect(() => {
     setSaved(!!window.localStorage.getItem(`koupl.game.${game.id}`));
   }, [game.id]);
 
-  useEffect(() => {
-    const update = () => setOnlineNow(navigator.onLine);
-    update();
-    window.addEventListener("online", update);
-    window.addEventListener("offline", update);
-    return () => {
-      window.removeEventListener("online", update);
-      window.removeEventListener("offline", update);
-    };
-  }, []);
-
-  const lobbyState = (room.room?.state ?? {}) as {
-    hostReady?: boolean;
-    guestReady?: boolean;
-    started?: boolean;
-    seed?: number;
-  };
-  const amHost = room.room?.host_id === app.session?.user.id;
-  const myReady = amHost ? !!lobbyState.hostReady : !!lobbyState.guestReady;
-  const bothReady = !!lobbyState.hostReady && !!lobbyState.guestReady;
-  const inRoom = mode === "online" && !!room.room;
-  // Both phones must shuffle the same deck, so the host's seed lives in the room.
-  const seed = inRoom && typeof lobbyState.seed === "number" ? lobbyState.seed : localSeed;
-
-  // After a refresh the saved room is restored: come back on the two-phone tab
-  // (unless this device deliberately switched to one-phone play).
-  useEffect(() => {
-    if (room.room && !choseLocal.current) setMode("online");
-  }, [room.room]);
-
-  useEffect(() => {
-    if (mode === "online" && lobbyState.started) setStarted(true);
-  }, [lobbyState.started, mode]);
-
-  // The room disappeared mid-game (partner left, or it was closed): fall back to
-  // the lobby instead of leaving a dead game on screen.
-  useEffect(() => {
-    if (mode !== "online" || !started || room.room) return;
-    setStarted(false);
-    starting.current = false;
-    toast.error(room.error ?? "The room closed.");
-  }, [mode, started, room.room, room.error]);
-
-  // Surface room problems once (the lobby also shows them inline).
-  const shownError = useRef<string | null>(null);
-  useEffect(() => {
-    if (!room.error || shownError.current === room.error) return;
-    shownError.current = room.error;
-    toast.error(room.error);
-  }, [room.error]);
-
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
+  const players: [Player, Player] = [
+    app.me,
+    { id: "them", name: partnerName, avatar: partnerAvatar },
+  ];
 
-  const players: [Player, Player] = useMemo(() => {
-    const me = app.me;
-    const them: Player = { id: "them", name: partnerName, avatar: partnerAvatar };
-    if (mode === "online" && room.room && room.room.host_id !== app.session?.user.id) {
-      return [them, me];
-    }
-    return [me, them];
-  }, [app.me, app.session?.user.id, mode, partnerName, partnerAvatar, room.room]);
-
-  const mySlot: PlayerSlot | null = useMemo(() => {
-    if (mode !== "online" || !room.room || !app.session) return null;
-    return room.room.host_id === app.session.user.id ? 0 : 1;
-  }, [mode, room.room, app.session]);
-
-  const localChat = useLocalChat(game.id, players);
-  const online = mode === "online" && !!room.room;
-  const chat = online ? roomChat : localChat;
-  const chatMyId = online ? (app.session?.user.id ?? null) : (localChat.localSender?.id ?? null);
+  const chat = useLocalChat(game.id, players);
 
   function finish(result: GameResult) {
     void app.logActivity({
       game_id: game.id,
-      mode: mode === "online" ? "room" : "local",
+      mode: "local",
       summary: result.summary,
       my_score: result.myScore,
       their_score: result.theirScore,
     });
     clearSavedGame(game.id);
-    if (mode === "online") void room.leave();
     app.buzz(20);
     void navigate({ to: "/activity" });
   }
 
   function exit() {
-    if (mode === "online") void room.leave();
     void navigate({ to: "/games" });
   }
 
   if (!app.hydrated) return <LoadingScreen />;
 
-  /* ---------------- lobby ---------------- */
   if (!started) {
-    const waiting = mode === "online" && room.room && !room.room.guest_id;
     return (
       <div className="min-h-dvh bg-background">
         <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pb-10 pt-6">
@@ -213,7 +96,12 @@ function Play() {
           </div>
 
           <div className="animate-rise text-center">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-secondary text-4xl" aria-hidden>{game.emoji}</div>
+            <div
+              className="mx-auto grid h-20 w-20 place-items-center rounded-3xl bg-secondary text-4xl"
+              aria-hidden
+            >
+              {game.emoji}
+            </div>
             <h1 className="font-display mt-3 text-3xl font-bold">{game.title}</h1>
             <p className="mt-2 text-sm text-muted-foreground text-balance-tight">
               {game.description}
@@ -239,202 +127,36 @@ function Play() {
             </div>
           </div>
 
-          <div className="mt-6 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              aria-pressed={mode === "local"}
-              onClick={() => {
-                choseLocal.current = true;
-                if (room.room) void room.leave();
-                setMode("local");
-              }}
-               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
-                mode === "local" ? "border-primary bg-primary/10" : "border-border"
-              }`}
-            >
-              <Smartphone className="h-6 w-6" aria-hidden />
-              <span className="text-sm font-bold">One phone</span>
-              <span className="text-xs text-muted-foreground">Pass it back and forth</span>
-            </button>
-            <button
-              type="button"
-              aria-pressed={mode === "online"}
-              disabled={game.online === "local"}
-              onClick={() => {
-                if (game.online === "local") return;
-                if (!app.session) {
-                  toast.error("Create an account to play from two phones");
-                  return;
-                }
-                choseLocal.current = false;
-                setMode("online");
-              }}
-               className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 disabled:opacity-55 ${
-                mode === "online" ? "border-primary bg-primary/10" : "border-border"
-              }`}
-            >
-              <Users className="h-6 w-6" aria-hidden />
-              <span className="text-sm font-bold">Two phones</span>
-              <span className="text-xs text-muted-foreground">
-                {game.online === "local" ? "Needs one shared screen" : "Live room"}
-              </span>
-            </button>
+          <div className="surface mt-4 flex items-center gap-3 p-4">
+            <Smartphone className="h-6 w-6 shrink-0 text-primary" aria-hidden />
+            <p className="text-sm text-muted-foreground">
+              One phone, passed back and forth. For two phones, open your Couple Room.
+            </p>
           </div>
 
-          {mode === "online" ? (
-            <div className="surface mt-4 p-4">
-              <div className="mb-3 flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground" aria-live="polite">
-                {onlineNow ? <Wifi className="h-4 w-4 text-success" aria-hidden /> : <WifiOff className="h-4 w-4 text-destructive" aria-hidden />}
-                {onlineNow ? "Connected" : "You’re offline — reconnect to continue"}
-              </div>
-              {room.room ? (
-                <div className="text-center">
-                  <p className="text-xs font-bold text-muted-foreground">Room code</p>
-                  <div className="mt-1 flex items-center justify-center gap-2">
-                    <p className="font-display text-3xl font-bold tracking-[0.25em]">
-                      {room.room.code}
-                    </p>
-                    <button
-                      type="button"
-                      aria-label="Copy room code"
-                      className="press flex h-11 w-11 items-center justify-center rounded-full border border-border"
-                      onClick={() => {
-                        void navigator.clipboard?.writeText(room.room!.code);
-                        toast.success("Room code copied");
-                      }}
-                    >
-                      <Copy className="h-4 w-4" aria-hidden />
-                    </button>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="mt-2 min-h-11 rounded-2xl"
-                    onClick={() => {
-                      const text = `Join my ${game.title} room on Koupl with code ${room.room?.code ?? ""}`;
-                      if (navigator.share) void navigator.share({ title: "Join my Koupl room", text });
-                      else {
-                        void navigator.clipboard?.writeText(text);
-                        toast.success("Invite copied");
-                      }
-                    }}
-                  >
-                    <Share2 className="h-4 w-4" aria-hidden /> Share invite
-                  </Button>
-                  <p className="mt-2 text-sm text-muted-foreground" aria-live="polite">
-                    {waiting ? "Waiting for your partner to join…" : "Both players are in."}
-                  </p>
-                  {!waiting ? (
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-bold">
-                      <div className="rounded-2xl bg-muted p-3">
-                        <span className={lobbyState.hostReady ? "text-success" : "text-muted-foreground"}>{lobbyState.hostReady ? "Ready" : "Not ready"}</span>
-                      </div>
-                      <div className="rounded-2xl bg-muted p-3">
-                        <span className={lobbyState.guestReady ? "text-success" : "text-muted-foreground"}>{lobbyState.guestReady ? "Ready" : "Not ready"}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                  <Button
-                    variant="ghost"
-                    className="mt-3 min-h-11 rounded-2xl text-xs font-bold text-muted-foreground"
-                    onClick={() => {
-                      void room.leave();
-                      toast.success("You left the room");
-                    }}
-                  >
-                    Leave room
-                  </Button>
-                  {!amHost && !waiting ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {bothReady ? "Waiting for the host to start…" : "The host starts the game."}
-                    </p>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="grid gap-3">
-                  <Button
-                    className="h-13 rounded-2xl text-base"
-                    disabled={room.busy}
-                    onClick={() => void room.create()}
-                  >
-                    Create a room
-                  </Button>
-                  <div className="flex gap-2">
-                    <Input
-                      value={joinCode}
-                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                      placeholder="Room code"
-                      maxLength={6}
-                      aria-label="Room code"
-                      className="h-12 flex-1 rounded-2xl text-center font-bold tracking-[0.2em]"
-                    />
-                    <Button
-                      variant="secondary"
-                      className="h-12 rounded-2xl"
-                      disabled={joinCode.length < 4 || room.busy}
-                      onClick={() => void room.join(joinCode)}
-                    >
-                      Join
-                    </Button>
-                  </div>
-                  {room.error ? (
-                    <p className="text-center text-xs font-bold text-destructive" role="alert">
-                      {room.error}
-                    </p>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ) : null}
+          <Link
+            to="/room"
+            className="press surface mt-3 flex min-h-14 items-center gap-3 p-4 text-sm font-bold"
+          >
+            <Users className="h-5 w-5 text-primary" aria-hidden /> Play Together in Couple Room
+          </Link>
 
-          {mode === "local" || room.room ? (
-            <div className="surface mt-4 flex flex-col p-4">
-              <p className="mb-2 text-xs font-bold text-muted-foreground">
-                {online ? "Chat — talk before you start" : "Notes — leave each other a message"}
-              </p>
-              <ChatPanel chat={chat} myId={chatMyId} />
-            </div>
-          ) : null}
-
+          <div className="surface mt-4 flex flex-col p-4">
+            <p className="mb-2 text-xs font-bold text-muted-foreground">
+              Notes — leave each other a message
+            </p>
+            <ChatPanel chat={chat} myId={chat.localSender?.id ?? null} />
+          </div>
 
           <div className="mt-auto space-y-2 pt-8">
-            {mode === "online" && room.room?.guest_id ? (
-              <Button
-                variant={myReady ? "secondary" : "outline"}
-                className="h-12 w-full rounded-2xl"
-                onClick={() => void room.patchState(amHost ? { hostReady: !myReady } : { guestReady: !myReady })}
-              >
-                {myReady ? <Check className="h-5 w-5" aria-hidden /> : null}
-                {myReady ? "You’re ready" : "Mark me ready"}
-              </Button>
-            ) : null}
             <Button
               size="lg"
               className="h-16 w-full rounded-3xl text-lg"
-              disabled={mode === "online" && (!room.room || !room.room.guest_id || !bothReady || !amHost || !onlineNow)}
-              onClick={() => {
-                if (starting.current) return;
-                starting.current = true;
-                if (mode === "online") {
-                  // One synchronised start, with a deck seed both phones share.
-                  void room.patchState({ started: true, seed: localSeed });
-                }
-                setStarted(true);
-                window.setTimeout(() => {
-                  starting.current = false;
-                }, 1200);
-              }}
+              onClick={() => setStarted(true)}
             >
-              {mode === "online" && waiting
-                ? "Waiting for partner…"
-                : mode === "online" && !bothReady
-                  ? "Both players need to be ready"
-                  : mode === "online" && !amHost
-                    ? "Waiting for host to start…"
-                : saved && mode === "local"
-                  ? "Resume game"
-                  : "Start game"}
+              {saved ? "Resume game" : "Start game"}
             </Button>
-            {saved && mode === "local" ? (
+            {saved ? (
               <Button
                 variant="ghost"
                 className="h-12 w-full rounded-2xl font-bold"
@@ -454,156 +176,19 @@ function Play() {
     );
   }
 
-  /* ---------------- game ---------------- */
   const base: GameProps = {
     game,
     players,
-    mySlot,
-    room: mode === "online" ? room : null,
+    mySlot: null,
+    room: null,
     onFinish: finish,
     onExit: exit,
   };
 
-  const gameScreen = ((): ReactNode => {
-    switch (game.id) {
-    case "never-have-i-ever": {
-      const rounds: DualRound[] = shuffle(NEVER_HAVE_I_EVER, seed)
-        .slice(0, ROUNDS)
-        .map((p, i) => ({
-          key: `nhie-${i}`,
-          prompt: p,
-          options: [
-            { label: "I have", value: "have" },
-            { label: "Never", value: "never" },
-          ],
-        }));
-      return (
-        <DualChoiceGame
-          {...base}
-          rounds={rounds}
-          tone="primary"
-          layout="confess"
-          objective="Ten confessions. Answer honestly at the same time — every matching answer scores a point for the two of you."
-          matchCopy={{
-            hit: "Same answer — point for the pair.",
-            miss: "Different answers. Story time.",
-          }}
-        />
-      );
-    }
-    case "whos-more-likely": {
-      const rounds: DualRound[] = shuffle(WHOS_MORE_LIKELY, seed)
-        .slice(0, ROUNDS)
-        .map((p, i) => ({
-          key: `wml-${i}`,
-          prompt: p,
-          options: [
-            { label: players[0].name, value: "p0" },
-            { label: players[1].name, value: "p1" },
-          ],
-        }));
-      return (
-        <DualChoiceGame
-          {...base}
-          rounds={rounds}
-          tone="berry"
-          layout="point"
-          objective="Ten rounds of finger-pointing. Point at the same person and you both score."
-          matchCopy={{
-            hit: "You both pointed the same way.",
-            miss: "You each pointed at the other. Bold.",
-          }}
-          summaryNoun="agreements"
-        />
-      );
-    }
-    case "this-or-that": {
-      const rounds: DualRound[] = shuffle(THIS_OR_THAT, seed)
-        .slice(0, ROUNDS)
-        .map((c, i) => ({
-          key: `tot-${i}`,
-          prompt: `${c.a} or ${c.b}?`,
-          options: [
-            { label: c.a, value: c.a },
-            { label: c.b, value: c.b },
-          ],
-        }));
-      return (
-        <DualChoiceGame
-          {...base}
-          rounds={rounds}
-          tone="mint"
-          layout="split"
-          objective="Ten split-second choices. Pick your side in secret, reveal together, and see how aligned your tastes really are."
-          matchCopy={{ hit: "Same pick. Frighteningly aligned.", miss: "Split decision." }}
-        />
-      );
-    }
-    case "four-in-a-row":
-      return <FourInARow {...base} />;
-    case "basketball-rivalry":
-      return <BasketballRivalry {...base} />;
-    case "pillow-talk":
-      return <PillowTalk {...base} cards={shuffle(PILLOW_TALK, seed).slice(0, 12)} />;
-    case "truth-or-dare":
-      return (
-        <TruthOrDare
-          {...base}
-          truths={shuffle(TRUTHS, seed)}
-          dares={shuffle(DARES, seed)}
-        />
-      );
-    case "couple-quiz":
-      return <CoupleQuiz {...base} questions={shuffle(COUPLE_QUIZ, seed).slice(0, 10)} />;
-    case "air-hockey-duel":
-      return <AirHockeyDuel {...base} />;
-    case "reaction-clash":
-      return <ReactionClash {...base} />;
-    case "memory-match-duel":
-      return <MemoryMatchDuel {...base} />;
-    case "mini-golf-duel":
-      return <MiniGolfDuel {...base} />;
-    case "battleship-blitz":
-      return <BattleshipBlitz {...base} />;
-    case "tap-race-dash":
-      return <TapRaceDash {...base} />;
-    case "sumo-tug":
-      return <SumoTug {...base} />;
-    case "grid-clash":
-      return <GridClash {...base} />;
-    case "box-wars":
-      return <BoxWars {...base} />;
-    case "penalty-shootout":
-      return <PenaltyShootout {...base} />;
-    case "echo-sequence":
-      return <EchoSequence {...base} />;
-    case "odd-one-out":
-      return <OddOneOut {...base} />;
-    case "number-hunt":
-      return <NumberHunt {...base} />;
-    case "bowling-roll":
-      return <BowlingRoll {...base} />;
-    case "last-stick":
-      return <LastStick {...base} />;
-    case "bubble-pop-panic":
-      return <BubblePopPanic {...base} />;
-    case "guess-the-word":
-      return <GuessTheWord {...base} />;
-    case "emoji-decode":
-      return <EmojiDecode {...base} />;
-    case "two-truths":
-      return <TwoTruthsAndALie {...base} />;
-    case "rate-my-guess":
-      return <RateMyGuess {...base} />;
-    default:
-      return null;
-    }
-  })();
-
   return (
     <>
-      {gameScreen}
-      <ChatDock chat={chat} myId={chatMyId} />
+      <GameRenderer base={base} seed={localSeed} />
+      <ChatDock chat={chat} myId={chat.localSender?.id ?? null} />
     </>
   );
 }
