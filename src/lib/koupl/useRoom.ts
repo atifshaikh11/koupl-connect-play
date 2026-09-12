@@ -21,6 +21,9 @@ export type RoomApi = {
   join: (code: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
   patchState: (patch: Record<string, unknown>) => Promise<void>;
+  /** Pull the authoritative row again (reconnect / tab focus / refresh). */
+  refresh: () => Promise<void>;
+  clearError: () => void;
 };
 
 /** Live two-player room backed by the database with realtime updates. */
