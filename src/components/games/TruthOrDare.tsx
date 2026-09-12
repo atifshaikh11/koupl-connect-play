@@ -74,7 +74,8 @@ export function TruthOrDare({
       setLeft(null);
       return;
     }
-    const update = () => setLeft(Math.max(0, SECONDS[s.pick] - Math.floor((Date.now() - s.pickedAt) / 1000)));
+    const kind = s.pick;
+    const update = () => setLeft(Math.max(0, SECONDS[kind] - Math.floor((Date.now() - s.pickedAt) / 1000)));
     update();
     const id = window.setInterval(() => {
       update();
