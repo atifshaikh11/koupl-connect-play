@@ -79,6 +79,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
       const other: 0 | 1 = turn === 0 ? 1 : 0;
       setScores((s) => [s[0] + (other === 0 ? 1 : 0), s[1] + (other === 1 ? 1 : 0)]);
       setMessage(`${players[turn]!.name} broke the chain at ${seq.length} — point to ${players[other]!.name}`);
+      setSlipped(true);
       setPhase("result");
       return;
     }
