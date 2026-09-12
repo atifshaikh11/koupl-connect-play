@@ -388,8 +388,16 @@ function Play() {
               className="h-16 w-full rounded-3xl text-lg"
               disabled={mode === "online" && (!room.room || !room.room.guest_id || !bothReady || !amHost || !onlineNow)}
               onClick={() => {
-                if (mode === "online") void room.patchState({ started: true });
+                if (starting.current) return;
+                starting.current = true;
+                if (mode === "online") {
+                  // One synchronised start, with a deck seed both phones share.
+                  void room.patchState({ started: true, seed: localSeed });
+                }
                 setStarted(true);
+                window.setTimeout(() => {
+                  starting.current = false;
+                }, 1200);
               }}
             >
               {mode === "online" && waiting
