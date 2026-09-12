@@ -170,12 +170,12 @@ function Home() {
           </div>
           <div className="min-w-0 flex-1">
             <p className="font-display truncate text-sm font-bold">
-              {app.partner ? `You & ${app.partner.name}` : "No partner yet"}
+              {app.partner ? `You & ${app.partner.name}` : "Your partner isn't connected yet"}
             </p>
             <p className="truncate text-xs text-night-muted">
               {app.partner
                 ? `${played} ${played === 1 ? "game" : "games"} played together`
-                : "Add them to start a streak"}
+                : "Invite them to play together ❤️"}
             </p>
           </div>
           <Dialog>
@@ -185,7 +185,7 @@ function Home() {
                 className="press min-h-11 shrink-0 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-foreground"
               >
                 <Link2 className="mr-1 inline h-3.5 w-3.5" aria-hidden />
-                {app.partner ? "Manage" : "Connect"}
+                {app.partner ? "Manage" : "Connect Partner"}
               </button>
             </DialogTrigger>
             <DialogContent className="max-w-sm rounded-3xl">
@@ -235,14 +235,16 @@ function Home() {
           </Dialog>
         </div>
 
-        <div className="relative mt-3">
-          <StreakBadge
-            current={app.coupleStreak.current}
-            best={app.coupleStreak.best}
-            name={app.coupleStreak.leaderName}
-            compact
-          />
-        </div>
+        {app.partner || app.coupleStreak.current > 0 || app.coupleStreak.best > 0 ? (
+          <div className="relative mt-3">
+            <StreakBadge
+              current={app.coupleStreak.current}
+              best={app.coupleStreak.best}
+              name={app.coupleStreak.leaderName}
+              compact
+            />
+          </div>
+        ) : null}
 
         {/* the main entry point: one room, every game */}
         <Link
@@ -296,7 +298,7 @@ function Home() {
 
       <div className="px-4 pt-6">
         {/* four ways in */}
-        <section aria-labelledby="cats-h" className="mb-7">
+        <section aria-labelledby="cats-h" className="mb-6">
           <h2 id="cats-h" className="sr-only">
             Browse by mood
           </h2>
@@ -319,7 +321,7 @@ function Home() {
         </section>
 
         {favorites.length ? (
-          <section aria-labelledby="favorites-h" className="mb-7">
+          <section aria-labelledby="favorites-h" className="mb-6">
             <SectionHeading
               title="Your favorites"
               action={<Heart className="h-4 w-4 fill-primary text-primary" aria-hidden />}
@@ -331,7 +333,7 @@ function Home() {
         ) : null}
 
         {recent.length ? (
-          <section aria-labelledby="recent-h" className="mb-7">
+          <section aria-labelledby="recent-h" className="mb-6">
             <SectionHeading title="Recently played" />
             <div className="grid grid-cols-2 gap-3">
               {recent.map((g) => g ? <MiniTile key={g.id} game={g} /> : null)}
@@ -340,7 +342,7 @@ function Home() {
         ) : null}
 
         {/* featured rail */}
-        <section aria-labelledby="featured-h" className="mb-7">
+        <section aria-labelledby="featured-h" className="mb-6">
           <SectionHeading
             title="Tonight's picks"
             action={
@@ -357,7 +359,7 @@ function Home() {
         </section>
 
         {/* daily prompt */}
-        <section aria-labelledby="daily-h" className="mb-7">
+        <section aria-labelledby="daily-h" className="mb-6">
           <h2 id="daily-h" className="sr-only">
             Prompt of the day
           </h2>
@@ -371,7 +373,7 @@ function Home() {
           </div>
         </section>
 
-        <section aria-labelledby="quick-h" className="mb-7">
+        <section aria-labelledby="quick-h" className="mb-6">
           <SectionHeading
             title="Quick start"
             action={<Zap className="h-4 w-4 text-sunny-foreground" aria-hidden />}
