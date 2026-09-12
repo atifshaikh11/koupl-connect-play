@@ -83,6 +83,9 @@
 :root {
   --radius: 1.1rem;
 
+  /* Height of the on-screen keyboard inside the Android shell (0 on the web). */
+  --kb-inset: 0px;
+
   --background: oklch(0.976 0.016 82);
   --foreground: oklch(0.26 0.05 25);
 
