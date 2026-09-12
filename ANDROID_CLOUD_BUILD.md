@@ -37,7 +37,7 @@ Capacitor CLI and plugins, runs `npx cap sync android`, installs Java 21 and the
 Android SDK, and builds the debug APK. It deliberately does **not** build the
 web app: the Android shell loads the already-published Koupl site, so there is
 nothing to bundle.
-loads the already-published Koupl site, so there is nothing to bundle.
+
 
 ---
 
