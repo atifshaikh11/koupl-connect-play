@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Koupl — offline</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: #1c0f0e; color: #fdf6eb; font-family: system-ui, sans-serif; text-align: center; }
+      .mark { width: 76px; height: 76px; margin: 0 auto 20px; border-radius: 26px; background: #ea4a4c; display: grid; place-items: center; font-size: 34px; font-weight: 800; }
+      h1 { font-size: 22px; margin: 0 0 8px; }
+      p { margin: 0 0 22px; font-size: 15px; line-height: 1.5; opacity: .75; }
+      button { min-height: 48px; padding: 0 24px; border: 0; border-radius: 16px; background: #ea4a4c; color: #fff; font-size: 15px; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">K</div>
+      <h1>Koupl needs a connection</h1>
+      <p>We couldn't reach Koupl. Check your internet connection and try again.</p>
+      <button type="button" onclick="window.location.reload()">Try again</button>
+    </main>
+  </body>
+</html>
