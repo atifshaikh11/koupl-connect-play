@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AvatarBubble, GameArtwork, LoadingScreen, Wordmark } from "@/components/koupl/ui";
+import { AvatarBubble, BottomNav, GameArtwork, LoadingScreen, Wordmark } from "@/components/koupl/ui";
 import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
 import { GameRenderer } from "@/components/games/GameRenderer";
 import type { GameProps } from "@/components/games/shared";
@@ -499,7 +499,7 @@ function CoupleRoom() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background">
-      <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
+      <div className="mx-auto w-full max-w-md px-4 pb-28 pt-6">
         <div className="flex items-center justify-between">
           <Link
             to="/"
@@ -511,6 +511,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
         {children}
       </div>
+      <BottomNav />
     </div>
   );
 }
