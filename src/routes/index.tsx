@@ -235,14 +235,16 @@ function Home() {
           </Dialog>
         </div>
 
-        <div className="relative mt-3">
-          <StreakBadge
-            current={app.coupleStreak.current}
-            best={app.coupleStreak.best}
-            name={app.coupleStreak.leaderName}
-            compact
-          />
-        </div>
+        {app.partner || app.coupleStreak.current > 0 || app.coupleStreak.best > 0 ? (
+          <div className="relative mt-3">
+            <StreakBadge
+              current={app.coupleStreak.current}
+              best={app.coupleStreak.best}
+              name={app.coupleStreak.leaderName}
+              compact
+            />
+          </div>
+        ) : null}
 
         {/* the main entry point: one room, every game */}
         <Link
