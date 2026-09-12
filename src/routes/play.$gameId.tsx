@@ -115,14 +115,34 @@ function Play() {
     hostReady?: boolean;
     guestReady?: boolean;
     started?: boolean;
+    seed?: number;
   };
   const amHost = room.room?.host_id === app.session?.user.id;
   const myReady = amHost ? !!lobbyState.hostReady : !!lobbyState.guestReady;
   const bothReady = !!lobbyState.hostReady && !!lobbyState.guestReady;
+  const inRoom = mode === "online" && !!room.room;
+  // Both phones must shuffle the same deck, so the host's seed lives in the room.
+  const seed = inRoom && typeof lobbyState.seed === "number" ? lobbyState.seed : localSeed;
 
   useEffect(() => {
     if (mode === "online" && lobbyState.started) setStarted(true);
   }, [lobbyState.started, mode]);
+
+  // The room disappeared mid-game (partner left, or it was closed): fall back to
+  // the lobby instead of leaving a dead game on screen.
+  useEffect(() => {
+    if (mode !== "online" || !started || room.room) return;
+    setStarted(false);
+    starting.current = false;
+    toast.error(room.error ?? "The room closed.");
+  }, [mode, started, room.room, room.error]);
+
+  // Surface room problems once, wherever they happen.
+  useEffect(() => {
+    if (!room.error) return;
+    toast.error(room.error);
+    room.clearError();
+  }, [room]);
 
   const partnerName = app.partner?.name ?? "Player 2";
   const partnerAvatar = app.partner?.avatar ?? "🐼";
