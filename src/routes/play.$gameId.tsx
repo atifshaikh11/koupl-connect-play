@@ -236,7 +236,10 @@ function Play() {
             <button
               type="button"
               aria-pressed={mode === "local"}
-              onClick={() => setMode("local")}
+              onClick={() => {
+                if (room.room) void room.leave();
+                setMode("local");
+              }}
                className={`press flex min-h-28 flex-col items-center justify-center gap-1 rounded-2xl border-2 bg-card p-4 ${
                 mode === "local" ? "border-primary bg-primary/10" : "border-border"
               }`}
