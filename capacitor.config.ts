@@ -19,13 +19,29 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: false,
+    // Google's sign-in pages refuse a WebView user agent (the "; wv" token).
+    // Presenting a plain Chrome UA keeps the whole OAuth round-trip in-app, so the
+    // broker's state cookie and the callback live in the same browser session.
+    overrideUserAgent:
+      "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36 Koupl/1.0",
   },
   server: {
     // Production HTTPS origin. No localhost / dev URLs here.
     url: APP_URL,
     cleartext: false,
     androidScheme: "https",
-    allowNavigation: ["koupl-connect-play.lovable.app", "*.supabase.co", "*.lovable.app"],
+    // OAuth must stay inside the app: broker, Google account pages and the
+    // backend are all allowed; anything else still opens in the phone browser.
+    allowNavigation: [
+      "koupl-connect-play.lovable.app",
+      "*.supabase.co",
+      "*.lovable.app",
+      "accounts.google.com",
+      "*.google.com",
+      "*.googleusercontent.com",
+      "ssl.gstatic.com",
+      "*.gstatic.com",
+    ],
   },
   plugins: {
     SplashScreen: {
