@@ -1,43 +1,20 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Brain,
-  CircleDot,
   ChevronLeft,
-  Disc3,
-  Flag,
   Gamepad2,
   Heart,
   History,
   Home,
-  MessageCircleHeart,
-  Scale,
-  Ship,
-  Sparkles,
-  Target,
-  Trophy,
+  Play,
   User,
   UsersRound,
-  Zap,
-  Baseline,
-  Bomb,
-  Circle,
-  Grid3x3,
-  Hash,
-  LayoutGrid,
-  Minus,
-  Music4,
-  Palette,
-  Puzzle,
-  SlidersHorizontal,
-  Squircle,
-  Timer,
-  VenetianMask,
-  type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
+import { GameThumb } from "@/components/koupl/GameThumb";
 import type { GameDef, Player } from "@/lib/koupl/types";
+import { moodLabelOf } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
 
 /* ------------------------------------------------------------------ */
@@ -182,60 +159,17 @@ export function AvatarBubble({
   );
 }
 
-const ACCENT_BG: Record<GameDef["accent"], string> = {
-  primary: "bg-primary/15 text-primary",
-  berry: "bg-berry/15 text-berry",
-  sunny: "bg-sunny/25 text-sunny-foreground",
-  mint: "bg-mint/25 text-mint-foreground",
-  sky: "bg-sky/20 text-sky-foreground",
-};
-
-const GAME_ICONS: Record<string, LucideIcon> = {
-  "never-have-i-ever": Sparkles,
-  "whos-more-likely": UsersRound,
-  "four-in-a-row": CircleDot,
-  "basketball-rivalry": Target,
-  "pillow-talk": MessageCircleHeart,
-  "this-or-that": Scale,
-  "truth-or-dare": Trophy,
-  "couple-quiz": Gamepad2,
-  "air-hockey-duel": Disc3,
-  "reaction-clash": Zap,
-  "memory-match-duel": Brain,
-  "mini-golf-duel": Flag,
-  "battleship-blitz": Ship,
-  "tap-race-dash": Timer,
-  "sumo-tug": Minus,
-  "grid-clash": Grid3x3,
-  "box-wars": LayoutGrid,
-  "penalty-shootout": Target,
-  "echo-sequence": Music4,
-  "odd-one-out": Palette,
-  "number-hunt": Hash,
-  "bowling-roll": Circle,
-  "last-stick": Baseline,
-  "bubble-pop-panic": Bomb,
-  "guess-the-word": Squircle,
-  "emoji-decode": Puzzle,
-  "two-truths": VenetianMask,
-  "rate-my-guess": SlidersHorizontal,
-};
-
-export function GameArtwork({ game, className }: { game: GameDef; className?: string }) {
-  const Icon = GAME_ICONS[game.id] ?? Gamepad2;
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative grid aspect-square place-items-center overflow-hidden rounded-2xl",
-        ACCENT_BG[game.accent],
-        className,
-      )}
-    >
-      <span className="absolute -right-3 -top-3 h-10 w-10 rounded-full border-4 border-current opacity-10" />
-      <Icon className="relative h-[48%] w-[48%]" strokeWidth={2.4} />
-    </span>
-  );
+/** Every game tile shares one artwork component, so the style never drifts. */
+export function GameArtwork({
+  game,
+  className,
+  plain,
+}: {
+  game: GameDef;
+  className?: string | undefined;
+  plain?: boolean | undefined;
+}) {
+  return <GameThumb game={game} className={className} plain={plain} />;
 }
 
 export function FavoriteButton({ gameId, inverse = false }: { gameId: string; inverse?: boolean }) {
@@ -261,6 +195,24 @@ export function FavoriteButton({ gameId, inverse = false }: { gameId: string; in
   );
 }
 
+/** Small pill that names the game's mood — the only category label on a card. */
+export function MoodBadge({ game, inverse }: { game: GameDef; inverse?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold leading-tight",
+        inverse ? "bg-night-foreground/12 text-night-muted" : "bg-muted text-muted-foreground",
+      )}
+    >
+      {moodLabelOf(game)}
+    </span>
+  );
+}
+
+/**
+ * Horizontal row card: big thumbnail, name, one-line description, mood badge
+ * and a clear play affordance on the right.
+ */
 export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }) {
   return (
     <Link
@@ -268,22 +220,32 @@ export function GameCard({ game, compact }: { game: GameDef; compact?: boolean }
       params={{ gameId: game.id }}
       className={cn(
         "press surface group relative flex overflow-hidden",
-        compact ? "w-44 shrink-0 flex-col gap-2 p-4" : "items-center gap-4 p-4",
+        compact ? "w-44 shrink-0 flex-col gap-2 p-4" : "items-center gap-3.5 p-3.5",
       )}
     >
-      <GameArtwork game={game} className={compact ? "h-14 w-14" : "h-14 w-14 shrink-0"} />
+      <GameArtwork game={game} className={compact ? "h-16 w-16" : "h-16 w-16"} />
       <span className="min-w-0 flex-1">
-        <span className="font-display block truncate text-base font-semibold">{game.title}</span>
-        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+        <span className="font-display block truncate text-[15px] font-bold leading-tight">
+          {game.title}
+        </span>
+        <span className="mt-1 block truncate text-xs leading-snug text-muted-foreground">
           {game.tagline}
         </span>
-        {!compact ? (
-          <span className="mt-2 flex gap-1.5 text-xs font-bold text-muted-foreground">
-            <span className="rounded-full bg-muted px-2 py-0.5">{game.minutes}</span>
-            <span className="rounded-full bg-muted px-2 py-0.5">{game.players}</span>
+        <span className="mt-2 flex items-center gap-1.5">
+          <MoodBadge game={game} />
+          <span className="truncate text-[11px] font-bold text-muted-foreground">
+            {game.minutes}
           </span>
-        ) : null}
+        </span>
       </span>
+      {!compact ? (
+        <span
+          aria-hidden
+          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/12 text-primary"
+        >
+          <Play className="h-4 w-4 fill-current" />
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -296,74 +258,109 @@ const ACCENT_DOT: Record<GameDef["accent"], string> = {
   sky: "bg-sky",
 };
 
-/** Dark, poster-style tile used for the featured rail on Home. */
+/** Dark, poster-style tile used for the rails on Home. */
 export function FeatureTile({ game }: { game: GameDef }) {
   return (
     <Link
       to="/game/$gameId"
       params={{ gameId: game.id }}
-      className="press relative flex w-[9.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-3xl bg-night p-4 text-night-foreground shadow-float"
+      className="press relative flex w-[10.5rem] shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-night p-3.5 text-night-foreground shadow-float"
     >
       <span
         aria-hidden
         className={cn(
-          "absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-25 blur-xl",
+          "absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-30 blur-2xl",
           ACCENT_DOT[game.accent],
         )}
       />
-      <GameArtwork game={game} className="relative h-14 w-14 bg-night-soft text-night-foreground" />
-      <span className="relative mt-6 block">
-        <span className="font-display block text-base font-bold leading-tight">{game.title}</span>
-        <span className="mt-1 block truncate text-xs text-night-muted">{game.minutes}</span>
+      <GameArtwork
+        game={game}
+        plain
+        className="relative h-[5.75rem] w-full rounded-2xl bg-night-soft/70 text-night-foreground [aspect-ratio:auto]"
+      />
+      <span className="relative mt-3 block min-w-0">
+        <span className="font-display block truncate text-[15px] font-bold leading-tight">
+          {game.title}
+        </span>
+        <span className="mt-1 block truncate text-[11px] text-night-muted">{game.tagline}</span>
       </span>
-      <span className="relative mt-3 inline-flex w-fit items-center rounded-full bg-primary px-3 py-1 text-xs font-bold text-primary-foreground">
-        Play
+      <span className="relative mt-2.5 flex items-center justify-between gap-2">
+        <MoodBadge game={game} inverse />
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+          <Play className="h-3.5 w-3.5 fill-current" aria-hidden />
+        </span>
       </span>
     </Link>
   );
 }
 
-/** Compact square tile for the discovery grid. */
+/** Compact card for two-column grids. */
 export function MiniTile({ game }: { game: GameDef }) {
   return (
     <Link
       to="/game/$gameId"
       params={{ gameId: game.id }}
-      className="press surface flex flex-col gap-2 p-3"
+      className="press surface flex flex-col gap-2.5 overflow-hidden p-3"
     >
-      <GameArtwork game={game} className="h-11 w-11" />
+      <GameArtwork
+        game={game}
+        className="h-20 w-full rounded-2xl [aspect-ratio:auto]"
+      />
       <span className="min-w-0">
-        <span className="font-display block truncate text-sm font-bold">{game.title}</span>
-        <span className="block truncate text-xs text-muted-foreground">{game.tagline}</span>
+        <span className="font-display block truncate text-sm font-bold leading-tight">
+          {game.title}
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] leading-snug text-muted-foreground">
+          {game.tagline}
+        </span>
+      </span>
+      <span className="flex items-center justify-between gap-2">
+        <MoodBadge game={game} />
+        <span className="truncate text-[11px] font-bold text-muted-foreground">{game.minutes}</span>
       </span>
     </Link>
   );
 }
 
-/** Tall dark artwork tile used in the games library grid. */
+/** Tall artwork tile used in the games library grid. */
 export function PosterTile({ game }: { game: GameDef }) {
   const app = useApp();
   const favorite = app.favorites.includes(game.id);
   return (
-    <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-night text-night-foreground shadow-float">
+    <div className="surface relative overflow-hidden p-0">
       <Link
         to="/game/$gameId"
         params={{ gameId: game.id }}
-        className="press absolute inset-0 flex flex-col justify-end p-4"
+        className="press flex flex-col"
       >
-      <span
-        aria-hidden
-        className={cn(
-          "absolute -right-8 -top-10 h-32 w-32 rounded-full opacity-30 blur-2xl",
-          ACCENT_DOT[game.accent],
-        )}
-      />
-      <GameArtwork game={game} className="absolute left-4 top-4 h-16 w-16 bg-night-soft text-night-foreground" />
-      <span className="relative">
-        <span className="font-display block text-sm font-bold leading-tight">{game.title}</span>
-        <span className="mt-1 block text-xs leading-snug text-night-muted">{game.tagline}</span>
-        <span className="mt-2 block text-xs font-bold text-night-muted">{game.minutes} · {game.players}</span>
-      </span>
+        <span className="relative block overflow-hidden rounded-t-[calc(var(--radius-2xl)-1px)] bg-night p-3 text-night-foreground">
+          <span
+            aria-hidden
+            className={cn(
+              "absolute -right-8 -top-10 h-28 w-28 rounded-full opacity-30 blur-2xl",
+              ACCENT_DOT[game.accent],
+            )}
+          />
+          <GameArtwork
+            game={game}
+            plain
+            className="relative h-24 w-full rounded-2xl bg-night-soft/60 text-night-foreground [aspect-ratio:auto]"
+          />
+        </span>
+        <span className="block p-3">
+          <span className="font-display block truncate text-sm font-bold leading-tight">
+            {game.title}
+          </span>
+          <span className="mt-1 block truncate text-[11px] leading-snug text-muted-foreground">
+            {game.tagline}
+          </span>
+          <span className="mt-2 flex items-center justify-between gap-2">
+            <MoodBadge game={game} />
+            <span className="truncate text-[11px] font-bold text-muted-foreground">
+              {game.minutes}
+            </span>
+          </span>
+        </span>
       </Link>
       <button
         type="button"
@@ -371,11 +368,11 @@ export function PosterTile({ game }: { game: GameDef }) {
         aria-pressed={favorite}
         onClick={() => app.toggleFavorite(game.id)}
         className={cn(
-          "press absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-full bg-night-soft text-night-foreground",
+          "press absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-night-soft/90 text-night-foreground backdrop-blur",
           favorite && "bg-primary text-primary-foreground",
         )}
       >
-        <Heart className={cn("h-5 w-5", favorite && "fill-current")} aria-hidden />
+        <Heart className={cn("h-4 w-4", favorite && "fill-current")} aria-hidden />
       </button>
     </div>
   );

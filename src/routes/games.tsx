@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Search } from "lucide-react";
+import { ArrowRight, Search, UsersRound } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { EmptyState, PosterTile, Screen, SectionHeading } from "@/components/koupl/ui";
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/games")({
   component: GamesLibrary,
 });
 
+/** Four moods cover all 28 games, plus All and Favorites. */
 const FILTERS = [
   "all",
   "favorites",
@@ -37,11 +38,6 @@ const FILTERS = [
   "m_cooperative",
   "m_conversation",
   "m_quick",
-  "arcade",
-  "reflex",
-  "board",
-  "sports",
-  "puzzle",
 ] as const;
 
 const FILTER_LABEL: Record<string, string> = {
@@ -77,7 +73,9 @@ function GamesLibrary() {
     <Screen className="px-0 pt-0">
       <header className="rounded-b-[2rem] bg-night px-4 pb-5 pt-6 text-night-foreground">
         <h1 className="font-display text-3xl font-bold">Games</h1>
-        <p className="mt-1 text-sm text-night-muted">Pick the mood. We’ll bring the game.</p>
+        <p className="mt-1 text-sm text-night-muted">
+          {GAMES.length} original games. Pick the mood, we’ll bring the game.
+        </p>
 
         <div className="relative mt-4">
           <Search
@@ -113,7 +111,23 @@ function GamesLibrary() {
         </div>
       </header>
 
-      <div className="px-4 pt-6">
+      <div className="px-4 pt-5">
+        <Link
+          to="/room"
+          className="press mb-6 flex items-center gap-3 rounded-3xl bg-primary p-3.5 text-primary-foreground shadow-float"
+        >
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary-foreground/20">
+            <UsersRound className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="font-display block truncate text-base font-bold">Play Together</span>
+            <span className="block truncate text-xs opacity-85">
+              One Couple Room for every game on this page
+            </span>
+          </span>
+          <ArrowRight className="h-5 w-5 shrink-0" aria-hidden />
+        </Link>
+
         {battles.length && filter === "all" && q.trim() === "" ? (
           <section className="mb-6">
             <SectionHeading title="Quick Battle" action={<span className="text-xs font-bold text-muted-foreground">Under 90 seconds</span>} />

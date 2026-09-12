@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { AvatarBubble, GameArtwork, LoadingScreen, Wordmark } from "@/components/koupl/ui";
+import { AvatarBubble, BottomNav, GameArtwork, LoadingScreen, Wordmark } from "@/components/koupl/ui";
 import { ChatDock, ChatPanel } from "@/components/koupl/RoomChat";
 import { GameRenderer } from "@/components/games/GameRenderer";
 import type { GameProps } from "@/components/games/shared";
@@ -35,6 +35,9 @@ import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/room")({
+  // `?g=<gameId>` lets a game page hand the room a pre-picked game.
+  validateSearch: (search: Record<string, unknown>): { g?: string } =>
+    typeof search['g'] === "string" ? { g: search['g'] as string } : {},
   head: () => ({
     meta: [
       { title: "Couple Room — Koupl" },
@@ -58,6 +61,7 @@ export const Route = createFileRoute("/room")({
 function CoupleRoom() {
   const app = useApp();
   const navigate = useNavigate();
+  const { g: wantedGame } = Route.useSearch();
   const userId = app.session?.user.id ?? null;
   const room = useRoom(COUPLE_ROOM_KEY, userId);
   const chat = useRoomChat(room.room?.id ?? null, {
@@ -72,6 +76,7 @@ function CoupleRoom() {
   const [showGames, setShowGames] = useState(false);
   const [onlineNow, setOnlineNow] = useState(true);
   const starting = useRef(false);
+  const preselected = useRef(false);
   const joinedPending = useRef(false);
   const shownError = useRef<string | null>(null);
 
@@ -167,6 +172,22 @@ function CoupleRoom() {
     setShowGames(false);
     app.buzz(10);
   }
+
+  /* a game chosen on its detail page becomes the room's active game once */
+  useEffect(() => {
+    if (!wantedGame || preselected.current || !room.room) return;
+    if (!gameById(wantedGame)) return;
+    preselected.current = true;
+    if (coupleState(room.room).activeGame === wantedGame) return;
+    void patchRef.current({
+      activeGame: wantedGame,
+      started: false,
+      seed: Math.random(),
+      hostReady: false,
+      guestReady: false,
+      game: {},
+    });
+  }, [wantedGame, room.room]);
 
   function backToRoom() {
     void room.patchState({ started: false, game: {}, hostReady: false, guestReady: false });
@@ -478,7 +499,7 @@ function CoupleRoom() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background">
-      <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
+      <div className="mx-auto w-full max-w-md px-4 pb-28 pt-6">
         <div className="flex items-center justify-between">
           <Link
             to="/"
@@ -490,6 +511,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </div>
         {children}
       </div>
+      <BottomNav />
     </div>
   );
 }
