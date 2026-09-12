@@ -178,13 +178,15 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
               <button
                 key={slot}
                 type="button"
-                onClick={() => tap(round.odd, slot)}
+                aria-pressed={tapper === slot}
+                onClick={() => setTapper(slot)}
                 className={cn(
-                  "press h-12 rounded-2xl text-sm font-bold",
+                  "press h-12 rounded-2xl text-sm font-bold transition-opacity",
                   slot === 0 ? "bg-primary/12 text-primary" : "bg-sky/25 text-sky-foreground",
+                  tapper === slot ? "opacity-100 ring-2 ring-current" : "opacity-55",
                 )}
               >
-                {players[slot]!.name} found it
+                {players[slot]!.name} taps
               </button>
             ))}
           </div>
