@@ -29,6 +29,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [message, setMessage] = useState("Watch the sequence…");
   const [done, setDone] = useState(false);
+  const [slipped, setSlipped] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(
