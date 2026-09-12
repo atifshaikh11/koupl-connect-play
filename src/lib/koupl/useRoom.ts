@@ -134,7 +134,10 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         return null;
       }
       if (row.game_id !== gameId) {
-        setError("That room is for a different game.");
+        // Don't stay attached to a room we can't play in.
+        if (userId && row.guest_id === userId)
+          await supabase.from("rooms").update({ guest_id: null }).eq("id", row.id);
+        setError("That code belongs to a different game.");
         return null;
       }
       setRoom(row);
