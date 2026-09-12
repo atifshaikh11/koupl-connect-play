@@ -29,8 +29,9 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
   const [index, setIndex] = useState(0);
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [locked, setLocked] = useState(false);
-  const [message, setMessage] = useState("Both of you look — first correct tap scores.");
+  const [message, setMessage] = useState("Pick who is tapping, then find the odd tile.");
   const [round, setRound] = useState<Round>(() => makeRound(0));
+  const [tapper, setTapper] = useState<0 | 1>(0);
   const [done, setDone] = useState(false);
   const startedAt = useRef(performance.now());
   const [bestMs, setBestMs] = useState<[number | null, number | null]>([null, null]);
@@ -73,7 +74,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setIndex(i);
     setRound(makeRound(i));
     setLocked(false);
-    setMessage("Both of you look — first correct tap scores.");
+    setMessage("Pick who is tapping, then find the odd tile.");
   }
 
   function rematch() {
@@ -83,7 +84,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
     setRound(makeRound(0));
     setLocked(false);
     setDone(false);
-    setMessage("Both of you look — first correct tap scores.");
+    setMessage("Pick who is tapping, then find the odd tile.");
   }
 
   if (showIntro) {
@@ -145,11 +146,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
               key={i}
               type="button"
               aria-label={`Tile ${i + 1}`}
-              onClick={() => tap(i, 0)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                tap(i, 1);
-              }}
+              onClick={() => tap(i, tapper)}
               disabled={locked}
               className={cn(
                 "rounded-xl transition-transform active:scale-95",
@@ -181,13 +178,15 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
               <button
                 key={slot}
                 type="button"
-                onClick={() => tap(round.odd, slot)}
+                aria-pressed={tapper === slot}
+                onClick={() => setTapper(slot)}
                 className={cn(
-                  "press h-12 rounded-2xl text-sm font-bold",
+                  "press h-12 rounded-2xl text-sm font-bold transition-opacity",
                   slot === 0 ? "bg-primary/12 text-primary" : "bg-sky/25 text-sky-foreground",
+                  tapper === slot ? "opacity-100 ring-2 ring-current" : "opacity-55",
                 )}
               >
-                {players[slot]!.name} found it
+                {players[slot]!.name} taps
               </button>
             ))}
           </div>

@@ -29,6 +29,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [message, setMessage] = useState("Watch the sequence…");
   const [done, setDone] = useState(false);
+  const [slipped, setSlipped] = useState(false);
   const timers = useRef<number[]>([]);
 
   useEffect(
@@ -78,6 +79,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
       const other: 0 | 1 = turn === 0 ? 1 : 0;
       setScores((s) => [s[0] + (other === 0 ? 1 : 0), s[1] + (other === 1 ? 1 : 0)]);
       setMessage(`${players[turn]!.name} broke the chain at ${seq.length} — point to ${players[other]!.name}`);
+      setSlipped(true);
       setPhase("result");
       return;
     }
@@ -92,6 +94,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
         return copy;
       });
       setMessage(`Nailed ${seq.length} — passing over`);
+      setSlipped(false);
       setPhase("result");
       return;
     }
@@ -99,12 +102,12 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function next() {
-    const failed = message.includes("broke the chain");
-    if (failed) {
+    if (slipped) {
       if (scores[0] >= 3 || scores[1] >= 3) {
         setDone(true);
         return;
       }
+      setSlipped(false);
       setSeq([]);
       beginTurn(turn === 0 ? 1 : 0, []);
       return;
@@ -116,6 +119,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
     setScores([0, 0]);
     setBest([0, 0]);
     setSeq([]);
+    setSlipped(false);
     setDone(false);
     beginTurn(0, []);
   }

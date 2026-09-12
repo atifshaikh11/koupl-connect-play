@@ -41,20 +41,22 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
     };
   }, [running]);
 
+  const scoredRound = useRef(0);
   useEffect(() => {
     if (running || left !== 0) return;
-    setTaps((t) => {
-      setBestBurst((b) => [Math.max(b[0], t[0]), Math.max(b[1], t[1])]);
-      const winner = t[0] === t[1] ? null : t[0] > t[1] ? 0 : 1;
-      if (winner === null) setMessage(`Tied on ${t[0]} taps each.`);
-      else setMessage(`${players[winner]!.name} wins with ${t[winner]} taps.`);
-      if (winner !== null) {
-        setWins((w) => [w[0] + (winner === 0 ? 1 : 0), w[1] + (winner === 1 ? 1 : 0)]);
-        fx.win();
-      }
-      return t;
-    });
-  }, [running, left, players, fx]);
+    if (scoredRound.current === round) return;
+    scoredRound.current = round;
+    const t = taps;
+    setBestBurst((b) => [Math.max(b[0], t[0]), Math.max(b[1], t[1])]);
+    const winner = t[0] === t[1] ? null : t[0] > t[1] ? 0 : 1;
+    if (winner === null) {
+      setMessage(`Tied on ${t[0]} taps each.`);
+      return;
+    }
+    setMessage(`${players[winner]!.name} wins with ${t[winner]} taps.`);
+    setWins((w) => [w[0] + (winner === 0 ? 1 : 0), w[1] + (winner === 1 ? 1 : 0)]);
+    fx.win();
+  }, [running, left, players, fx, round, taps]);
 
   function start() {
     setTaps([0, 0]);
@@ -81,6 +83,7 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function rematch() {
+    scoredRound.current = 0;
     setWins([0, 0]);
     setTaps([0, 0]);
     setBestBurst([0, 0]);

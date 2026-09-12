@@ -19,6 +19,21 @@ import { ReactionClash } from "@/components/games/ReactionClash";
 import { MemoryMatchDuel } from "@/components/games/MemoryMatchDuel";
 import { MiniGolfDuel } from "@/components/games/MiniGolfDuel";
 import { BattleshipBlitz } from "@/components/games/BattleshipBlitz";
+import { TapRaceDash } from "@/components/games/TapRaceDash";
+import { SumoTug } from "@/components/games/SumoTug";
+import { GridClash } from "@/components/games/GridClash";
+import { BoxWars } from "@/components/games/BoxWars";
+import { PenaltyShootout } from "@/components/games/PenaltyShootout";
+import { EchoSequence } from "@/components/games/EchoSequence";
+import { OddOneOut } from "@/components/games/OddOneOut";
+import { NumberHunt } from "@/components/games/NumberHunt";
+import { BowlingRoll } from "@/components/games/BowlingRoll";
+import { LastStick } from "@/components/games/LastStick";
+import { BubblePopPanic } from "@/components/games/BubblePopPanic";
+import { GuessTheWord } from "@/components/games/GuessTheWord";
+import { EmojiDecode } from "@/components/games/EmojiDecode";
+import { TwoTruthsAndALie } from "@/components/games/TwoTruthsAndALie";
+import { RateMyGuess } from "@/components/games/RateMyGuess";
 import type { GameProps } from "@/components/games/shared";
 import {
   COUPLE_QUIZ,
@@ -493,6 +508,36 @@ function Play() {
       return <MiniGolfDuel {...base} />;
     case "battleship-blitz":
       return <BattleshipBlitz {...base} />;
+    case "tap-race-dash":
+      return <TapRaceDash {...base} />;
+    case "sumo-tug":
+      return <SumoTug {...base} />;
+    case "grid-clash":
+      return <GridClash {...base} />;
+    case "box-wars":
+      return <BoxWars {...base} />;
+    case "penalty-shootout":
+      return <PenaltyShootout {...base} />;
+    case "echo-sequence":
+      return <EchoSequence {...base} />;
+    case "odd-one-out":
+      return <OddOneOut {...base} />;
+    case "number-hunt":
+      return <NumberHunt {...base} />;
+    case "bowling-roll":
+      return <BowlingRoll {...base} />;
+    case "last-stick":
+      return <LastStick {...base} />;
+    case "bubble-pop-panic":
+      return <BubblePopPanic {...base} />;
+    case "guess-the-word":
+      return <GuessTheWord {...base} />;
+    case "emoji-decode":
+      return <EmojiDecode {...base} />;
+    case "two-truths":
+      return <TwoTruthsAndALie {...base} />;
+    case "rate-my-guess":
+      return <RateMyGuess {...base} />;
     default:
       return null;
     }
