@@ -72,8 +72,9 @@ keyPassword=YOUR_KEY_PASSWORD
    Bundle* for Play Store or *APK* for direct install, choose the keystore above,
    and select the `release` build variant.
 
-   Command line equivalent (after wiring the signing config in
-   `android/app/build.gradle` from `keystore.properties`):
+   The signing config is already wired in `android/app/build.gradle`: it reads
+   `android/keystore.properties` automatically when that file exists, so the
+   command line works too:
 
 ```bash
 cd android
