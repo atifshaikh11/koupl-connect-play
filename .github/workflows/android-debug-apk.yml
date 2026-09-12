@@ -1,18 +1,19 @@
 name: Android Debug APK
 
 # Build an installable debug APK in the cloud — no local computer needed.
-# Run it from the GitHub website or app: Actions -> "Android Debug APK" -> Run workflow.
+# Run it from the GitHub website: Actions -> "Android Debug APK" -> Run workflow.
+#
+# The Android app is a Capacitor shell that loads the deployed production site
+# (see capacitor.config.ts -> server.url), so this workflow does NOT need to build
+# the web app. It only needs the Capacitor CLI + plugins to sync the native project.
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - "src/**"
       - "android/**"
       - "android-www/**"
       - "capacitor.config.ts"
-      - "package.json"
-      - "bun.lock"
       - ".github/workflows/android-debug-apk.yml"
 
 permissions:
@@ -27,19 +28,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Typecheck
-        run: bunx tsgo --noEmit
-
-      - name: Build web app
-        run: bun run build
+      # Installed explicitly from the public npm registry: the committed bun.lock
+      # pins an internal build-cache registry that CI cannot reach.
+      - name: Install Capacitor tooling
+        run: |
+          npm install --no-save --no-package-lock --registry=https://registry.npmjs.org \
+            typescript@5 \
+            @capacitor/cli@8 \
+            @capacitor/core@8 \
+            @capacitor/android@8 \
+            @capacitor/app@8 \
+            @capacitor/keyboard@8 \
+            @capacitor/splash-screen@8 \
+            @capacitor/status-bar@8
 
       # Capacitor's generated android/app/capacitor.build.gradle targets Java 21.
       - name: Setup Java 21
@@ -52,7 +59,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Sync Capacitor Android project
-        run: bunx cap sync android
+        run: npx cap sync android
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
