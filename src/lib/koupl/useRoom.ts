@@ -11,12 +11,18 @@ export type RoomRow = {
   game_id: string;
   status: string;
   state: Record<string, unknown>;
+  updated_at: string;
 };
+
+export type RoomConnection = "idle" | "connecting" | "connected" | "reconnecting" | "offline";
 
 export type RoomApi = {
   room: RoomRow | null;
   error: string | null;
   busy: boolean;
+  restoring: boolean;
+  connection: RoomConnection;
+  partnerOnline: boolean;
   create: () => Promise<RoomRow | null>;
   join: (code: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
@@ -31,9 +37,22 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const [room, setRoom] = useState<RoomRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const [connection, setConnection] = useState<RoomConnection>("idle");
+  const [partnerOnline, setPartnerOnline] = useState(false);
   const roomIdRef = useRef<string | null>(null);
+  const newestRoomAtRef = useRef(0);
+  const refreshRef = useRef<() => Promise<void>>(async () => undefined);
+  const patchSequenceRef = useRef(0);
 
   roomIdRef.current = room?.id ?? null;
+
+  const acceptAuthoritativeRoom = useCallback((next: RoomRow) => {
+    const nextAt = Date.parse(next.updated_at) || 0;
+    if (nextAt < newestRoomAtRef.current) return;
+    newestRoomAtRef.current = nextAt;
+    setRoom(next);
+  }, []);
 
   // Restore the room this device was last in, so a refresh never loses it.
   useEffect(() => {
@@ -41,6 +60,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     const savedCode = window.localStorage.getItem(`koupl.room.${gameId}`);
     if (!savedCode) return;
     let active = true;
+    setRestoring(true);
     void supabase
       .from("rooms")
       .select("*")
@@ -52,17 +72,23 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         if (!active) return;
         const row = data as RoomRow | null;
         const member = !!row && (row.host_id === userId || row.guest_id === userId);
-        if (member) setRoom(row);
+        if (member) acceptAuthoritativeRoom(row);
         else window.localStorage.removeItem(`koupl.room.${gameId}`);
+        setRestoring(false);
       });
     return () => {
       active = false;
     };
-  }, [gameId, userId]);
+  }, [acceptAuthoritativeRoom, gameId, userId]);
 
   useEffect(() => {
-    if (!room?.id) return;
+    if (!room?.id) {
+      setConnection("idle");
+      setPartnerOnline(false);
+      return;
+    }
     const id = room.id;
+    setConnection(navigator.onLine ? "connecting" : "offline");
     const channel = supabase
       .channel(`room-${id}`)
       .on(
@@ -79,7 +105,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
               window.localStorage.removeItem(`koupl.room.${gameId}`);
             return;
           }
-          setRoom(next);
+          acceptAuthoritativeRoom(next);
         },
       )
       .on(
@@ -91,11 +117,27 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
             window.localStorage.removeItem(`koupl.room.${gameId}`);
         },
       )
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const onlineIds = Object.values(state)
+          .flat()
+          .map((presence) => (presence as { userId?: string }).userId)
+          .filter((id): id is string => typeof id === "string");
+        setPartnerOnline(onlineIds.some((id) => id !== userId));
+      })
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setConnection("connected");
+          void channel.track({ userId, onlineAt: new Date().toISOString() });
+          void refreshRef.current();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          setConnection(navigator.onLine ? "reconnecting" : "offline");
+        }
+      });
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [room?.id, gameId]);
+  }, [acceptAuthoritativeRoom, room?.id, gameId, userId]);
 
   const create = useCallback(async () => {
     if (!userId) return null;
@@ -103,7 +145,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     setError(null);
     const code = randomRoomCode();
     // Close anything this player left open for this game — no ghost rooms.
-    await supabase.rpc("close_stale_rooms", { p_game_id: gameId });
+    if (gameId !== "couple") await supabase.rpc("close_stale_rooms", { p_game_id: gameId });
     const { data, error: err } = await supabase
       .from("rooms")
       .insert({ code, host_id: userId, game_id: gameId, status: "waiting", state: {} })
@@ -114,10 +156,10 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       setError(err.message);
       return null;
     }
-    setRoom(data as RoomRow);
+    acceptAuthoritativeRoom(data as RoomRow);
     if (typeof window !== "undefined") window.localStorage.setItem(`koupl.room.${gameId}`, data.code);
     return data as RoomRow;
-  }, [gameId, userId]);
+  }, [acceptAuthoritativeRoom, gameId, userId]);
 
   const join = useCallback(
     async (code: string) => {
@@ -139,12 +181,12 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
         setError(err?.message ?? "No open room with that code.");
         return null;
       }
-      setRoom(row);
+      acceptAuthoritativeRoom(row);
       if (typeof window !== "undefined")
         window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
       return row;
     },
-    [gameId, userId],
+    [acceptAuthoritativeRoom, gameId, userId],
   );
 
   /**
@@ -154,7 +196,11 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const refresh = useCallback(async () => {
     const id = roomIdRef.current;
     if (!id || !userId) return;
-    const { data } = await supabase.from("rooms").select("*").eq("id", id).maybeSingle();
+    const { data, error: refreshError } = await supabase.from("rooms").select("*").eq("id", id).maybeSingle();
+    if (refreshError) {
+      setConnection(navigator.onLine ? "reconnecting" : "offline");
+      return;
+    }
     const row = data as RoomRow | null;
     if (!row || row.status === "closed") {
       setRoom(null);
@@ -168,14 +214,22 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
       if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
       return;
     }
-    setRoom(row);
-  }, [gameId, userId]);
+    acceptAuthoritativeRoom(row);
+    setConnection("connected");
+  }, [acceptAuthoritativeRoom, gameId, userId]);
+
+  refreshRef.current = refresh;
 
   const clearError = useCallback(() => setError(null), []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const sync = () => {
+      if (!navigator.onLine) {
+        setConnection("offline");
+        return;
+      }
+      setConnection("reconnecting");
       if (document.visibilityState === "visible") void refresh();
     };
     window.addEventListener("online", sync);
@@ -189,6 +243,8 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const leave = useCallback(async () => {
     const id = roomIdRef.current;
     setRoom(null);
+    newestRoomAtRef.current = 0;
+    setConnection("idle");
     if (typeof window !== "undefined") window.localStorage.removeItem(`koupl.room.${gameId}`);
     if (!id || !userId) return;
     await supabase.from("rooms").update({ status: "closed" }).eq("id", id);
@@ -197,17 +253,34 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
   const patchState = useCallback(async (patch: Record<string, unknown>) => {
     const id = roomIdRef.current;
     if (!id) return;
+    const sequence = ++patchSequenceRef.current;
     setRoom((prev) => (prev ? { ...prev, state: { ...prev.state, ...patch } } : prev));
     const { data, error: err } = await supabase.rpc("patch_room_state", {
       p_room_id: id,
       p_patch: patch as never,
     });
     const updated = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
-    if (updated) setRoom(updated);
-    if (err) setError(err.message);
-  }, []);
+    if (updated && sequence === patchSequenceRef.current) acceptAuthoritativeRoom(updated);
+    if (err) {
+      setError(err.message);
+      await refreshRef.current();
+    }
+  }, [acceptAuthoritativeRoom]);
 
-  return { room, error, busy, create, join, leave, patchState, refresh, clearError };
+  return {
+    room,
+    error,
+    busy,
+    restoring,
+    connection,
+    partnerOnline,
+    create,
+    join,
+    leave,
+    patchState,
+    refresh,
+    clearError,
+  };
 }
 
 export function randomRoomCode(len = 5) {

@@ -103,6 +103,8 @@ export function MemoryMatchDuel({ game, players, mySlot, room, onFinish, onExit 
     if (open.length !== 2) return;
     const [a, b] = open as [number, number];
     const match = deck[a] === deck[b];
+    if (match) fx.win();
+    else fx.fail();
     const t = window.setTimeout(() => {
       if (match) {
         const nextFound = [...found, a, b];
@@ -129,15 +131,6 @@ export function MemoryMatchDuel({ game, players, mySlot, room, onFinish, onExit 
       }
     }, 850);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.open]);
-
-  useEffect(() => {
-    if (open.length === 2) {
-      const match = deck[open[0]!] === deck[open[1]!];
-      if (match) fx.win();
-      else fx.fail();
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.open]);
 

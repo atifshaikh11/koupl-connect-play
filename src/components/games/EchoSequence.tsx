@@ -85,7 +85,7 @@ export function EchoSequence({ game, players, onFinish, onExit }: GameProps) {
     }
     fx.tap();
     setLit(i);
-    window.setTimeout(() => setLit(null), 160);
+    timers.current.push(window.setTimeout(() => setLit(null), 160));
     const nextStep = step + 1;
     if (nextStep >= seq.length) {
       setBest((b) => {

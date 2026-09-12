@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useGameFeel } from "@/components/koupl/GameFeel";
 import type { GameDef, GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
@@ -22,11 +22,10 @@ export const REACTIONS = ["😂", "😍", "😳", "🔥", "🙄"] as const;
  */
 export function useGameFx() {
   const { cue } = useGameFeel();
-  return {
-    tap: useCallback(() => cue("tap"), [cue]),
-    win: useCallback((streak = 1) => cue("win", streak), [cue]),
-    fail: useCallback(() => cue("fail"), [cue]),
-  };
+  const tap = useCallback(() => cue("tap"), [cue]);
+  const win = useCallback((streak = 1) => cue("win", streak), [cue]);
+  const fail = useCallback(() => cue("fail"), [cue]);
+  return useMemo(() => ({ tap, win, fail }), [tap, win, fail]);
 }
 
 /**

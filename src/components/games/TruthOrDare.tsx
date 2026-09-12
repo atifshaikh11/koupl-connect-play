@@ -30,6 +30,7 @@ type State = {
   s0: number;
   s1: number;
   done: boolean;
+  pickedAt: number;
 };
 
 const initial: State = {
@@ -44,6 +45,7 @@ const initial: State = {
   s0: 0,
   s1: 0,
   done: false,
+  pickedAt: 0,
 };
 
 export function TruthOrDare({
@@ -72,17 +74,20 @@ export function TruthOrDare({
       setLeft(null);
       return;
     }
-    setLeft(SECONDS[s.pick]);
+    const kind = s.pick;
+    const update = () => setLeft(Math.max(0, SECONDS[kind] - Math.floor((Date.now() - s.pickedAt) / 1000)));
+    update();
     const id = window.setInterval(() => {
-      setLeft((v) => (v === null ? null : Math.max(0, v - 1)));
+      update();
     }, 1000);
     return () => window.clearInterval(id);
-  }, [s.pick, s.i]);
+  }, [s.pick, s.i, s.pickedAt]);
 
   function pickCard(kind: "truth" | "dare") {
     fx.tap();
     patch({
       pick: kind,
+      pickedAt: Date.now(),
       ...(kind === "truth"
         ? active === 0
           ? { truths0: s.truths0 + 1 }
@@ -101,6 +106,7 @@ export function TruthOrDare({
     patch({
       i: s.i + 1,
       pick: "",
+      pickedAt: 0,
       tUsed: s.pick === "truth" ? s.tUsed + 1 : s.tUsed,
       dUsed: s.pick === "dare" ? s.dUsed + 1 : s.dUsed,
       s0: s.s0 + (active === 0 ? points : 0),

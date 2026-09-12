@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { FeedbackBanner, GameFrame, GameIntro, GameSummary } from "@/components/koupl/GameShell";
 import { ScoreBar } from "@/components/koupl/ui";
@@ -49,13 +49,15 @@ export function GuessTheWord({ game, players, onFinish, onExit }: GameProps) {
   const [scores, setScores] = useState<[number, number]>([0, 0]);
   const [over, setOver] = useState<null | "won" | "lost">(null);
   const [done, setDone] = useState(false);
+  const pickedRef = useRef<string[]>([]);
 
   const letters = useMemo(() => word.split(""), [word]);
   const solved = letters.every((l) => picked.includes(l));
 
   function guess(letter: string) {
-    if (over || picked.includes(letter)) return;
-    const next = [...picked, letter];
+    if (over || pickedRef.current.includes(letter)) return;
+    const next = [...pickedRef.current, letter];
+    pickedRef.current = next;
     setPicked(next);
     if (word.includes(letter)) {
       fx.tap();
@@ -84,6 +86,7 @@ export function GuessTheWord({ game, players, onFinish, onExit }: GameProps) {
     setUsed(nextUsed);
     setWord(pick(nextUsed));
     setPicked([]);
+    pickedRef.current = [];
     setLives(LIVES);
     setOver(null);
   }
@@ -94,6 +97,7 @@ export function GuessTheWord({ game, players, onFinish, onExit }: GameProps) {
     setUsed([]);
     setWord(pick([]));
     setPicked([]);
+    pickedRef.current = [];
     setLives(LIVES);
     setScores([0, 0]);
     setOver(null);

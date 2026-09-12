@@ -36,6 +36,7 @@ export function BubblePopPanic({ game, players, onFinish, onExit }: GameProps) {
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
   const [done, setDone] = useState(false);
   const nextId = useRef(0);
+  const runningRef = useRef(false);
 
   useEffect(() => {
     if (!running) return;
@@ -54,6 +55,7 @@ export function BubblePopPanic({ game, players, onFinish, onExit }: GameProps) {
 
   useEffect(() => {
     if (!running || left > 0) return;
+    runningRef.current = false;
     setRunning(false);
     setBubbles([]);
     const score = Math.max(points, 0);
@@ -67,6 +69,7 @@ export function BubblePopPanic({ game, players, onFinish, onExit }: GameProps) {
   }, [left, running, points, turn, fx]);
 
   function pop(b: Bubble) {
+    if (!runningRef.current) return;
     setBubbles((list) => list.filter((x) => x.id !== b.id));
     if (b.bad) {
       fx.fail();
@@ -78,6 +81,7 @@ export function BubblePopPanic({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function start() {
+    runningRef.current = true;
     setPoints(0);
     setLeft(DURATION);
     setBubbles([makeBubble(nextId.current++), makeBubble(nextId.current++)]);
@@ -96,6 +100,7 @@ export function BubblePopPanic({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function rematch() {
+    runningRef.current = false;
     setRound(1);
     setTurn(0);
     setTotals([0, 0]);

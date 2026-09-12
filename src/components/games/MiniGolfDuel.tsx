@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FeedbackBanner, GameFrame, GameIntro, GameSummary, StatPill } from "@/components/koupl/GameShell";
@@ -84,18 +84,24 @@ export function MiniGolfDuel({ game, players, onFinish, onExit }: GameProps) {
   const ball = useRef({ x: 0, y: 0, vx: 0, vy: 0 });
   const ballEl = useRef<HTMLDivElement | null>(null);
   const placed = useRef("");
+  const limitTimer = useRef<number | null>(null);
 
   const px = (v: number) => v * w;
   const py = (v: number) => v * h;
   const rectPx = (r: Rect) => ({ x: r.x * w, y: r.y * h, w: r.w * w, h: r.h * h });
 
   const key = `${hole}-${turn}-${w}`;
-  if (w > 0 && placed.current !== key && !moving) {
+  useEffect(() => {
+    if (w <= 0 || placed.current === key || moving) return;
     placed.current = key;
     ball.current = { x: px(course.tee.x), y: py(course.tee.y), vx: 0, vy: 0 };
     if (ballEl.current)
       ballEl.current.style.transform = `translate3d(${ball.current.x - BALL_R}px, ${ball.current.y - BALL_R}px, 0)`;
-  }
+  }, [course.tee.x, course.tee.y, key, moving, w]);
+
+  useEffect(() => () => {
+    if (limitTimer.current !== null) window.clearTimeout(limitTimer.current);
+  }, []);
 
   useRaf((dt) => {
     const b = ball.current;
@@ -167,13 +173,15 @@ export function MiniGolfDuel({ game, players, onFinish, onExit }: GameProps) {
       next[turn] = next[turn]! + 1;
       if (next[turn]! >= MAX_STROKES) {
         setMessage(`Stroke limit reached — ${MAX_STROKES} counted.`);
-        window.setTimeout(() => setHoleDone(true), 900);
+        if (limitTimer.current !== null) window.clearTimeout(limitTimer.current);
+        limitTimer.current = window.setTimeout(() => setHoleDone(true), 900);
       }
       return next;
     });
   }
 
   function nextTurn() {
+    if (limitTimer.current !== null) window.clearTimeout(limitTimer.current);
     const taken = strokes[turn]!;
     setTotals((t) => {
       const next: [number, number] = [...t];
@@ -195,6 +203,7 @@ export function MiniGolfDuel({ game, players, onFinish, onExit }: GameProps) {
   }
 
   function rematch() {
+    if (limitTimer.current !== null) window.clearTimeout(limitTimer.current);
     courses.current = Array.from({ length: HOLES }, (_, i) => buildCourse(i));
     setHole(0);
     setTurn(0);

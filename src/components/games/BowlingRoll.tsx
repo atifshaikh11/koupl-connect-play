@@ -23,6 +23,7 @@ export function BowlingRoll({ game, players, onFinish, onExit }: GameProps) {
   const [strikes, setStrikes] = useState<[number, number]>([0, 0]);
   const [message, setMessage] = useState("Stop the marker in the middle.");
   const raf = useRef(0);
+  const rollLocked = useRef(false);
   const dir = useRef(1);
   const [done, setDone] = useState(false);
 
@@ -51,7 +52,8 @@ export function BowlingRoll({ game, players, onFinish, onExit }: GameProps) {
   }, [rolling, showIntro, done]);
 
   function roll() {
-    if (!rolling) return;
+    if (!rolling || rollLocked.current) return;
+    rollLocked.current = true;
     setRolling(false);
     const off = Math.abs(pos - 50);
     let knocked: number;
@@ -90,6 +92,7 @@ export function BowlingRoll({ game, players, onFinish, onExit }: GameProps) {
     setPos(0);
     dir.current = 1;
     setRolling(true);
+    rollLocked.current = false;
     setMessage("Stop the marker in the middle.");
   }
 
@@ -102,6 +105,7 @@ export function BowlingRoll({ game, players, onFinish, onExit }: GameProps) {
     setPos(0);
     dir.current = 1;
     setRolling(true);
+    rollLocked.current = false;
     setDone(false);
     setMessage("Stop the marker in the middle.");
   }

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
+import { Heart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Chip, EmptyState, Screen } from "@/components/koupl/ui";
 import { gameById } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/activity")({
   head: () => ({
@@ -84,7 +86,12 @@ function Activity() {
         </div>
       </header>
 
-      <div className="px-4 pt-6">
+      <Tabs defaultValue="history" className="px-4 pt-6">
+        <TabsList className="grid h-12 w-full grid-cols-2 rounded-2xl">
+          <TabsTrigger value="history" className="rounded-xl">Game history</TabsTrigger>
+          <TabsTrigger value="story" className="rounded-xl">Our Story</TabsTrigger>
+        </TabsList>
+        <TabsContent value="history" className="mt-4">
       {app.activityLoading ? (
         <div className="grid gap-3">
           {[0, 1, 2].map((i) => (
@@ -131,7 +138,29 @@ function Activity() {
           })}
         </ul>
       )}
-      </div>
+        </TabsContent>
+        <TabsContent value="story" className="mt-4 space-y-3">
+          {totalGames === 0 ? (
+            <EmptyState emoji="💞" title="Your story starts with a game" body="Real shared milestones will appear here as you play together." />
+          ) : (
+            <>
+              <div className="surface flex gap-3 p-4">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary"><Heart className="h-6 w-6" /></span>
+                <div><p className="font-display font-bold">First game together</p><p className="mt-1 text-sm text-muted-foreground">{gameById(app.activity[app.activity.length - 1]!.game_id)?.title ?? "A Koupl game"} · {timeAgo(app.activity[app.activity.length - 1]!.created_at)}</p></div>
+              </div>
+              {totalGames >= 10 ? (
+                <div className="surface flex gap-3 p-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-sunny/25 text-sunny-foreground"><Sparkles className="h-6 w-6" /></span>
+                  <div><p className="font-display font-bold">10 games together</p><p className="mt-1 text-sm text-muted-foreground">A real milestone from your shared game history.</p></div>
+                </div>
+              ) : (
+                <p className="rounded-2xl bg-muted p-4 text-sm text-muted-foreground">{10 - totalGames} more finished {10 - totalGames === 1 ? "game" : "games"} until your next shared milestone.</p>
+              )}
+              <p className="px-2 text-xs leading-relaxed text-muted-foreground">Only finished-game milestones are shown. Private answers and conversations are never added unless they are explicitly saved.</p>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </Screen>
   );
 }

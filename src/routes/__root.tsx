@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "@/lib/koupl/store";
 import { initNative } from "@/lib/koupl/native";
 import { Toaster } from "@/components/ui/sonner";
+import { RoomOnboarding } from "@/components/koupl/RoomOnboarding";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +143,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
+        <RoomOnboarding />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <main><Outlet /></main>
         <Toaster position="top-center" />

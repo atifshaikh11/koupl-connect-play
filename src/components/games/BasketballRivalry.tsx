@@ -78,8 +78,18 @@ export function BasketballRivalry({
   const [flight, setFlight] = useState<"" | "make" | "miss">("");
   const [locked, setLocked] = useState(false);
   const frame = useRef<number | null>(null);
+  const shotTimer = useRef<number | null>(null);
+  const stateRef = useRef(s);
+  stateRef.current = s;
   const fx = useGameFx();
   const { showIntro, startPlaying } = useIntro(s.shots0 === 0 && s.shots1 === 0);
+
+  useEffect(
+    () => () => {
+      if (shotTimer.current !== null) window.clearTimeout(shotTimer.current);
+    },
+    [],
+  );
 
   const myTurn = mySlot === null || mySlot === s.turn;
   const shotsTaken = s.turn === 0 ? s.shots0 : s.shots1;
@@ -109,30 +119,32 @@ export function BasketballRivalry({
     setFlight(hit ? "make" : "miss");
     if (hit) fx.win();
     else fx.fail();
-    window.setTimeout(() => {
+    shotTimer.current = window.setTimeout(() => {
+      const current = stateRef.current;
       const base = perfect ? 2 : hit ? 1 : 0;
-      const nextStreak = hit ? streak + 1 : 0;
+      const currentStreak = current.turn === 0 ? current.streak0 : current.streak1;
+      const nextStreak = hit ? currentStreak + 1 : 0;
       // Every third consecutive make adds a bonus point.
       const bonus = hit && nextStreak > 0 && nextStreak % 3 === 0 ? 1 : 0;
       const gained = base + bonus;
       const mark = perfect ? "2" : hit ? "1" : "0";
-      const isP0 = s.turn === 0;
-      const nextShots0 = isP0 ? s.shots0 + 1 : s.shots0;
-      const nextShots1 = isP0 ? s.shots1 : s.shots1 + 1;
+      const isP0 = current.turn === 0;
+      const nextShots0 = isP0 ? current.shots0 + 1 : current.shots0;
+      const nextShots1 = isP0 ? current.shots1 : current.shots1 + 1;
       patch({
         shots0: nextShots0,
         shots1: nextShots1,
-        s0: s.s0 + (isP0 ? gained : 0),
-        s1: s.s1 + (isP0 ? 0 : gained),
-        streak0: isP0 ? nextStreak : s.streak0,
-        streak1: isP0 ? s.streak1 : nextStreak,
-        best0: isP0 ? Math.max(s.best0, nextStreak) : s.best0,
-        best1: isP0 ? s.best1 : Math.max(s.best1, nextStreak),
-        log0: isP0 ? s.log0 + mark : s.log0,
-        log1: isP0 ? s.log1 : s.log1 + mark,
+        s0: current.s0 + (isP0 ? gained : 0),
+        s1: current.s1 + (isP0 ? 0 : gained),
+        streak0: isP0 ? nextStreak : current.streak0,
+        streak1: isP0 ? current.streak1 : nextStreak,
+        best0: isP0 ? Math.max(current.best0, nextStreak) : current.best0,
+        best1: isP0 ? current.best1 : Math.max(current.best1, nextStreak),
+        log0: isP0 ? current.log0 + mark : current.log0,
+        log1: isP0 ? current.log1 : current.log1 + mark,
         turn: (isP0 ? 1 : 0) as 0 | 1,
         lastResult: perfect ? "perfect" : hit ? "swish" : "miss",
-        shotSeq: s.shotSeq + 1,
+        shotSeq: current.shotSeq + 1,
         done: nextShots0 >= SHOTS_EACH && nextShots1 >= SHOTS_EACH,
       });
       setFlight("");
