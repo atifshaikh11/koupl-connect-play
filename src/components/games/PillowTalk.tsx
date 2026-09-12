@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Heart, Moon, SkipForward } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export function PillowTalk({
   const loved = s.loved ? s.loved.split(",") : [];
   const isLoved = loved.includes(String(s.i));
   const { label, tone } = chapter(s.i, cards.length);
+  const pending = useRef(false);
 
   function toggleLove() {
     fx.tap();
@@ -59,6 +61,8 @@ export function PillowTalk({
   }
 
   function advance(kept: boolean) {
+    if (pending.current) return;
+    pending.current = true;
     const done = s.i + 1 >= cards.length;
     fx.tap();
     patch({
@@ -67,6 +71,7 @@ export function PillowTalk({
       skipped: s.skipped + (kept ? 0 : 1),
       done,
     });
+    window.setTimeout(() => { pending.current = false; }, 350);
   }
 
   if (showIntro) {

@@ -28,20 +28,19 @@ export function TapRaceDash({ game, players, onFinish, onExit }: GameProps) {
   useEffect(() => {
     if (!running) return;
     tick.current = window.setInterval(() => {
-      setLeft((l) => {
-        if (l <= 1) {
-          window.clearInterval(tick.current!);
-          runningRef.current = false;
-          setRunning(false);
-          return 0;
-        }
-        return l - 1;
-      });
+      setLeft((l) => Math.max(0, l - 1));
     }, 1000);
     return () => {
       if (tick.current) window.clearInterval(tick.current);
     };
   }, [running]);
+
+  useEffect(() => {
+    if (!running || left > 0) return;
+    if (tick.current) window.clearInterval(tick.current);
+    runningRef.current = false;
+    setRunning(false);
+  }, [left, running]);
 
   const scoredRound = useRef(0);
   useEffect(() => {
