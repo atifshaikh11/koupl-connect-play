@@ -255,7 +255,7 @@ function StorePage() {
             <Info className="h-4 w-4 text-night-muted" />
           </div>
           <p className="mt-2 text-sm leading-relaxed text-night-muted">
-            Koupl turns any evening into date night. Eight original games for two — confessions,
+            Koupl turns any evening into date night. 28 original games for two — confessions,
             dares, quizzes, deep-talk prompts and quick arcade battles — with turn-taking, scoring,
             reactions and instant rematches. Play on one phone or connect two with a short room
             code. No account needed to start.
