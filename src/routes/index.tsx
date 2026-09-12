@@ -234,7 +234,7 @@ function Home() {
           <GameArtwork game={lastPlayed ?? featured[0]!} className="h-12 w-12 bg-primary-foreground/15 text-primary-foreground" />
           <span className="min-w-0 flex-1">
             <span className="block text-xs font-bold uppercase opacity-80">
-              {lastPlayed ? "Continue" : "Start here"}
+              {resumeGame ? "Pick up where you left off" : lastPlayed ? "Play again" : "Start here"}
             </span>
             <span className="font-display block truncate text-lg font-bold">
               {lastPlayed?.title ?? featured[0]!.title}
