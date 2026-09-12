@@ -146,11 +146,7 @@ export function OddOneOut({ game, players, onFinish, onExit }: GameProps) {
               key={i}
               type="button"
               aria-label={`Tile ${i + 1}`}
-              onClick={() => tap(i, 0)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                tap(i, 1);
-              }}
+              onClick={() => tap(i, tapper)}
               disabled={locked}
               className={cn(
                 "rounded-xl transition-transform active:scale-95",
