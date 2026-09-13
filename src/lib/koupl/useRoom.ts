@@ -193,6 +193,33 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     [acceptAuthoritativeRoom, gameId, userId],
   );
 
+  const joinByToken = useCallback(
+    async (token: string) => {
+      const clean = token.trim().toLowerCase();
+      if (clean.length < 8) {
+        setError("That invite link is not valid.");
+        return null;
+      }
+      setBusy(true);
+      setError(null);
+      const { data, error: err } = await supabase.rpc("join_room_by_token", {
+        p_token: clean,
+        p_game_id: gameId,
+      });
+      setBusy(false);
+      const row = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
+      if (err || !row) {
+        setError(err?.message ?? "That invite is no longer active.");
+        return null;
+      }
+      acceptAuthoritativeRoom(row);
+      if (typeof window !== "undefined")
+        window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
+      return row;
+    },
+    [acceptAuthoritativeRoom, gameId],
+  );
+
   /**
    * Re-read the authoritative row. Realtime can miss updates while the tab is
    * backgrounded or the connection drops, so we resync on focus/reconnect.
