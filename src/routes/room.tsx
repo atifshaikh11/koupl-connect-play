@@ -472,7 +472,8 @@ function CoupleRoom() {
           className="mt-2 h-12 w-full rounded-2xl font-bold"
           onClick={() => setShowGames((v) => !v)}
         >
-          <Gamepad2 className="h-5 w-5" aria-hidden /> {showGames ? "Hide games" : "Games"}
+          <Gamepad2 className="h-5 w-5" aria-hidden />{" "}
+          {showGames ? "Hide games" : "Play Together — All 28 games"}
         </Button>
       </div>
 
