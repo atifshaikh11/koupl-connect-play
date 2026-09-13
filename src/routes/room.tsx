@@ -301,7 +301,7 @@ function CoupleRoom() {
           onClick={backToRoom}
           className="press fixed left-4 top-4 z-40 flex min-h-11 items-center gap-1 rounded-full border border-border bg-card/95 px-3 text-xs font-bold backdrop-blur"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Room
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Couple Room
         </button>
         <ChatDock chat={chat} myId={userId} />
       </>
