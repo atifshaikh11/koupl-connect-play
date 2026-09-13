@@ -35,7 +35,10 @@ function JoinRoom() {
   const [error, setError] = useState<string | null>(null);
   const tried = useRef(false);
 
-  const clean = code.trim().toUpperCase();
+  const raw = code.trim();
+  // Long values are opaque invite tokens; short ones are the typed fallback code.
+  const isToken = raw.length >= 8;
+  const clean = isToken ? raw.toLowerCase() : raw.toUpperCase();
 
   useEffect(() => {
     if (!app.hydrated || app.loading || tried.current) return;
@@ -49,10 +52,15 @@ function JoinRoom() {
     }
 
     void (async () => {
-      const { data, error: err } = await supabase.rpc("join_room", {
-        p_code: clean,
-        p_game_id: COUPLE_ROOM_KEY,
-      });
+      const { data, error: err } = isToken
+        ? await supabase.rpc("join_room_by_token", {
+            p_token: clean,
+            p_game_id: COUPLE_ROOM_KEY,
+          })
+        : await supabase.rpc("join_room", {
+            p_code: clean,
+            p_game_id: COUPLE_ROOM_KEY,
+          });
       const row = Array.isArray(data) ? data[0] : null;
       if (err || !row) {
         setError(err?.message ?? "That invite is no longer active.");

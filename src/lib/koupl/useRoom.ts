@@ -6,6 +6,8 @@ import type { SharedState } from "./types";
 export type RoomRow = {
   id: string;
   code: string;
+  /** Opaque token used for the shareable one-tap invite link. */
+  invite_token?: string;
   host_id: string;
   guest_id: string | null;
   game_id: string;
@@ -25,6 +27,8 @@ export type RoomApi = {
   partnerOnline: boolean;
   create: () => Promise<RoomRow | null>;
   join: (code: string) => Promise<RoomRow | null>;
+  /** Join through a shared invite link token (opaque, not the short code). */
+  joinByToken: (token: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
   patchState: (patch: Record<string, unknown>) => Promise<void>;
   /** Pull the authoritative row again (reconnect / tab focus / refresh). */
@@ -189,6 +193,33 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     [acceptAuthoritativeRoom, gameId, userId],
   );
 
+  const joinByToken = useCallback(
+    async (token: string) => {
+      const clean = token.trim().toLowerCase();
+      if (clean.length < 8) {
+        setError("That invite link is not valid.");
+        return null;
+      }
+      setBusy(true);
+      setError(null);
+      const { data, error: err } = await supabase.rpc("join_room_by_token", {
+        p_token: clean,
+        p_game_id: gameId,
+      });
+      setBusy(false);
+      const row = Array.isArray(data) ? (data[0] as RoomRow | undefined) : undefined;
+      if (err || !row) {
+        setError(err?.message ?? "That invite is no longer active.");
+        return null;
+      }
+      acceptAuthoritativeRoom(row);
+      if (typeof window !== "undefined")
+        window.localStorage.setItem(`koupl.room.${gameId}`, row.code);
+      return row;
+    },
+    [acceptAuthoritativeRoom, gameId],
+  );
+
   /**
    * Re-read the authoritative row. Realtime can miss updates while the tab is
    * backgrounded or the connection drops, so we resync on focus/reconnect.
@@ -276,6 +307,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     partnerOnline,
     create,
     join,
+    joinByToken,
     leave,
     patchState,
     refresh,

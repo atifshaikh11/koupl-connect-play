@@ -29,6 +29,7 @@ import {
   PENDING_JOIN_KEY,
   coupleState,
   inviteLink,
+  inviteMessage,
   useScopedGameRoom,
 } from "@/lib/koupl/coupleRoom";
 import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
@@ -300,7 +301,7 @@ function CoupleRoom() {
           onClick={backToRoom}
           className="press fixed left-4 top-4 z-40 flex min-h-11 items-center gap-1 rounded-full border border-border bg-card/95 px-3 text-xs font-bold backdrop-blur"
         >
-          <ArrowLeft className="h-4 w-4" aria-hidden /> Room
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Back to Couple Room
         </button>
         <ChatDock chat={chat} myId={userId} />
       </>
@@ -308,7 +309,8 @@ function CoupleRoom() {
   }
 
   /* ---------------- hub ---------------- */
-  const link = inviteLink(room.room.code);
+  const link = inviteLink(room.room.invite_token ?? room.room.code);
+  const shareText = inviteMessage(link, room.room.code);
 
   return (
     <Shell>
@@ -356,15 +358,17 @@ function CoupleRoom() {
             variant="secondary"
             className="h-12 rounded-2xl"
             onClick={() => {
-              const text = `Join me in our Koupl Couple Room: ${link}`;
-              if (navigator.share) void navigator.share({ title: "Koupl Couple Room", text, url: link });
+              if (navigator.share)
+                void navigator
+                  .share({ title: "Join my Koupl Couple Room", text: shareText, url: link })
+                  .catch(() => undefined);
               else {
-                void navigator.clipboard?.writeText(link);
+                void navigator.clipboard?.writeText(shareText);
                 toast.success("Invite link copied");
               }
             }}
           >
-            <Share2 className="h-4 w-4" aria-hidden /> Invite Partner
+            <Share2 className="h-4 w-4" aria-hidden /> Share invite link
           </Button>
           <Button
             variant="outline"
@@ -468,7 +472,8 @@ function CoupleRoom() {
           className="mt-2 h-12 w-full rounded-2xl font-bold"
           onClick={() => setShowGames((v) => !v)}
         >
-          <Gamepad2 className="h-5 w-5" aria-hidden /> {showGames ? "Hide games" : "Games"}
+          <Gamepad2 className="h-5 w-5" aria-hidden />{" "}
+          {showGames ? "Hide games" : "Play Together — All 28 games"}
         </Button>
       </div>
 

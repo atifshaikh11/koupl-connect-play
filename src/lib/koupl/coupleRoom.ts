@@ -26,13 +26,21 @@ export function coupleState(room: RoomRow | null): CoupleRoomState {
   return (room?.state ?? {}) as CoupleRoomState;
 }
 
-/** Stable invite link for the couple session. */
-export function inviteLink(code: string) {
+/**
+ * Stable invite link for the couple session. Uses the room's opaque invite
+ * token (never the short code), so the URL can't be guessed.
+ */
+export function inviteLink(token: string) {
   const origin =
     typeof window !== "undefined" && window.location?.origin
       ? window.location.origin
       : "https://koupl-connect-play.lovable.app";
-  return `${origin}/join/${code}`;
+  return `${origin}/join/${token}`;
+}
+
+/** Friendly one-tap invite message. The code stays as a typed fallback. */
+export function inviteMessage(link: string, code: string) {
+  return `❤️ Join me on Koupl\nLet's play together\nTap to join our Couple Room: ${link}\nRoom code: ${code}`;
 }
 
 /**
