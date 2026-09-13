@@ -308,7 +308,8 @@ function CoupleRoom() {
   }
 
   /* ---------------- hub ---------------- */
-  const link = inviteLink(room.room.code);
+  const link = inviteLink(room.room.invite_token ?? room.room.code);
+  const shareText = inviteMessage(link, room.room.code);
 
   return (
     <Shell>
