@@ -29,6 +29,7 @@ import {
   PENDING_JOIN_KEY,
   coupleState,
   inviteLink,
+  inviteMessage,
   useScopedGameRoom,
 } from "@/lib/koupl/coupleRoom";
 import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
