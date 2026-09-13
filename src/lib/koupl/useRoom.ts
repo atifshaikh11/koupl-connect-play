@@ -27,6 +27,8 @@ export type RoomApi = {
   partnerOnline: boolean;
   create: () => Promise<RoomRow | null>;
   join: (code: string) => Promise<RoomRow | null>;
+  /** Join through a shared invite link token (opaque, not the short code). */
+  joinByToken: (token: string) => Promise<RoomRow | null>;
   leave: () => Promise<void>;
   patchState: (patch: Record<string, unknown>) => Promise<void>;
   /** Pull the authoritative row again (reconnect / tab focus / refresh). */
