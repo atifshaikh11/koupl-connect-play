@@ -6,6 +6,8 @@ import type { SharedState } from "./types";
 export type RoomRow = {
   id: string;
   code: string;
+  /** Opaque token used for the shareable one-tap invite link. */
+  invite_token?: string;
   host_id: string;
   guest_id: string | null;
   game_id: string;
