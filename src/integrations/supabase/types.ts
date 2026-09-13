@@ -138,6 +138,7 @@ export type Database = {
           guest_id: string | null
           host_id: string
           id: string
+          invite_token: string
           state: Json
           status: string
           updated_at: string
@@ -149,6 +150,7 @@ export type Database = {
           guest_id?: string | null
           host_id: string
           id?: string
+          invite_token?: string
           state?: Json
           status?: string
           updated_at?: string
@@ -160,6 +162,7 @@ export type Database = {
           guest_id?: string | null
           host_id?: string
           id?: string
+          invite_token?: string
           state?: Json
           status?: string
           updated_at?: string
@@ -173,6 +176,7 @@ export type Database = {
     Functions: {
       close_stale_rooms: { Args: { p_game_id: string }; Returns: undefined }
       gen_code: { Args: { len?: number }; Returns: string }
+      gen_invite_token: { Args: never; Returns: string }
       join_room: {
         Args: { p_code: string; p_game_id?: string }
         Returns: {
@@ -182,6 +186,28 @@ export type Database = {
           guest_id: string | null
           host_id: string
           id: string
+          invite_token: string
+          state: Json
+          status: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "rooms"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      join_room_by_token: {
+        Args: { p_game_id?: string; p_token: string }
+        Returns: {
+          code: string
+          created_at: string
+          game_id: string
+          guest_id: string | null
+          host_id: string
+          id: string
+          invite_token: string
           state: Json
           status: string
           updated_at: string
@@ -218,6 +244,7 @@ export type Database = {
           guest_id: string | null
           host_id: string
           id: string
+          invite_token: string
           state: Json
           status: string
           updated_at: string
