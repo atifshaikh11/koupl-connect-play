@@ -358,15 +358,17 @@ function CoupleRoom() {
             variant="secondary"
             className="h-12 rounded-2xl"
             onClick={() => {
-              const text = `Join me in our Koupl Couple Room: ${link}`;
-              if (navigator.share) void navigator.share({ title: "Koupl Couple Room", text, url: link });
+              if (navigator.share)
+                void navigator
+                  .share({ title: "Join my Koupl Couple Room", text: shareText, url: link })
+                  .catch(() => undefined);
               else {
-                void navigator.clipboard?.writeText(link);
+                void navigator.clipboard?.writeText(shareText);
                 toast.success("Invite link copied");
               }
             }}
           >
-            <Share2 className="h-4 w-4" aria-hidden /> Invite Partner
+            <Share2 className="h-4 w-4" aria-hidden /> Share invite link
           </Button>
           <Button
             variant="outline"
