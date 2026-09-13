@@ -307,6 +307,7 @@ export function useRoom(gameId: string, userId: string | null): RoomApi {
     partnerOnline,
     create,
     join,
+    joinByToken,
     leave,
     patchState,
     refresh,
