@@ -106,12 +106,17 @@ function CoupleRoom() {
 
   /* an invite link handled before sign-in finishes joining here */
   useEffect(() => {
-    if (!userId || room.room || joinedPending.current) return;
+    if (!userId || room.room || room.restoring || joinedPending.current) return;
     const pending = window.localStorage.getItem(PENDING_JOIN_KEY);
     if (!pending) return;
     joinedPending.current = true;
     window.localStorage.removeItem(PENDING_JOIN_KEY);
-    void room.join(pending).then((row) => {
+    // Long values are opaque invite tokens; short ones are the typed code.
+    const resolve =
+      pending.trim().length >= 8
+        ? room.joinByToken(pending.trim().toLowerCase())
+        : room.join(pending.trim().toUpperCase());
+    void resolve.then((row) => {
       if (row) toast.success("You're in the Couple Room");
     });
   }, [userId, room]);
