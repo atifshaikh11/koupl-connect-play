@@ -106,16 +106,23 @@ function CoupleRoom() {
 
   /* an invite link handled before sign-in finishes joining here */
   useEffect(() => {
-    if (!userId || room.room || room.restoring || joinedPending.current) return;
-    const pending = window.localStorage.getItem(PENDING_JOIN_KEY);
+    if (!userId || room.restoring || joinedPending.current) return;
+    const pending = window.localStorage.getItem(PENDING_JOIN_KEY)?.trim();
     if (!pending) return;
+    const isTokenInvite = pending.length >= 8;
+    // Already sitting in the invited room (e.g. the host opened their own link).
+    const alreadyHere = room.room
+      ? isTokenInvite
+        ? room.room.invite_token?.toLowerCase() === pending.toLowerCase()
+        : room.room.code.toUpperCase() === pending.toUpperCase()
+      : false;
     joinedPending.current = true;
     window.localStorage.removeItem(PENDING_JOIN_KEY);
+    if (alreadyHere) return;
     // Long values are opaque invite tokens; short ones are the typed code.
-    const resolve =
-      pending.trim().length >= 8
-        ? room.joinByToken(pending.trim().toLowerCase())
-        : room.join(pending.trim().toUpperCase());
+    const resolve = isTokenInvite
+      ? room.joinByToken(pending.toLowerCase())
+      : room.join(pending.toUpperCase());
     void resolve.then((row) => {
       if (row) toast.success("You're in the Couple Room");
     });
