@@ -10,6 +10,7 @@ import { Wordmark } from "@/components/koupl/ui";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useApp } from "@/lib/koupl/store";
+import { postAuthTarget } from "@/lib/koupl/coupleRoom";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -41,7 +42,7 @@ function Auth() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (session) void navigate({ to: "/" });
+    if (session) void navigate({ to: postAuthTarget() });
   }, [session, navigate]);
 
   async function submit(e: React.FormEvent) {
@@ -63,12 +64,12 @@ function Auth() {
           return;
         }
         toast.success("Account created");
-        void navigate({ to: "/" });
+        void navigate({ to: postAuthTarget() });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back");
-        void navigate({ to: "/" });
+        void navigate({ to: postAuthTarget() });
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
@@ -90,7 +91,7 @@ function Auth() {
         return;
       }
       if (result.redirected) return;
-      void navigate({ to: "/" });
+      void navigate({ to: postAuthTarget() });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Google sign-in failed. Try email instead.");
     } finally {
