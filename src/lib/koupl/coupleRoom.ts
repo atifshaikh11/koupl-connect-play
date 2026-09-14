@@ -9,6 +9,15 @@ import type { RoomApi, RoomRow } from "./useRoom";
 export const COUPLE_ROOM_KEY = "couple";
 export const PENDING_JOIN_KEY = "koupl.pendingJoin";
 
+/**
+ * Where to land after signing in: straight into the Couple Room when an invite
+ * was tapped before sign-in, otherwise home.
+ */
+export function postAuthTarget(): "/room" | "/" {
+  if (typeof window === "undefined") return "/";
+  return window.localStorage.getItem(PENDING_JOIN_KEY) ? "/room" : "/";
+}
+
 export type CoupleRoomState = {
   /** Game currently selected in the hub, or null when nobody picked one. */
   activeGame?: string | null;
