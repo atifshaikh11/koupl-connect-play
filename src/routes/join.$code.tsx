@@ -45,8 +45,9 @@ function JoinRoom() {
     tried.current = true;
 
     if (!app.session) {
-      // Remember the invite so signing in lands straight in the room.
-      window.localStorage.setItem(PENDING_JOIN_KEY, clean);
+      // Remember the invite exactly as shared so signing in (including Google
+      // OAuth, which reloads the app) lands straight in the same room.
+      window.localStorage.setItem(PENDING_JOIN_KEY, raw);
       void navigate({ to: "/auth" });
       return;
     }
