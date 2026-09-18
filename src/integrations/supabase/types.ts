@@ -92,6 +92,53 @@ export type Database = {
         }
         Relationships: []
       }
+      room_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          game_id: string
+          id: string
+          room_id: string
+          status: string
+          token_hash: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          game_id: string
+          id?: string
+          room_id: string
+          status?: string
+          token_hash: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          game_id?: string
+          id?: string
+          room_id?: string
+          status?: string
+          token_hash?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_invites_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_messages: {
         Row: {
           body: string
@@ -175,6 +222,12 @@ export type Database = {
     }
     Functions: {
       close_stale_rooms: { Args: { p_game_id: string }; Returns: undefined }
+      create_room_invite: {
+        Args: { p_game_id: string; p_room_id: string; p_token: string }
+        Returns: {
+          expires_at: string
+        }[]
+      }
       gen_code: { Args: { len?: number }; Returns: string }
       gen_invite_token: { Args: never; Returns: string }
       join_room: {
@@ -255,6 +308,21 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      peek_room_invite: {
+        Args: { p_token: string }
+        Returns: {
+          game_id: string
+          status: string
+        }[]
+      }
+      redeem_room_invite: {
+        Args: { p_token: string }
+        Returns: {
+          game_id: string
+          room_code: string
+          status: string
+        }[]
       }
       unlink_partner: { Args: never; Returns: undefined }
     }

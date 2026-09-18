@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useRef } from "react";
+import type { useNavigate } from "@tanstack/react-router";
 
 import type { RoomApi, RoomRow } from "./useRoom";
+
+type NavigateFn = ReturnType<typeof useNavigate>;
 
 /**
  * One persistent room per couple. Every game is played inside this room, so the
@@ -35,21 +38,81 @@ export function coupleState(room: RoomRow | null): CoupleRoomState {
   return (room?.state ?? {}) as CoupleRoomState;
 }
 
+function origin() {
+  return typeof window !== "undefined" && window.location?.origin
+    ? window.location.origin
+    : "https://koupl-connect-play.lovable.app";
+}
+
 /**
  * Stable invite link for the couple session. Uses the room's opaque invite
  * token (never the short code), so the URL can't be guessed.
  */
 export function inviteLink(token: string) {
-  const origin =
-    typeof window !== "undefined" && window.location?.origin
-      ? window.location.origin
-      : "https://koupl-connect-play.lovable.app";
-  return `${origin}/join/${token}`;
+  return `${origin()}/join/${token}`;
 }
 
 /** Friendly one-tap invite message. The code stays as a typed fallback. */
 export function inviteMessage(link: string, code: string) {
   return `❤️ Join me on Koupl\nLet's play together\nTap to join our Couple Room: ${link}\nRoom code: ${code}`;
+}
+
+/* ------------------------------------------------------------------ *
+ * One-tap game invitations (Zoom-style temporary links)
+ * ------------------------------------------------------------------ */
+
+/** Raw invite token kept only until the recipient finishes signing in. */
+export const PENDING_INVITE_KEY = "koupl.pendingInvite";
+
+/** Short, unguessable, URL-safe bearer token (~71 bits of entropy). */
+export function newInviteToken(len = 12) {
+  const alphabet = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = new Uint8Array(len);
+  crypto.getRandomValues(bytes);
+  let out = "";
+  for (const b of bytes) out += alphabet[b % alphabet.length];
+  return out;
+}
+
+/** Clean, opaque invitation URL: nothing but the ticket. */
+export function gameInviteUrl(token: string) {
+  return `${origin()}/i/${token}`;
+}
+
+/** Share text that names the game while the URL stays opaque. */
+export function gameInviteMessage(opts: {
+  link: string;
+  gameTitle: string;
+  gameEmoji: string;
+  code: string;
+}) {
+  return `❤️ Join me on Koupl\n${opts.gameEmoji} Let's play ${opts.gameTitle} together!\nTap to join:\n${opts.link}\n\n(Backup room code: ${opts.code})`;
+}
+
+export function pendingInvite(): string | null {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(PENDING_INVITE_KEY);
+}
+
+export function rememberInvite(token: string) {
+  if (typeof window !== "undefined") window.localStorage.setItem(PENDING_INVITE_KEY, token);
+}
+
+export function forgetInvite() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(PENDING_INVITE_KEY);
+}
+
+/**
+ * Send a freshly signed-in player where they meant to go: back to a tapped
+ * game invitation first, then a pending room invite, then home.
+ */
+export function goPostAuth(navigate: NavigateFn, replace = false) {
+  const token = pendingInvite();
+  if (token) {
+    void navigate({ to: "/i/$token", params: { token }, replace });
+    return;
+  }
+  void navigate({ to: postAuthTarget(), replace });
 }
 
 /**
