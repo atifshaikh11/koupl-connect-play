@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "@/components/koupl/ui";
 import { supabase } from "@/integrations/supabase/client";
-import { postAuthTarget } from "@/lib/koupl/coupleRoom";
+import { goPostAuth } from "@/lib/koupl/coupleRoom";
 
 export const Route = createFileRoute("/auth_/callback")({
   ssr: false,
@@ -46,7 +46,7 @@ function AuthCallback() {
     const done = () => {
       if (!active) return;
       active = false;
-      void navigate({ to: postAuthTarget(), replace: true });
+      goPostAuth(navigate, true);
     };
 
     const fail = (message: string) => {
