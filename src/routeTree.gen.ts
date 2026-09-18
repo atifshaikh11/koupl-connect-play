@@ -19,6 +19,7 @@ import { Route as StoreRouteImport } from './routes/store'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as GameGameIdRouteImport } from './routes/game.$gameId'
+import { Route as ITokenRouteImport } from './routes/i.$token'
 import { Route as JoinCodeRouteImport } from './routes/join.$code'
 import { Route as PlayGameIdRouteImport } from './routes/play.$gameId'
 
@@ -72,6 +73,11 @@ const GameGameIdRoute = GameGameIdRouteImport.update({
   path: '/game/$gameId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ITokenRoute = ITokenRouteImport.update({
+  id: '/i/$token',
+  path: '/i/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const JoinCodeRoute = JoinCodeRouteImport.update({
   id: '/join/$code',
   path: '/join/$code',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
+  '/i/$token': typeof ITokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/play/$gameId': typeof PlayGameIdRoute
 }
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof WelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
+  '/i/$token': typeof ITokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/play/$gameId': typeof PlayGameIdRoute
 }
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/auth_/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
+  '/i/$token': typeof ITokenRoute
   '/join/$code': typeof JoinCodeRoute
   '/play/$gameId': typeof PlayGameIdRoute
 }
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/auth/callback'
     | '/game/$gameId'
+    | '/i/$token'
     | '/join/$code'
     | '/play/$gameId'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/auth/callback'
     | '/game/$gameId'
+    | '/i/$token'
     | '/join/$code'
     | '/play/$gameId'
   id:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/auth_/callback'
     | '/game/$gameId'
+    | '/i/$token'
     | '/join/$code'
     | '/play/$gameId'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   WelcomeRoute: typeof WelcomeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   GameGameIdRoute: typeof GameGameIdRoute
+  ITokenRoute: typeof ITokenRoute
   JoinCodeRoute: typeof JoinCodeRoute
   PlayGameIdRoute: typeof PlayGameIdRoute
 }
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GameGameIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/i/$token': {
+      id: '/i/$token'
+      path: '/i/$token'
+      fullPath: '/i/$token'
+      preLoaderRoute: typeof ITokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/join/$code': {
       id: '/join/$code'
       path: '/join/$code'
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   WelcomeRoute: WelcomeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   GameGameIdRoute: GameGameIdRoute,
+  ITokenRoute: ITokenRoute,
   JoinCodeRoute: JoinCodeRoute,
   PlayGameIdRoute: PlayGameIdRoute,
 }
