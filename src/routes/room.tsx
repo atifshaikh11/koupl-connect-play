@@ -82,6 +82,7 @@ function CoupleRoom() {
   const [onlineNow, setOnlineNow] = useState(true);
   const starting = useRef(false);
   const [readyBusy, setReadyBusy] = useState(false);
+  const [inviteBusy, setInviteBusy] = useState(false);
   const preselected = useRef(false);
   const joinedPending = useRef(false);
   const shownError = useRef<string | null>(null);
@@ -208,6 +209,41 @@ function CoupleRoom() {
       game: {},
     });
   }, [wantedGame, room.room]);
+
+  /** Zoom-style one-tap ticket: single-use, 2 hours, tied to this game. */
+  async function invitePartner() {
+    if (!room.room || !activeGame || inviteBusy) return;
+    setInviteBusy(true);
+    try {
+      const token = newInviteToken();
+      const { error } = await supabase.rpc("create_room_invite", {
+        p_room_id: room.room.id,
+        p_token: token,
+        p_game_id: activeGame.id,
+      });
+      if (error) {
+        toast.error("We couldn't create that invite. Try again.");
+        return;
+      }
+      const url = gameInviteUrl(token);
+      const text = gameInviteMessage({
+        link: url,
+        gameTitle: activeGame.title,
+        gameEmoji: activeGame.emoji,
+        code: room.room.code,
+      });
+      if (navigator.share) {
+        await navigator
+          .share({ title: `Play ${activeGame.title} on Koupl`, text, url })
+          .catch(() => undefined);
+      } else {
+        await navigator.clipboard?.writeText(text);
+        toast.success("Invite link copied — valid for 2 hours");
+      }
+    } finally {
+      setInviteBusy(false);
+    }
+  }
 
   function backToRoom() {
     void room.patchState({ started: false, game: {}, hostReady: false, guestReady: false });
