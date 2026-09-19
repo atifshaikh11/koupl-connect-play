@@ -28,10 +28,14 @@ import {
   COUPLE_ROOM_KEY,
   PENDING_JOIN_KEY,
   coupleState,
+  gameInviteMessage,
+  gameInviteUrl,
   inviteLink,
   inviteMessage,
+  newInviteToken,
   useScopedGameRoom,
 } from "@/lib/koupl/coupleRoom";
+import { supabase } from "@/integrations/supabase/client";
 import type { GameResult, Player, PlayerSlot } from "@/lib/koupl/types";
 import { cn } from "@/lib/utils";
 
