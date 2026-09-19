@@ -8,6 +8,13 @@
       "when": 1789739605209,
       "tag": "0000_room_invites_one_tap",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789776566184,
+      "tag": "0001_redeem_invite_marks_room_playing",
+      "breakpoints": true
     }
   ]
 }
