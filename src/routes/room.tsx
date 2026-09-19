@@ -459,6 +459,17 @@ function CoupleRoom() {
                 </p>
               </div>
             </div>
+            {!partnerIn ? (
+              <Button
+                size="lg"
+                className="mt-3 h-14 w-full rounded-2xl text-base"
+                disabled={inviteBusy}
+                onClick={() => void invitePartner()}
+              >
+                <Share2 className="h-5 w-5" aria-hidden />
+                {inviteBusy ? "Creating invite…" : "Invite Partner"}
+              </Button>
+            ) : null}
             {partnerIn ? (
               <>
                 <div className="mt-3 grid grid-cols-2 gap-2" aria-live="polite">
