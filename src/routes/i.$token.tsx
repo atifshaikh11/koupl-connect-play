@@ -100,6 +100,8 @@ function InvitePage() {
     }
     forgetInvite();
     window.localStorage.setItem(`koupl.room.${COUPLE_ROOM_KEY}`, row.room_code);
+    // One tap means straight into the game — no welcome guide in the way.
+    window.localStorage.setItem("koupl.room-onboarding.v1", "done");
     void navigate({ to: "/room", replace: true });
   }, [navigate, token]);
 
