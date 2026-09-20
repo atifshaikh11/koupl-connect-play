@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { Gamepad2, Share2, UsersRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
