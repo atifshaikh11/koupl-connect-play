@@ -17,10 +17,14 @@ export function RoomOnboarding() {
   const app = useApp();
   const [step, setStep] = useState(0);
   const [open, setOpen] = useState(false);
+  // A tapped invitation is a one-tap flow: never cover it with the guide.
+  const onInvite = useRouterState({
+    select: (s) => s.location.pathname.startsWith("/i/"),
+  });
   useEffect(() => {
-    if (!app.hydrated || !app.onboarded) return;
+    if (!app.hydrated || !app.onboarded || onInvite) return;
     try { setOpen(window.localStorage.getItem(KEY) !== "done"); } catch { setOpen(true); }
-  }, [app.hydrated, app.onboarded]);
+  }, [app.hydrated, app.onboarded, onInvite]);
   const finish = () => {
     try { window.localStorage.setItem(KEY, "done"); } catch { /* unavailable */ }
     setOpen(false);
