@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -211,6 +211,12 @@ function Auth() {
         >
           {mode === "signup" ? "I already have an account" : "I need an account"}
         </button>
+
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          By continuing you agree to the{" "}
+          <Link to="/terms" className="font-bold text-primary underline">Terms</Link> and{" "}
+          <Link to="/privacy" className="font-bold text-primary underline">Privacy Policy</Link>.
+        </p>
 
         <button
           type="button"

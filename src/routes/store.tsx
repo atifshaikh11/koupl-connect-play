@@ -10,7 +10,6 @@ import {
   Share2,
   Shield,
   Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 
