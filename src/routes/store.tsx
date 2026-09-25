@@ -10,7 +10,6 @@ import {
   Share2,
   Shield,
   Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 
@@ -77,37 +76,6 @@ const FEATURES = [
   },
 ];
 
-const RATING_BARS: Array<[stars: number, pct: number]> = [
-  [5, 82],
-  [4, 11],
-  [3, 4],
-  [2, 1],
-  [1, 2],
-];
-
-const REVIEWS = [
-  {
-    name: "Maya R.",
-    stars: 5,
-    title: "Our Friday night ritual",
-    body: "We started with This or That as a joke and ended up talking for two hours. The prompts are genuinely good.",
-    date: "Aug 28, 2026",
-  },
-  {
-    name: "Daniel K.",
-    stars: 5,
-    title: "Long-distance approved",
-    body: "Room codes just work. We play Four in a Row and Basketball Rivalry over video call every week.",
-    date: "Aug 14, 2026",
-  },
-  {
-    name: "Priya S.",
-    stars: 4,
-    title: "Cute and easy",
-    body: "Loved the demo mode — we were playing in ten seconds. Would love even more deep-talk questions.",
-    date: "Jul 30, 2026",
-  },
-];
 
 function AppIcon({ className }: { className?: string }) {
   return (
@@ -122,21 +90,6 @@ function AppIcon({ className }: { className?: string }) {
   );
 }
 
-function Stars({ value, className }: { value: number; className?: string }) {
-  return (
-    <div className={cn("flex items-center gap-0.5", className)} aria-label={`${value} out of 5 stars`}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          className={cn(
-            "h-3.5 w-3.5",
-            i < value ? "fill-amber-400 text-amber-400" : "fill-night-muted/30 text-night-muted/30",
-          )}
-        />
-      ))}
-    </div>
-  );
-}
 
 function StorePage() {
   const navigate = useNavigate();
@@ -192,9 +145,9 @@ function StorePage() {
         {/* Stats strip */}
         <section className="mt-5 flex items-stretch justify-between gap-2 overflow-x-auto px-5 text-center">
           {[
-            { top: "4.9 ★", bottom: "12K reviews" },
-            { top: "10K+", bottom: "Downloads" },
-            { top: "12+", bottom: "Rated for 12+" },
+            { top: "28", bottom: "Games" },
+            { top: "Free", bottom: "No ads" },
+            { top: "2", bottom: "Players" },
           ].map((s) => (
             <div
               key={s.bottom}
@@ -296,49 +249,6 @@ function StorePage() {
           </ul>
         </section>
 
-        {/* Ratings & reviews */}
-        <section className="px-5 pt-8">
-          <h2 className="font-display text-lg font-bold">Ratings and reviews</h2>
-          <div className="mt-4 flex items-center gap-6">
-            <div className="text-center">
-              <p className="font-display text-5xl font-bold">4.9</p>
-              <Stars value={5} className="mt-2 justify-center" />
-              <p className="mt-1 text-xs text-night-muted">12,408 reviews</p>
-            </div>
-            <div className="flex-1 space-y-1.5">
-              {RATING_BARS.map(([stars, pct]) => (
-                <div key={stars} className="flex items-center gap-2">
-                  <span className="w-3 text-right text-xs text-night-muted">{stars}</span>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-night-soft">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-6 space-y-3">
-            {REVIEWS.map((r) => (
-              <article key={r.name} className="rounded-3xl bg-night-soft p-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/20 font-display text-sm font-bold text-primary">
-                    {r.name[0]}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold">{r.name}</p>
-                    <div className="flex items-center gap-2">
-                      <Stars value={r.stars} />
-                      <span className="text-[11px] text-night-muted">{r.date}</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-2.5 text-sm font-semibold">{r.title}</p>
-                <p className="mt-1 text-sm leading-relaxed text-night-muted">{r.body}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
         {/* In this app */}
         <section className="pt-8">
           <h2 className="px-5 font-display text-lg font-bold">Games in this app</h2>
@@ -364,7 +274,7 @@ function StorePage() {
         <footer className="mt-10 px-5 text-center text-[11px] leading-relaxed text-night-muted">
           <p>Koupl Studio · Games · Casual</p>
           <p className="mt-1">
-            Ratings and reviews shown are illustrative. All game content is original to Koupl.
+            All game content is original to Koupl. Not yet listed on any app store.
           </p>
         </footer>
       </main>

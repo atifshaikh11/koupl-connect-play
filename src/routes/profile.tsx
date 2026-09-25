@@ -137,6 +137,7 @@ function Profile() {
           </Label>
           <Input
             id="dn"
+            maxLength={40}
             value={currentName}
             onChange={(e) => setName(e.target.value)}
             className="h-13 rounded-2xl text-base"
