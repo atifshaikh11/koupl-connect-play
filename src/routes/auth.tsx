@@ -146,6 +146,7 @@ function Auth() {
               </Label>
               <Input
                 id="dn"
+                maxLength={40}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Sam"

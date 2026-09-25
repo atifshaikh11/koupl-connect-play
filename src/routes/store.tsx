@@ -91,21 +91,6 @@ function AppIcon({ className }: { className?: string }) {
   );
 }
 
-function Stars({ value, className }: { value: number; className?: string }) {
-  return (
-    <div className={cn("flex items-center gap-0.5", className)} aria-label={`${value} out of 5 stars`}>
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          className={cn(
-            "h-3.5 w-3.5",
-            i < value ? "fill-amber-400 text-amber-400" : "fill-night-muted/30 text-night-muted/30",
-          )}
-        />
-      ))}
-    </div>
-  );
-}
 
 function StorePage() {
   const navigate = useNavigate();
