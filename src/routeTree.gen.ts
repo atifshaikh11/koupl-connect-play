@@ -13,9 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as GamesRouteImport } from './routes/games'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RoomRouteImport } from './routes/room'
 import { Route as StoreRouteImport } from './routes/store'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as GameGameIdRouteImport } from './routes/game.$gameId'
@@ -43,6 +45,11 @@ const GamesRoute = GamesRouteImport.update({
   path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -56,6 +63,11 @@ const RoomRoute = RoomRouteImport.update({
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WelcomeRoute = WelcomeRouteImport.update({
@@ -94,9 +106,11 @@ export interface FileRoutesByFullPath {
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
   '/games': typeof GamesRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/room': typeof RoomRoute
   '/store': typeof StoreRoute
+  '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
@@ -109,9 +123,11 @@ export interface FileRoutesByTo {
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
   '/games': typeof GamesRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/room': typeof RoomRoute
   '/store': typeof StoreRoute
+  '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
@@ -125,9 +141,11 @@ export interface FileRoutesById {
   '/activity': typeof ActivityRoute
   '/auth': typeof AuthRoute
   '/games': typeof GamesRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/room': typeof RoomRoute
   '/store': typeof StoreRoute
+  '/terms': typeof TermsRoute
   '/welcome': typeof WelcomeRoute
   '/auth_/callback': typeof AuthCallbackRoute
   '/game/$gameId': typeof GameGameIdRoute
@@ -142,9 +160,11 @@ export interface FileRouteTypes {
     | '/activity'
     | '/auth'
     | '/games'
+    | '/privacy'
     | '/profile'
     | '/room'
     | '/store'
+    | '/terms'
     | '/welcome'
     | '/auth/callback'
     | '/game/$gameId'
@@ -157,9 +177,11 @@ export interface FileRouteTypes {
     | '/activity'
     | '/auth'
     | '/games'
+    | '/privacy'
     | '/profile'
     | '/room'
     | '/store'
+    | '/terms'
     | '/welcome'
     | '/auth/callback'
     | '/game/$gameId'
@@ -172,9 +194,11 @@ export interface FileRouteTypes {
     | '/activity'
     | '/auth'
     | '/games'
+    | '/privacy'
     | '/profile'
     | '/room'
     | '/store'
+    | '/terms'
     | '/welcome'
     | '/auth_/callback'
     | '/game/$gameId'
@@ -188,9 +212,11 @@ export interface RootRouteChildren {
   ActivityRoute: typeof ActivityRoute
   AuthRoute: typeof AuthRoute
   GamesRoute: typeof GamesRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   RoomRoute: typeof RoomRoute
   StoreRoute: typeof StoreRoute
+  TermsRoute: typeof TermsRoute
   WelcomeRoute: typeof WelcomeRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   GameGameIdRoute: typeof GameGameIdRoute
@@ -229,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -248,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/store'
       fullPath: '/store'
       preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/welcome': {
@@ -300,9 +340,11 @@ const rootRouteChildren: RootRouteChildren = {
   ActivityRoute: ActivityRoute,
   AuthRoute: AuthRoute,
   GamesRoute: GamesRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   RoomRoute: RoomRoute,
   StoreRoute: StoreRoute,
+  TermsRoute: TermsRoute,
   WelcomeRoute: WelcomeRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   GameGameIdRoute: GameGameIdRoute,
