@@ -15,6 +15,13 @@
       "when": 1789776566184,
       "tag": "0001_redeem_invite_marks_room_playing",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790332850878,
+      "tag": "0002_security_audit_hardening",
+      "breakpoints": true
     }
   ]
 }
