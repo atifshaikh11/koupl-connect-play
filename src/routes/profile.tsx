@@ -32,6 +32,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { deleteMyAccount } from "@/lib/koupl/account.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 import { AvatarBubble, LoadingScreen, Screen } from "@/components/koupl/ui";
 import { AVATARS, RELATIONSHIP_OPTIONS } from "@/lib/koupl/games";
 import { useApp } from "@/lib/koupl/store";
@@ -341,6 +344,17 @@ function Profile() {
           </DialogContent>
         </Dialog>
 
+        <Link to="/privacy" className="press flex min-h-14 w-full items-center gap-3 px-4">
+          <Shield className="h-5 w-5 text-muted-foreground" aria-hidden />
+          <span className="flex-1 text-left text-sm font-bold">Privacy Policy</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        </Link>
+        <Link to="/terms" className="press flex min-h-14 w-full items-center gap-3 px-4">
+          <HelpCircle className="h-5 w-5 text-muted-foreground" aria-hidden />
+          <span className="flex-1 text-left text-sm font-bold">Terms &amp; Conditions</span>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        </Link>
+
         <Link
           to="/store"
           className="press flex min-h-14 w-full items-center gap-3 px-4"
@@ -405,6 +419,9 @@ function Profile() {
           >
             <LogOut className="mr-1 h-5 w-5" aria-hidden /> Sign out
           </Button>
+        ) : null}
+        {app.session ? (
+          <DeleteAccount />
         ) : (
           <Button asChild className="h-13 rounded-2xl text-base">
             <Link to="/auth">Create an account</Link>
@@ -422,5 +439,63 @@ function Profile() {
         </Button>
       </div>
     </Screen>
+  );
+}
+
+function DeleteAccount() {
+  const del = useServerFn(deleteMyAccount);
+  const navigate = useNavigate();
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" className="h-11 rounded-2xl text-sm text-destructive">
+          Delete account
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-sm rounded-3xl">
+        <DialogHeader>
+          <DialogTitle className="font-display">Delete your account?</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm text-muted-foreground">
+          <p>
+            This permanently deletes your account, profile, game history and any Couple Room you
+            host, including its chat and invites. Your partner link is removed. This can't be undone.
+          </p>
+          <Label htmlFor="del-confirm" className="text-xs font-bold text-foreground">
+            Type DELETE to confirm
+          </Label>
+          <Input
+            id="del-confirm"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            autoComplete="off"
+            className="h-12 rounded-2xl"
+          />
+          <Button
+            variant="destructive"
+            className="h-12 w-full rounded-2xl"
+            disabled={confirm !== "DELETE" || busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await del();
+                await supabase.auth.signOut();
+                window.localStorage.clear();
+                toast.success("Your account was deleted");
+                void navigate({ to: "/welcome", replace: true });
+              } catch {
+                toast.error("We couldn't delete your account. Please try again.");
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? "Deleting…" : "Permanently delete account"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
