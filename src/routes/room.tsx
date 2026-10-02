@@ -232,12 +232,15 @@ function CoupleRoom() {
         gameEmoji: activeGame.emoji,
         code: room.room.code,
       });
+      let shared = false;
       if (navigator.share) {
-        await navigator
-          .share({ title: `Play ${activeGame.title} on Koupl`, text, url })
-          .catch(() => undefined);
-      } else {
-        await navigator.clipboard?.writeText(text);
+        shared = await navigator
+          .share({ title: `Play ${activeGame.title} on Koupl`, text })
+          .then(() => true)
+          .catch((e: unknown) => (e as DOMException)?.name === "AbortError");
+      }
+      if (!shared) {
+        await navigator.clipboard?.writeText(text).catch(() => undefined);
         toast.success("Invite link copied — valid for 2 hours");
       }
     } finally {
@@ -409,10 +412,16 @@ function CoupleRoom() {
           <Button
             variant="secondary"
             className="h-12 rounded-2xl"
+            disabled={inviteBusy}
             onClick={() => {
+              // With a game picked, share the one-tap ticket that opens that game.
+              if (activeGame && !partnerIn) {
+                void invitePartner();
+                return;
+              }
               if (navigator.share)
                 void navigator
-                  .share({ title: "Join my Koupl Couple Room", text: shareText, url: link })
+                  .share({ title: "Join my Koupl Couple Room", text: shareText })
                   .catch(() => undefined);
               else {
                 void navigator.clipboard?.writeText(shareText);

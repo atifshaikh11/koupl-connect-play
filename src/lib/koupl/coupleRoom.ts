@@ -74,9 +74,14 @@ export function newInviteToken(len = 12) {
   return out;
 }
 
+/** Public app address: invites must open for the partner, never a private preview. */
+export const PUBLIC_ORIGIN = "https://koupl-connect-play.lovable.app";
+
 /** Clean, opaque invitation URL: nothing but the ticket. */
 export function gameInviteUrl(token: string) {
-  return `${origin()}/i/${token}`;
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  const base = host === "localhost" || host === "127.0.0.1" ? origin() : PUBLIC_ORIGIN;
+  return `${base}/i/${token}`;
 }
 
 /** Share text that names the game while the URL stays opaque. */
