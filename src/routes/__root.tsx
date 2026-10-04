@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppProvider } from "@/lib/koupl/store";
 import { initNative } from "@/lib/koupl/native";
+import { setupOfflineSupport } from "@/lib/koupl/pwa";
 import { Toaster } from "@/components/ui/sonner";
 import { RoomOnboarding } from "@/components/koupl/RoomOnboarding";
 
@@ -131,6 +132,10 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+
+  useEffect(() => {
+    setupOfflineSupport();
+  }, []);
 
   useEffect(() => {
     return initNative(() => {
