@@ -12,7 +12,6 @@ import { GAMES } from "@/lib/koupl/games";
  * unregisters it (kill switch).
  */
 const SW_URL = "/sw.js";
-const WARM_FLAG = "koupl.offline-warm";
 
 function refused(): boolean {
   if (!import.meta.env.PROD) return true;
@@ -39,17 +38,20 @@ function offlinePages(): string[] {
   return ["/", "/games", "/welcome", "/activity", ...GAMES.map((g) => `/play/${g.id}`)];
 }
 
-async function warmPages(version: string) {
-  if (!navigator.onLine) return;
-  if (window.localStorage.getItem(WARM_FLAG) === version) return;
+let warming = false;
+
+/** Refresh cached pages on every online launch so they always match the current build. */
+async function warmPages() {
+  if (!navigator.onLine || warming) return;
+  warming = true;
   for (const url of offlinePages()) {
     try {
       await fetch(url, { headers: { "x-koupl-warm": "1" }, credentials: "same-origin" });
     } catch {
-      return; // went offline mid-way; try again next launch
+      break; // went offline mid-way; try again next launch
     }
   }
-  window.localStorage.setItem(WARM_FLAG, version);
+  warming = false;
 }
 
 export function setupOfflineSupport() {
@@ -60,12 +62,12 @@ export function setupOfflineSupport() {
   }
   void (async () => {
     try {
-      const reg = await navigator.serviceWorker.register(SW_URL, { scope: "/" });
+      await navigator.serviceWorker.register(SW_URL, { scope: "/" });
       await navigator.serviceWorker.ready;
-      // Version = the active worker script; re-warm pages after each new deploy.
-      const version = `${reg.active?.scriptURL ?? SW_URL}:${document.querySelector('script[type="module"]')?.getAttribute("src") ?? ""}`;
       // Give the first screen priority, then warm in the background.
-      window.setTimeout(() => void warmPages(version), 3000);
+      window.setTimeout(() => void warmPages(), 3000);
+      // A new deploy took over: re-cache pages against the new build.
+      navigator.serviceWorker.addEventListener("controllerchange", () => void warmPages());
     } catch {
       /* offline support is best-effort */
     }
