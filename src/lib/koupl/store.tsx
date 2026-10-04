@@ -11,6 +11,8 @@ const SETTINGS_KEY = "koupl.settings.v1";
 const ACTIVITY_KEY = "koupl.activity.v1";
 const FAVORITES_KEY = "koupl.favorites.v1";
 const STREAK_KEY = "koupl.couple-streak.v1";
+/** Last good profile/partner, so one-phone play keeps real names when offline. */
+const PROFILE_CACHE_KEY = "koupl.profile-cache.v1";
 
 export type CoupleStreak = {
   current: number;
@@ -166,7 +168,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const userId = session?.user.id ?? null;
 
   const loadProfile = useCallback(async (uid: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
+    if (error) {
+      // Offline / network failure: fall back to the last profile we saw for this user.
+      const cached = readLocal<{ profile: ProfileRow | null; partner: { display_name: string; avatar: string } | null } | null>(
+        PROFILE_CACHE_KEY,
+        null as never,
+      );
+      if (cached?.profile && cached.profile.id === uid) {
+        setProfile(cached.profile);
+        setPartnerRow(cached.partner ?? null);
+      }
+      return;
+    }
     if (!data) {
       setProfile(null);
       return;
@@ -186,20 +200,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .eq("id", data.partner_id)
         .maybeSingle();
       setPartnerRow(p ?? null);
+      writeLocal(PROFILE_CACHE_KEY, { profile: data, partner: p ?? null });
     } else {
       setPartnerRow(null);
+      writeLocal(PROFILE_CACHE_KEY, { profile: data, partner: null });
     }
   }, []);
 
   const refreshActivity = useCallback(async () => {
     if (!userId) return;
     setActivityLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("activity")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(60);
+    if (error) {
+      // Offline: keep whatever is already shown instead of wiping the list.
+      setActivityLoading(false);
+      return;
+    }
     setActivity((data ?? []) as ActivityItem[]);
     setActivityLoading(false);
   }, [userId]);
@@ -340,9 +361,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const logActivity = useCallback(
     async (item: Omit<ActivityItem, "id" | "created_at">) => {
       if (userId) {
-        await supabase.from("activity").insert({ ...item, user_id: userId });
-        await refreshActivity();
-        return;
+        const { error } = await supabase.from("activity").insert({ ...item, user_id: userId });
+        if (!error) {
+          await refreshActivity();
+          return;
+        }
+        // Offline one-phone game: keep the result on this device instead of losing it.
       }
       setActivity((prev) => {
         const next = [
