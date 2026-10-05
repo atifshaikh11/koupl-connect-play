@@ -113,6 +113,9 @@ type Ctx = {
   toggleFavorite: (gameId: string) => void;
   recordCoupleResult: (winner: Player | null) => CoupleStreak;
   refreshActivity: () => Promise<void>;
+  /** Upload state of a One Phone result, by activity id. */
+  syncStatus: (id: string) => SyncStatus | null;
+  retryUpload: (localId: string) => Promise<void>;
   signOut: () => Promise<void>;
   buzz: (ms?: number) => void;
 };
@@ -133,6 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activityLoading, setActivityLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [coupleStreak, setCoupleStreak] = useState<CoupleStreak>(EMPTY_STREAK);
+  const [pending, setPending] = useState<PendingActivity[]>([]);
   const flushingRef = useRef(false);
 
   /* -------- hydration from localStorage -------- */
@@ -559,7 +563,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     partner,
     inviteCode: profile?.invite_code ?? guest?.code ?? "",
     settings,
-    activity,
+    activity: mergedActivity,
+    syncStatus,
+    retryUpload,
     activityLoading,
     favorites,
     coupleStreak,
