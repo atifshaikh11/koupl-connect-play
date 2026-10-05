@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
@@ -13,6 +13,10 @@ const FAVORITES_KEY = "koupl.favorites.v1";
 const STREAK_KEY = "koupl.couple-streak.v1";
 /** Last good profile/partner, so one-phone play keeps real names when offline. */
 const PROFILE_CACHE_KEY = "koupl.profile-cache.v1";
+/** Results finished offline while signed in, waiting to be uploaded. */
+const PENDING_KEY = "koupl.activity.pending.v1";
+
+type PendingActivity = Omit<ActivityItem, "id"> & { local_id: string; user_id: string };
 
 export type CoupleStreak = {
   current: number;
@@ -122,6 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activityLoading, setActivityLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [coupleStreak, setCoupleStreak] = useState<CoupleStreak>(EMPTY_STREAK);
+  const flushingRef = useRef(false);
 
   /* -------- hydration from localStorage -------- */
   useEffect(() => {
@@ -358,25 +363,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadProfile(userId);
   }, [userId, loadProfile]);
 
+  /** Upload results finished offline while signed in. Never blocks gameplay. */
+  const flushPending = useCallback(async () => {
+    if (!userId || flushingRef.current) return;
+    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
+    const queue = readLocal<PendingActivity[]>(PENDING_KEY, []);
+    const mine = queue.filter((p) => p.user_id === userId);
+    if (mine.length === 0) return;
+    flushingRef.current = true;
+    const done = new Set<string>();
+    try {
+      for (const p of mine) {
+        const { error } = await supabase.from("activity").insert({
+          game_id: p.game_id,
+          mode: p.mode,
+          summary: p.summary,
+          my_score: p.my_score,
+          their_score: p.their_score,
+          created_at: p.created_at,
+          user_id: userId,
+        });
+        if (error) break; // still offline or failing — try again later
+        done.add(p.local_id);
+      }
+    } finally {
+      flushingRef.current = false;
+    }
+    if (done.size > 0) {
+      const rest = readLocal<PendingActivity[]>(PENDING_KEY, []).filter(
+        (p) => !done.has(p.local_id),
+      );
+      writeLocal(PENDING_KEY, rest);
+      await refreshActivity();
+    }
+  }, [userId, refreshActivity]);
+
+  useEffect(() => {
+    if (!userId) return;
+    void flushPending();
+    const onOnline = () => void flushPending();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void flushPending();
+    };
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [userId, flushPending]);
+
   const logActivity = useCallback(
     async (item: Omit<ActivityItem, "id" | "created_at">) => {
+      const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      const createdAt = new Date().toISOString();
       if (userId) {
         const { error } = await supabase.from("activity").insert({ ...item, user_id: userId });
         if (!error) {
           await refreshActivity();
           return;
         }
-        // Offline one-phone game: keep the result on this device instead of losing it.
+        // Offline: keep the result on this device and queue it for upload later.
+        const queue = readLocal<PendingActivity[]>(PENDING_KEY, []);
+        writeLocal(
+          PENDING_KEY,
+          [...queue, { ...item, local_id: localId, created_at: createdAt, user_id: userId }].slice(-100),
+        );
       }
       setActivity((prev) => {
-        const next = [
-          {
-            ...item,
-            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            created_at: new Date().toISOString(),
-          },
-          ...prev,
-        ].slice(0, 60);
+        const next = [{ ...item, id: localId, created_at: createdAt }, ...prev].slice(0, 60);
         writeLocal(ACTIVITY_KEY, next);
         return next;
       });
