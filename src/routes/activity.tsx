@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Trash2 } from "lucide-react";
+import { AlertCircle, Cloud, CloudOff, RotateCw, Smartphone, Trash2 } from "lucide-react";
+import { RecentResultsCard } from "@/components/koupl/RecentResultsCard";
+import type { SyncStatus } from "@/lib/koupl/store";
 import { Heart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,6 +39,34 @@ function timeAgo(iso: string) {
   if (hrs < 24) return `${hrs} h ago`;
   const days = Math.round(hrs / 24);
   return days === 1 ? "yesterday" : `${days} days ago`;
+}
+
+function SyncBadge({ status, onRetry }: { status: SyncStatus | null; onRetry: () => void }) {
+  if (!status) return null;
+  if (status === "failed")
+    return (
+      <div className="mt-1 flex items-center gap-2 text-xs font-bold text-destructive">
+        <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Upload failed
+        <button
+          type="button"
+          onClick={onRetry}
+          className="press inline-flex min-h-8 items-center gap-1 rounded-full border border-destructive/40 px-2.5 text-destructive"
+        >
+          <RotateCw className="h-3 w-3" aria-hidden /> Retry
+        </button>
+      </div>
+    );
+  const map = {
+    pending: { icon: CloudOff, text: "Waiting to upload", cls: "text-muted-foreground" },
+    synced: { icon: Cloud, text: "Synced", cls: "text-primary" },
+    local: { icon: Smartphone, text: "Saved on this phone", cls: "text-muted-foreground" },
+  } as const;
+  const { icon: Icon, text, cls } = map[status];
+  return (
+    <p className={`mt-1 flex items-center gap-1 text-xs font-bold ${cls}`}>
+      <Icon className="h-3.5 w-3.5" aria-hidden /> {text}
+    </p>
+  );
 }
 
 function Activity() {
@@ -131,6 +161,10 @@ function Activity() {
                   <p className="truncate text-xs text-muted-foreground">
                     {a.summary || "Finished"} · {timeAgo(a.created_at)}
                   </p>
+                  <SyncBadge
+                    status={app.syncStatus(a.id)}
+                    onRetry={() => void app.retryUpload(a.id)}
+                  />
                 </div>
                 <Chip tone={result === "You won" ? "success" : "muted"}>{result}</Chip>
               </li>

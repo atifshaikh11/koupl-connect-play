@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { HapticManager, SoundManager } from "./feedback";
 import type { ActivityItem, GuestProfile, Player, Settings } from "./types";
@@ -16,7 +17,13 @@ const PROFILE_CACHE_KEY = "koupl.profile-cache.v1";
 /** Results finished offline while signed in, waiting to be uploaded. */
 const PENDING_KEY = "koupl.activity.pending.v1";
 
-type PendingActivity = Omit<ActivityItem, "id"> & { local_id: string; user_id: string };
+type PendingActivity = Omit<ActivityItem, "id"> & {
+  local_id: string;
+  user_id: string;
+  failed?: boolean;
+};
+
+export type SyncStatus = "local" | "pending" | "failed" | "synced";
 
 export type CoupleStreak = {
   current: number;
@@ -106,6 +113,9 @@ type Ctx = {
   toggleFavorite: (gameId: string) => void;
   recordCoupleResult: (winner: Player | null) => CoupleStreak;
   refreshActivity: () => Promise<void>;
+  /** Upload state of a One Phone result, by activity id. */
+  syncStatus: (id: string) => SyncStatus | null;
+  retryUpload: (localId: string) => Promise<void>;
   signOut: () => Promise<void>;
   buzz: (ms?: number) => void;
 };
@@ -126,6 +136,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [activityLoading, setActivityLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [coupleStreak, setCoupleStreak] = useState<CoupleStreak>(EMPTY_STREAK);
+  const [pending, setPending] = useState<PendingActivity[]>([]);
   const flushingRef = useRef(false);
 
   /* -------- hydration from localStorage -------- */
@@ -363,40 +374,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadProfile(userId);
   }, [userId, loadProfile]);
 
+  const syncPendingState = useCallback(() => {
+    setPending(readLocal<PendingActivity[]>(PENDING_KEY, []));
+  }, []);
+
+  useEffect(() => {
+    syncPendingState();
+  }, [syncPendingState, userId]);
+
   /** Upload results finished offline while signed in. Never blocks gameplay. */
-  const flushPending = useCallback(async () => {
-    if (!userId || flushingRef.current) return;
-    if (typeof navigator !== "undefined" && navigator.onLine === false) return;
-    const queue = readLocal<PendingActivity[]>(PENDING_KEY, []);
-    const mine = queue.filter((p) => p.user_id === userId);
-    if (mine.length === 0) return;
-    flushingRef.current = true;
-    const done = new Set<string>();
-    try {
-      for (const p of mine) {
-        const { error } = await supabase.from("activity").insert({
-          game_id: p.game_id,
-          mode: p.mode,
-          summary: p.summary,
-          my_score: p.my_score,
-          their_score: p.their_score,
-          created_at: p.created_at,
-          user_id: userId,
-        });
-        if (error) break; // still offline or failing — try again later
-        done.add(p.local_id);
-      }
-    } finally {
-      flushingRef.current = false;
-    }
-    if (done.size > 0) {
-      const rest = readLocal<PendingActivity[]>(PENDING_KEY, []).filter(
-        (p) => !done.has(p.local_id),
+  const flushPending = useCallback(
+    async (onlyId?: string) => {
+      if (!userId || flushingRef.current) return;
+      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+      const queue = readLocal<PendingActivity[]>(PENDING_KEY, []);
+      const mine = queue.filter(
+        (p) => p.user_id === userId && (!onlyId || p.local_id === onlyId),
       );
+      if (mine.length === 0) return;
+      if (offline) {
+        if (onlyId) toast.error("You're offline — it will upload when you reconnect");
+        return;
+      }
+      flushingRef.current = true;
+      const done = new Set<string>();
+      const failed = new Set<string>();
+      try {
+        for (const p of mine) {
+          const { error } = await supabase.from("activity").insert({
+            game_id: p.game_id,
+            mode: p.mode,
+            summary: p.summary,
+            my_score: p.my_score,
+            their_score: p.their_score,
+            created_at: p.created_at,
+            user_id: userId,
+          });
+          if (error) {
+            failed.add(p.local_id);
+            break;
+          }
+          done.add(p.local_id);
+        }
+      } finally {
+        flushingRef.current = false;
+      }
+      const rest = readLocal<PendingActivity[]>(PENDING_KEY, [])
+        .filter((p) => !done.has(p.local_id))
+        .map((p) => (failed.has(p.local_id) ? { ...p, failed: true } : p));
       writeLocal(PENDING_KEY, rest);
-      await refreshActivity();
-    }
-  }, [userId, refreshActivity]);
+      setPending(rest);
+      if (onlyId) {
+        if (done.size) toast.success("Result uploaded");
+        else toast.error("Upload failed — try again in a moment");
+      }
+      if (done.size > 0) await refreshActivity();
+    },
+    [userId, refreshActivity],
+  );
 
   useEffect(() => {
     if (!userId) return;
@@ -413,6 +448,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [userId, flushPending]);
 
+  const retryUpload = useCallback((localId: string) => flushPending(localId), [flushPending]);
+
   const logActivity = useCallback(
     async (item: Omit<ActivityItem, "id" | "created_at">) => {
       const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -423,12 +460,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await refreshActivity();
           return;
         }
-        // Offline: keep the result on this device and queue it for upload later.
+        // Couldn't upload: keep it on this device and queue it (shown as pending/failed).
+        const online = typeof navigator === "undefined" || navigator.onLine !== false;
         const queue = readLocal<PendingActivity[]>(PENDING_KEY, []);
-        writeLocal(
-          PENDING_KEY,
-          [...queue, { ...item, local_id: localId, created_at: createdAt, user_id: userId }].slice(-100),
-        );
+        const next = [
+          ...queue,
+          { ...item, local_id: localId, created_at: createdAt, user_id: userId, failed: online },
+        ].slice(-100);
+        writeLocal(PENDING_KEY, next);
+        setPending(next);
+        return;
       }
       setActivity((prev) => {
         const next = [{ ...item, id: localId, created_at: createdAt }, ...prev].slice(0, 60);
@@ -510,6 +551,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return null;
   }, [profile, partnerRow, guest]);
 
+  const myPending = useMemo(
+    () => (userId ? pending.filter((p) => p.user_id === userId) : []),
+    [pending, userId],
+  );
+  const mergedActivity = useMemo(() => {
+    if (!myPending.length) return activity;
+    const items: ActivityItem[] = myPending.map((p) => ({
+      id: p.local_id,
+      game_id: p.game_id,
+      mode: p.mode,
+      summary: p.summary,
+      my_score: p.my_score,
+      their_score: p.their_score,
+      created_at: p.created_at,
+    }));
+    return [...items, ...activity].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }, [myPending, activity]);
+  const syncStatus = useCallback(
+    (id: string): SyncStatus | null => {
+      const p = myPending.find((x) => x.local_id === id);
+      if (p) return p.failed ? "failed" : "pending";
+      const a = activity.find((x) => x.id === id);
+      if (!a || a.mode !== "local") return null;
+      return userId ? "synced" : "local";
+    },
+    [myPending, activity, userId],
+  );
+
   const value: Ctx = {
     hydrated,
     loading: loading || (!!userId && !profile),
@@ -522,7 +591,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     partner,
     inviteCode: profile?.invite_code ?? guest?.code ?? "",
     settings,
-    activity,
+    activity: mergedActivity,
+    syncStatus,
+    retryUpload,
     activityLoading,
     favorites,
     coupleStreak,

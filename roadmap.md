@@ -65,3 +65,5 @@ Blocked (needs the app owner):
 - [ ] Phase 3: permission-aware push notifications and one daily prompt push (blocked until Firebase Cloud Messaging is connected)
 - [x] Final mobile browser QA and security review
 - [ ] Manual two-physical-device validation of realtime recovery and native push delivery
+
+- [ ] Activity: share recent One Phone results + AI conversation prompts from play history (AI Gateway)
