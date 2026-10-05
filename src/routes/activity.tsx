@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertCircle, Cloud, CloudOff, RotateCw, Smartphone, Trash2 } from "lucide-react";
+import { RecentResultsCard } from "@/components/koupl/RecentResultsCard";
 import type { SyncStatus } from "@/lib/koupl/store";
 import { Heart, Sparkles } from "lucide-react";
 import { toast } from "sonner";
