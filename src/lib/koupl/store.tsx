@@ -551,6 +551,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return null;
   }, [profile, partnerRow, guest]);
 
+  const myPending = useMemo(
+    () => (userId ? pending.filter((p) => p.user_id === userId) : []),
+    [pending, userId],
+  );
+  const mergedActivity = useMemo(() => {
+    if (!myPending.length) return activity;
+    const items: ActivityItem[] = myPending.map((p) => ({
+      id: p.local_id,
+      game_id: p.game_id,
+      mode: p.mode,
+      summary: p.summary,
+      my_score: p.my_score,
+      their_score: p.their_score,
+      created_at: p.created_at,
+    }));
+    return [...items, ...activity].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }, [myPending, activity]);
+  const syncStatus = useCallback(
+    (id: string): SyncStatus | null => {
+      const p = myPending.find((x) => x.local_id === id);
+      if (p) return p.failed ? "failed" : "pending";
+      const a = activity.find((x) => x.id === id);
+      if (!a || a.mode !== "local") return null;
+      return userId ? "synced" : "local";
+    },
+    [myPending, activity, userId],
+  );
+
   const value: Ctx = {
     hydrated,
     loading: loading || (!!userId && !profile),
